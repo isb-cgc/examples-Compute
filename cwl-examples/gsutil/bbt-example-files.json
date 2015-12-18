@@ -1,0 +1,12 @@
+{
+  "file_mappings": [
+    {
+      "url": "gs://isb-cgc-open/cwl-examples/Homo_sapiens.GRCh38.dna.primary_assembly.fa",
+      "destination": "/cwl-data/workflows/inputs/h_sapiens.fa"
+    },
+    {
+      "url": "gs://isb-cgc-open/cwl-examples/helicobacter_pylori.fa",
+      "destination": "/cwl-data/workflows/bbt/inputs/h_pylori.fa"
+    }
+  ]
+}

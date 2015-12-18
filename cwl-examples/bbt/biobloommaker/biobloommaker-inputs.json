@@ -1,0 +1,15 @@
+{
+  "output_prefix": "h_pylori",
+  "filter_fasta_sequences": [
+    {
+      "fasta_file": {
+        "class": "File",
+        "path": "/cwl-data/workflows/bbt/inputs/helicobacter_pylori.fa"
+      },
+      "fasta_index": {
+        "class": "File",
+        "path": "/cwl-data/workflows/bbt/inputs/helicobacter_pylori.fa.fai"
+      }
+    }
+  ]
+}

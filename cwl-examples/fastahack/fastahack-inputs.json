@@ -1,0 +1,6 @@
+{
+  "fasta_sequence": {
+    "path": "/cwl-data/workflows/fastahack/inputs/helicobacter_pylori.fa", 
+    "class": "File" 
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "file_mappings": [
+    {
+      "url": "gs://isb-cgc-open/cwl-examples/Homo_sapiens.GRCh38.dna.primary_assembly.fa",
+      "destination": "/cwl-data/workflows/inputs/h_sapiens.fa"
+    },
+    {
+      "url": "gs://isb-cgc-open/cwl-examples/Homo_sapiens.GRCh38.79.gtf",
+      "destination": "/cwl-data/workflows/inputs/h_sapiens.gtf"
+    },
+    {
+      "url": "gs://isb-cgc-open/cwl-examples/G20466.5637.2.bam",
+      "destination": "/cwl-data/workflows/inputs/G20466.5637.2.bam"
+    }
+  ]
+}
+

@@ -1,0 +1,6 @@
+{
+  "file_url_and_destination": {
+    "url": "gs://isb-cgc-open/genomic-reference/hg38/dna/Homo_sapiens.GRCh38.dna.primary_assembly.fa.gz", 
+    "destination": "/cwl-data/workflows/inputs/sequence.fa"
+  }
+}

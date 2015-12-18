@@ -1,0 +1,29 @@
+#ISB-CGC Single-Node CWL Workflow Examples
+
+Each subdirectory contains the required code files for a particular CWL (Draft 2) example.  Example directories may include one or more CommandLineTool specifications, a Workflow specification, or both, as well as a JSON-formatted input parameters file for each.  For example, the SNAPR example directory contains a Workflow file (.cwl), a JSON-formatted input parameters file, and additional subdirectories for each CommandLineTool required by the Workflow.  Each CommandLineTool directory contains a CommandLineTool file (.cwl), and a JSON-formatted input parameters file.  For CommandLineTool examples nested below a Workflow, the JSON-formatted input parameters files are used for reference or testing purposes only, and are not processed by the outer Workflow.
+
+Example directory structure:
+```
+workflow/
+  workflow.cwl  (Workflow)
+  workflow-inputs.json  (Workflow inputs)
+  commandlinetool-1/
+    commandlinetool-1.cwl  (CommandLineTool)
+    commandlinetool-1-inputs.json  (CommandLineTool inputs, for reference/testing only)
+  commandlinetool-2/
+    commandlinetool-2.cwl  (CommandLineTool)
+    commandlinetool-2-inputs.json  (CommandLineTool inputs, for reference/testing only)
+  ...
+```
+In general, each CommandLineTool represents a single step in the outer Workflow.  For more information about the relationship between CommandLineTool and Workflow, see the [CWL (Draft 2) specification](http://common-workflow-language.github.io/draft-2/).
+
+In order to run these examples on Google Compute Engine, you may use the deployment template located in [bioinformatics-pipelines/cwl-deployment](../cwl-deployment), which is preconfigured to run the examples.  Instructions for creating the deployment can be found in the README file in that directory.
+
+Once you've created a GCE VM for the examples, ssh to it:
+```
+gcloud compute ssh <cwl-node-name>
+```
+Once you've created your GCE VM and ssh'ed to it, clone this repo into your home directory so that you can run the examples:
+```
+git clone https://github.com/isb-cgc/bioinformatics-pipelines.git
+```

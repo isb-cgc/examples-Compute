@@ -1,0 +1,9 @@
+class: SchemaDefRequirement
+types:
+  - name: "gcs_url_to_file_mapping"
+    type: "record"
+    fields:
+      - name: "url"
+        type: string
+      - name: "destination"
+        type: string

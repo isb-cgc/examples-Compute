@@ -1,0 +1,48 @@
+{
+  "fasta_sequence": {
+    "path": "/cwl-data/workflows/snapr/inputs/Homo_sapiens.GRCh38.dna.primary_assembly.fa",
+    "class": "File"
+  },
+  "gene_set": {
+    "path": "/cwl-data/workflows/snapr/inputs/Homo_sapiens.GRCh38.79.gtf",
+    "class": "File"
+  },
+  "input_bam_file": {
+    "path": "/cwl-data/workflows/snapr/inputs/G20466.5637.2.bam",
+    "class": "File"
+  },
+  "genome_index_genome": {
+    "path": "/cwl-data/workflows/snapr/inputs/genome-index/Genome",
+    "class": "File"
+  },
+  "genome_index_genome_index": {
+    "path": "/cwl-data/workflows/snapr/inputs/genome-index/GenomeIndex",
+    "class": "File"
+  },
+  "genome_index_genome_index_hash": {
+    "path": "/cwl-data/workflows/snapr/inputs/genome-index/GenomeIndexHash",
+    "class": "File"
+  },
+  "genome_index_overflow_table": {
+    "path": "/cwl-data/workflows/snapr/inputs/genome-index/OverflowTable",
+    "class": "File"
+  },
+  "transcriptome_index_genome": {
+    "path": "/cwl-data/workflows/snapr/inputs/transcriptome-index/Genome",
+    "class": "File"
+  },
+  "transcriptome_index_genome_index": {
+    "path": "/cwl-data/workflows/snapr/inputs/transcriptome-index/GenomeIndex",
+    "class": "File"
+  },
+  "transcriptome_index_genome_index_hash": {
+    "path": "/cwl-data/workflows/snapr/inputs/transcriptome-index/GenomeIndexHash",
+    "class": "File"
+  },
+  "transcriptome_index_overflow_table": {
+    "path": "/cwl-data/workflows/snapr/inputs/transcriptome-index/OverflowTable",
+    "class": "File"
+  },
+  "output_bam_file": "G20466.5637.2.paired.bam",
+  "output_bam_prefix": "G20466.5637.2.paired"
+}

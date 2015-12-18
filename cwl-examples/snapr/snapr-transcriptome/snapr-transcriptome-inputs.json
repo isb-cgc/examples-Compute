@@ -1,0 +1,10 @@
+{
+  "fasta_sequence": {
+    "path": "/cwl-data/workflows/snapr/inputs/Homo_sapiens.GRCh38.dna.primary_assembly.fa",
+    "class": "File"
+  },
+  "gene_set": {
+    "path": "/cwl-data/workflows/snapr/inputs/Homo_sapiens.GRCh38.79.gtf", 
+    "class": "File"
+  }
+}
