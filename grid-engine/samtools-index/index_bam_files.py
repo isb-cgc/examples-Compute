@@ -20,10 +20,12 @@ bam_pattern = '^.*\.bam$'
 endpoint = "datafilenamekey_list"
 
 def index_bam_files(file_list, storage, job_name, output_bucket, logs_bucket, grid_computing_tools_dir, copy_original_bams, dry_run):
-	print copy_original_bams, dry_run
 	# Create a text file containing the file list (one file per line)
-	text_file_list = tempfile.NamedTemporaryFile(delete=False)
-	config_file = tempfile.NamedTemporaryFile(delete=False)
+	if not os.path.exists("{home}/samtools-index-config".format(os.environ['HOME'])):
+		os.makedirs("{home}/samtools-index-config".format(os.environ['HOME']))
+
+	text_file_list = tempfile.NamedTemporaryFile(dir="{home}/samtools-index-config".format(os.environ['HOME']), delete=False)
+	config_file = tempfile.NamedTemporaryFile(dir="{home}/samtools-index-config".format(os.environ['HOME']), delete=False)
 	
 	with open(text_file_list.name, 'w') as f:
 		for isb_cgc_bam_file in file_list:
@@ -55,7 +57,6 @@ def index_bam_files(file_list, storage, job_name, output_bucket, logs_bucket, gr
 				f.write("{new_path}\n".format(new_path=new_path))
 			else:
 				f.write("{isb_cgc_bam_file}\n".format(isb_cgc_bam_file=isb_cgc_bam_file))
-	f.close()
 			
 	# create the job config file
 	with open(config_file.name, 'w') as g:
@@ -63,8 +64,6 @@ def index_bam_files(file_list, storage, job_name, output_bucket, logs_bucket, gr
 		g.write("export OUTPUT_PATH=%s\n" % output_bucket)
 		g.write("export OUTPUT_LOG_PATH=%s\n" % logs_bucket)
 		g.write("export SAMTOOLS_OPERATION=\"index\"")
-
-	g.close()
 
 	if dry_run:
 		print "would've run {grid_computing_tools_dir}/src/samtools/launch_samtools.sh {config}".format(grid_computing_tools_dir=grid_computing_tools_dir, config=config_file.name)
