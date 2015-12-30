@@ -67,10 +67,10 @@ def index_bam_files(file_list, storage, job_name, output_bucket, logs_bucket, gr
 	g.close()
 
 	if dry_run:
-		print "would've run %s/src/samtools/launch_samtools %s" % (grid_computing_tools_dir, config_file.name)
+		print "would've run {grid_computing_tools_dir}/src/samtools/launch_samtools {config}".format(grid_computing_tools_dir=grid_computing_tools_dir, config=config_file.name)
 	else:
 		# submit the job
-		output = subprocess.check_output(["%s/src/samtools/launch_samtools" % grid_computing_tools_dir, config_file.name])
+		output = subprocess.check_output(["{grid_computing_tools_dir}/src/samtools/launch_samtools".format(grid_computing_tools_dir=grid_computing_tools_dir), "{config}".format(config=config_file.name)])
 
 	if not copy_original_bams:
 		copyfile(text_file_list.name, "%s-isb-cgc-bam-files.txt" % job_name)
