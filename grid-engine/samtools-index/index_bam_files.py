@@ -78,6 +78,7 @@ def index_bam_files(file_list, storage, job_name, output_bucket, logs_bucket, gr
 		
 	
 def generate_file_list(url, params):
+	file_list = []
 	try:
 		response = isb_curl.get(url, params)
 	except:
