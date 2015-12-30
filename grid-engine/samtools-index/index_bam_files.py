@@ -21,7 +21,6 @@ endpoint = "datafilenamekey_list"
 
 def index_bam_files(file_list, storage, job_name, output_bucket, logs_bucket, grid_computing_tools_dir, copy_original_bams, dry_run):
 	print copy_original_bams, dry_run
-	exit(0)
 	# Create a text file containing the file list (one file per line)
 	text_file_list = tempfile.NamedTemporaryFile(delete=False)
 	config_file = tempfile.NamedTemporaryFile(delete=False)
