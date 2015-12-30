@@ -9,19 +9,19 @@ In order to spin up a GCE VM, you will need access to a Google Cloud project (GC
 
 The template parameters can be found in cwl-node.yaml under "properties", and consist of the following values:
 
-- containerVmName:  The name of the container VM image to use; currently set to use "container-vm-v20151215".  More information about container-optimized VM images can be found [here](https://cloud.google.com/compute/docs/containers/container_vms), and an up-to-date list of available VM images can be found by running "gcloud compute images list".
+- **containerVmName**:  The name of the container VM image to use; currently set to use "container-vm-v20151215".  More information about container-optimized VM images can be found [here](https://cloud.google.com/compute/docs/containers/container_vms), and an up-to-date list of available VM images can be found by running "gcloud compute images list".
 
-- zone:  The compute zone you'd like to create your instance and disks in; currently set to use "us-central1-c".  More information about GCE Regions and Zones can be found [here](https://cloud.google.com/compute/docs/zones?hl=en).  You should choose a "us-central" or "us-east" zone regardless of your actual location.  Note that different [machine types](https://cloud.google.com/compute/docs/machine-types) are available in different zones.  Also note that all ISB-CGC hosted data is in [Standard Storage](https://cloud.google.com/storage/docs/standard-storage) in the US.
+- **zone**:  The compute zone you'd like to create your instance and disks in; currently set to use "us-central1-c".  More information about GCE Regions and Zones can be found [here](https://cloud.google.com/compute/docs/zones?hl=en).  You should choose a "us-central" or "us-east" zone regardless of your actual location.  Note that different [machine types](https://cloud.google.com/compute/docs/machine-types) are available in different zones.  Also note that all ISB-CGC hosted data is in [Standard Storage](https://cloud.google.com/storage/docs/standard-storage) in the US.
 
-- machineType:  The type of machine you'd like to use for your deployment; currently set to "n1-highmem-16".  For a complete list of images and their specifications, see [Google Compute Engine Machine Types](https://cloud.google.com/compute/docs/machine-types).
+- **machineType**:  The type of machine you'd like to use for your deployment; currently set to "n1-highmem-16".  For a complete list of images and their specifications, see [Google Compute Engine Machine Types](https://cloud.google.com/compute/docs/machine-types).
 
-- bootDiskSizeGb:  The size of the boot disk for the VM in gigabytes; currently set to "500".
+- **bootDiskSizeGb**:  The size of the boot disk for the VM in gigabytes; currently set to "500".
 
-- bootDiskType:  The type of boot disk to use, which can be one of "pd-standard", "pd-ssd" or "local-ssd"; currently set to "pd-standard".  Fore more information about block storage, see [Google Compute Engine Block Storage](https://cloud.google.com/compute/docs/disks).
+- **bootDiskType**:  The type of boot disk to use, which can be one of "pd-standard", "pd-ssd" or "local-ssd"; currently set to "pd-standard".  Fore more information about block storage, see [Google Compute Engine Block Storage](https://cloud.google.com/compute/docs/disks).
 
-- startupScript:  The startup script to run on the VM when it boots for the first time; currently set to point to the script "cwl-node-startup.sh" in this directory.
+- **startupScript**:  The startup script to run on the VM when it boots for the first time; currently set to point to the script "cwl-node-startup.sh" in this directory.
 
-- serviceAcctEmail:  The service account email to use; currently set to "default". 
+- **serviceAcctEmail**:  The service account email to use; currently set to "default". 
 
 The "name" of the VM (listed under "resources") may also be changed as well.  This will be the name of the VM that's created for you as part of the deployment, and can be used to access the VM using the "gcloud" tool.  
 
@@ -43,7 +43,7 @@ gcloud config set project <cloud-project-name>
 
 3) Create the deployment:
 ```
-cd bioinformatics-pipelines/cwl-deployment
+cd examples-Compute/cwl-deployment
 gcloud deployment-manager deployments create <deployment-name> --config cwl-node.yaml
 ```
 
