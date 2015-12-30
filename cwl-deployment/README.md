@@ -5,7 +5,7 @@ This directory contains files that you can use to create a deployment for runnin
 ##Prerequisites
 In order to spin up a GCE VM, you will need access to a Google Cloud project (GCP), and you will also need a local installation of the [Google Cloud SDK](https://cloud.google.com/sdk/).  If you are not yet an ISB-CGC user, please sign-in to the [web-app](https://isb-cgc.appspot.com) and request a GCP if you don't already have one.  Next, you'll need to enable Compute Engine and Deployment Manager and install the Cloud SDK.  (See steps 2 and 3 in this [Quickstart guide](https://cloud.google.com/deployment-manager/quickstart-guide)).
 
-A recently introduce alternative to installing the Cloud SDK locally is to use the [Google Cloud Shell](https://cloud.google.com/cloud-shell/docs/) feature that is now available directly from the Google Cloud [Console Dashboard](https://console.developers.google.com/home/dashboard).  In the upper-right corner, next to your project name, clicking on the **>_** icon will activate Google Cloud Shell.
+A recently introduce alternative to installing the Cloud SDK locally is to use the [Google Cloud Shell](https://cloud.google.com/cloud-shell/docs/) feature that is now available directly from the Google Cloud [Console Dashboard](https://console.developers.google.com/home/dashboard).  In the upper-right corner, next to your project name, clicking on the **[>_]** icon will activate Google Cloud Shell.
 
 Once you've installed the Cloud SDK, you'll want to become familiar with two important command-line tools:
 * [gcloud](https://cloud.google.com/sdk/gcloud/) for managing your GCP resources; and
