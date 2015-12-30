@@ -22,7 +22,7 @@ To create a Grid Engine cluster, run the following command:
 elasticluster start <cluster-name>
 ```
 
-The "cluster-name" should match the name of a particular cluster in one of the configuration files.  The cluster names can be found in the "cluster" sections of each configuration file ("[cluster/<cluster-name>]")  For example, the "samtools-index" cluster name can be found on the line "[cluster/samtools-index]" in [examples-Compute/grid-engine/elasticluster/config.d/samtools-index.config](elasticluster/config.d/samtools-index.config).
+The "cluster-name" should match the name of a particular cluster in one of the configuration files.  The cluster names can be found in the "cluster" sections of each configuration file.  For example, the "samtools-index" cluster name can be found on the line "[cluster/samtools-index]" in [examples-Compute/grid-engine/elasticluster/config.d/samtools-index.config](elasticluster/config.d/samtools-index.config).
 
 ###Step 3: Copy the setup script to the Grid Engine master 
 
