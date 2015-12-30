@@ -59,9 +59,9 @@ def index_bam_files(file_list, storage, job_name, output_bucket, logs_bucket, gr
 			
 	# create the job config file
 	with open(config_file.name, 'w') as g:
-		g.write("export INPUT_LIST_FILE=%s" % text_file_list.name)
-		g.write("export OUTPUT_PATH=%s" % output_bucket)
-		g.write("export OUTPUT_LOG_PATH=%s" % logs_bucket)
+		g.write("export INPUT_LIST_FILE=%s\n" % text_file_list.name)
+		g.write("export OUTPUT_PATH=%s\n" % output_bucket)
+		g.write("export OUTPUT_LOG_PATH=%s\n" % logs_bucket)
 		g.write("export SAMTOOLS_OPERATION=\"index\"")
 
 	g.close()
