@@ -84,8 +84,7 @@ def generate_file_list(url, params):
 		print "There was a problem with the format of the request -- exiting"
 		exit(-1)
 	else:
-		print response
-		if "datafilenamekeys" in response.keys() > 0:
+		if response["count"] > 0:
 			for datafilenamekey in response["datafilenamekeys"]:
 				if re.search(bam_pattern, datafilenamekey) is not None :
 					file_list.append(datafilenamekey)
