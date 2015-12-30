@@ -5,7 +5,17 @@ This directory contains files that you can use to create a deployment for runnin
 ##Prerequisites
 In order to spin up a GCE VM, you will need access to a Google Cloud project (GCP), and you will also need a local installation of the [Google Cloud SDK](https://cloud.google.com/sdk/).  If you are not yet an ISB-CGC user, please sign-in to the [web-app](https://isb-cgc.appspot.com) and request a GCP.  Once you have access to a GCP, make sure to enable Compute Engine and Deployment Manager and install the Cloud SDK.  (See steps 2 and 3 in this [Quickstart guide](https://cloud.google.com/deployment-manager/quickstart-guide)).
 
-##Template Parameters
+Once you've installed the Cloud SDK, you'll want to become familiar with two important command-line tools:
+* [gcloud](https://cloud.google.com/sdk/gcloud/) for managing your GCP resources; and
+* [gsutil](https://cloud.google.com/storage/docs/gsutil?hl=en) for access Google Cloud Storage (GCS) from the command line.
+
+You can check your current configuration using 
+```
+gcloud config list
+```
+where in particular you'll want to double-check that the values for account and project are correct.  You can also change your default region and zone for GCE using the **gcloud** command.  (For help, type ``gcloud config --help``.)
+
+##CWL Deployment Template Parameters
 
 The template parameters can be found in cwl-node.yaml under "properties", and consist of the following values:
 
