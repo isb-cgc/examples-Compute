@@ -52,9 +52,9 @@ def index_bam_files(file_list, storage, job_name, output_bucket, logs_bucket, gr
 						pass
 
 				# Write the new file path to the file list
-				f.write(new_path)
+				f.write("{new_path}\n".format(new_path=new_path)
 			else:
-				f.write(isb_cgc_bam_file)
+				f.write("{isb_cgc_bam_file}\n".format(isb_cgc_bam_file=isb_cgc_bam_file)
 	f.close()
 			
 	# create the job config file
