@@ -20,10 +20,12 @@ bam_pattern = '^.*\.bam$'
 endpoint = "datafilenamekey_list"
 
 def index_bam_files(file_list, storage, job_name, output_bucket, logs_bucket, grid_computing_tools_dir, copy_original_bams, dry_run):
-	print copy_original_bams, dry_run
 	# Create a text file containing the file list (one file per line)
-	text_file_list = tempfile.NamedTemporaryFile(delete=False)
-	config_file = tempfile.NamedTemporaryFile(delete=False)
+	if not os.path.exists("{home}/samtools-index-config".format(os.environ['HOME'])):
+		os.makedirs("{home}/samtools-index-config".format(os.environ['HOME']))
+
+	text_file_list = tempfile.NamedTemporaryFile(dir="{home}/samtools-index-config".format(os.environ['HOME']), delete=False)
+	config_file = tempfile.NamedTemporaryFile(dir="{home}/samtools-index-config".format(os.environ['HOME']), delete=False)
 	
 	with open(text_file_list.name, 'w') as f:
 		for isb_cgc_bam_file in file_list:
