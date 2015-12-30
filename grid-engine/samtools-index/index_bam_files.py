@@ -127,16 +127,14 @@ if __name__ == "__main__":
 	if "cohort_id" in args:
 		params = {
 			"cohort_id": str(args.cohort_id),
-			"token": auth_object.access_token
 		}
 		file_list = generate_file_list(url, params)
 		
 	elif "sample_barcode" in args:
 		params = {
 			"sample_barcode": sample_barcode,
-			"token": auth_token
 		}
-		file_list = generate_file_list_from_sample(url, params)
+		file_list = generate_file_list(url, params)
 	
 	if len(file_list) > 0:
 		# run the indexing job
