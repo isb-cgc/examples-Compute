@@ -4,6 +4,7 @@ class: CommandLineTool
 description: "BioBloomTools BioBloomMaker tool"
 
 requirements:
+  - import: ../biobloomcategorizer/filter-files-schema-def.yml
   - class: DockerRequirement
     dockerPull: gcr.io/isb-cgc/bbt:v2
   - class: ExpressionEngineRequirement

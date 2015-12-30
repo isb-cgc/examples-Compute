@@ -28,11 +28,51 @@ outputs:
     type: File
     source: "#build_transcriptome_index.stdout"
 
-  - id: "#single_end_alignment_outputs"
+  - id: "#fusions_reads"
+    type: File
+    source: "#run_single_end_alignment.fusions_reads"
+
+  - id: "#fusions"
+    type: File
+    source: "#run_single_end_alignment.fusions"
+
+  - id: "#gene_id_counts"
+    type: File
+    source: "#run_single_end_alignment.gene_id_counts"
+
+  - id: "#gene_name_counts"
+    type: File
+    source: "#run_single_end_alignment.gene_name_counts"
+
+  - id: "#interchromosomal_fusions"
+    type: File
+    source: "#run_single_end_alignment.interchromosomal_fusions"
+
+  - id: "#intrachromosomal_fusions"
+    type: File
+    source: "#run_single_end_alignment.intrachromosomal_fusions"
+
+  - id: "#junction_id_counts"
+    type: File
+    source: "#run_single_end_alignment.junction_id_counts"
+
+  - id: "#junction_name_counts"
+    type: File
+    source: "#run_single_end_alignment.junction_name_counts"
+
+  - id: "#transcript_id_counts"
+    type: File
+    source: "#run_single_end_alignment.transcript_id_counts"
+
+  - id: "#transcript_name_counts"
+    type: File
+    source: "#run_single_end_alignment.transcript_name_counts"
+
+  - id: "#single_end_alignment_output_bam_file"
     type: 
       type: array
       items: File
-    source: "#run_single_end_alignment.outputs"
+    source: "#run_single_end_alignment.output_bam"
 
   - id: "#stdout"
     type: File
@@ -81,6 +121,16 @@ steps:
       - { id: "#run_single_end_alignment.output_bam_file", source: "#single_alignment_output_bam_file" }
 
     outputs: 
-      - { id: "#run_single_end_alignment.outputs" }
+      - { id: "#run_single_end_alignment.fusions_reads" }
+      - { id: "#run_single_end_alignment.fusions" }
+      - { id: "#run_single_end_alignment.gene_id_counts" }
+      - { id: "#run_single_end_alignment.gene_name_counts" }
+      - { id: "#run_single_end_alignment.interchromosomal_fusions" }
+      - { id: "#run_single_end_alignment.intrachromosomal_fusions" }
+      - { id: "#run_single_end_alignment.junction_id_counts" }
+      - { id: "#run_single_end_alignment.junction_name_counts" }
+      - { id: "#run_single_end_alignment.transcript_id_counts" }
+      - { id: "#run_single_end_alignment.transcript_name_counts" }
+      - { id: "#run_single_end_alignment.output_bam" }
       - { id: "#run_single_end_alignment.stdout" }
  

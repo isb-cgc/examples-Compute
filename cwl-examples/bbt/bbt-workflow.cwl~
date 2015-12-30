@@ -32,7 +32,7 @@ outputs:
 
 steps:
   - id: "#index_fasta_files"
-    run: { import: ../samtools/samtools-faidx/samtools-faidx.cwl }
+    run: { import: ../samtools/samtools-faidx.cwl }
     inputs: 
       - { id: "#index_fasta_files.fasta_sequence", source: "#filter_fasta_sequence_file" }
     outputs:
