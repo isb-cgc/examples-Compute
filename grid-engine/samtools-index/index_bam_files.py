@@ -90,7 +90,7 @@ def generate_file_list(url, params):
 				if re.search(bam_pattern, datafilenamekey) is not None :
 					file_list.append(datafilenamekey)
 		else:
-			print "No BAM files found for sample %s" % (sample_barcode)
+			print "No BAM files found"
 			
 	return file_list
 
