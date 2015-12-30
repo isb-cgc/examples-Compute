@@ -21,7 +21,6 @@ endpoint = "datafilenamekey_list"
 
 def index_bam_files(file_list, storage, job_name, output_bucket, logs_bucket, grid_computing_tools_dir, copy_original_bams, dry_run):
 	print copy_original_bams, dry_run
-	exit(0)
 	# Create a text file containing the file list (one file per line)
 	text_file_list = tempfile.NamedTemporaryFile(delete=False)
 	config_file = tempfile.NamedTemporaryFile(delete=False)
@@ -85,8 +84,7 @@ def generate_file_list(url, params):
 		print "There was a problem with the format of the request -- exiting"
 		exit(-1)
 	else:
-		print response
-		if "datafilenamekeys" in response.keys() > 0:
+		if response["count"] > 0:
 			for datafilenamekey in response["datafilenamekeys"]:
 				if re.search(bam_pattern, datafilenamekey) is not None :
 					file_list.append(datafilenamekey)
@@ -129,16 +127,14 @@ if __name__ == "__main__":
 	if "cohort_id" in args:
 		params = {
 			"cohort_id": str(args.cohort_id),
-			"token": auth_object.access_token
 		}
 		file_list = generate_file_list(url, params)
 		
 	elif "sample_barcode" in args:
 		params = {
 			"sample_barcode": sample_barcode,
-			"token": auth_token
 		}
-		file_list = generate_file_list_from_sample(url, params)
+		file_list = generate_file_list(url, params)
 	
 	if len(file_list) > 0:
 		# run the indexing job
