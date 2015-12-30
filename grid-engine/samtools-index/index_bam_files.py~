@@ -51,6 +51,7 @@ def index_bam_files(file_list, storage, job_name, output_bucket, logs_bucket, gr
 						storage.copy(sourceBucket=source_bucket, sourceObject=source_object, destinationBucket=destination_bucket, destinationObject=my_bam_file, body={}).execute()				
 					except: 
 						# not sure what this will throw yet
+						print "couldn't copy bam file from isb-cgc to personal cloud storage!"
 						exit(-1)
 
 				# Write the new file path to the file list
