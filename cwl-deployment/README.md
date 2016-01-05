@@ -25,10 +25,8 @@ Note that you may need to run ``gcloud auth login`` to authenticate yourself (al
 Your home directory should be ``/home/<your-user-name>`` and you may want to create a subdirectory for any github repos you plan to clone, including this one:
 
 ```
-mkdir git_home
-cd git_home
-mkdir isb-cgc
-cd isb-cgc
+mkdir -p git_home/isb-cgc
+cd git_home/isb-cgc
 git clone https://github.com/isb-cgc/examples-Compute.git
 ```
 
@@ -69,14 +67,14 @@ Once you're satisfied with your template, you can create your deployment using t
 cd examples-Compute/cwl-deployment
 gcloud deployment-manager deployments create <deployment-name> --config cwl-node.yaml
 ```
-You can name your deployment anything you want, for example ``my-cwl-deployment``.  The deployment should only take a few seconds, and you should see something like this:
+You can name your deployment anything you want, for example ``my-cwl-deployment``.  The deployment should only take a few seconds, after which you should see something like this:
 ```
 Waiting for create operation-1451593204105-528376149ff28-e4c3b5ee-1dff694f...done.
 Create operation operation-1451593204105-528376149ff28-e4c3b5ee-1dff694f completed successfully.
 NAME      TYPE                 STATE      ERRORS
 cwl-node  compute.v1.instance  COMPLETED  -
 ```
-Note that the name of the VM (``cwl-node``) that you have created is different from the name of the *deployment* given on the "create" command line.  The VM name was specified in the cwl-node.yaml file.
+Note that the name of the VM (``cwl-node``) that you have created is different from the name of the *deployment* given as part of the ``create`` command.  The VM name was specified in the ``cwl-node.yaml`` file.
 You can ``list`` your existing deployments using the ``gcloud deployment-manager deployments list`` command, and you can use the ``describe`` command to get more information about a specific deployment:
 ```
 dr_breteuil@isb-cgc-01-0001:~/git_home/examples-Compute/cwl-deployment$ gcloud deployment-manager deployments describe my-cwl-deployment
@@ -125,7 +123,11 @@ The ``cwl-node-startup.sh`` script created a Unix group called ``docker``, and i
 ```
 sudo gpasswd -a ${USER} docker
 ```
-You can use ``whoami`` first to verify your username.
+You can use ``whoami`` first to verify your username.  Now, restart docker:
+```
+sudo service docker stop ; sleep 5s; sudo service docker start
+```
+(Note that ``sudo service docker restart`` should work, but might fail, hence the inelegant suggestion above.)
 
 ##Clean up
 
