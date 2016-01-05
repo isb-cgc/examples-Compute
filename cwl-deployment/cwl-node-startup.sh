@@ -13,3 +13,4 @@ groupadd docker
 # Create the data directory used by the example
 mkdir -p /cwl-data/workflows/inputs 
 chgrp -R docker /cwl-data
+chmod -R g+w /cwl-data
