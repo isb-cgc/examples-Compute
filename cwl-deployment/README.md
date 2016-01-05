@@ -121,12 +121,19 @@ You will be prompted to generate SSH keys, with an optional passphrase.  Once yo
 
 You can also see this VM from the [Google Console](https://console.developers.google.com/home/dashboard) under Compute Engine > VM instances.  You can also "STOP" and "DELETE" VM instances from the Console as well as see the machine's IP address and SSH directly to it.
 
+The ``cwl-node-startup.sh`` script created a Unix group called ``docker``, and in order to run the sample workflows, you will need to add your user id to this group and restart the docker service.  This will be a one-time operation on this VM:
+```
+sudo gpasswd -a ${USER} docker
+```
+You can use ``whoami`` first to verify your username.
+
 ##Clean up
 
 Once you are done with your deployment, make sure to delete it to avoid being charged for resources.  In general, it is best practice to delete unused resources to save costs and free up quota.
 
-To delete the deployment, run:
+To delete the deployment (and the underlying VM), run:
 ```
 gcloud deployment-manager deployments delete my-cwl-deployment
 ```
+
 
