@@ -75,7 +75,7 @@ NAME      TYPE                 STATE      ERRORS
 cwl-node  compute.v1.instance  COMPLETED  -
 ```
 Note that the name of the VM (``cwl-node``) that you have created is different from the name of the *deployment* given as part of the ``create`` command.  The VM name was specified in the ``cwl-node.yaml`` file.
-You can ``list`` your existing deployments using the ``gcloud deployment-manager deployments list`` command, and you can use the ``describe`` command to get more information about a specific deployment:
+You can list your existing deployments using the ``gcloud deployment-manager deployments list`` command, and you can use the ``describe`` command to get more information about a specific deployment:
 ```
 dr_breteuil@isb-cgc-01-0001:~/git_home/examples-Compute/cwl-deployment$ gcloud deployment-manager deployments describe my-cwl-deployment
 fingerprint: HnoYlFuZSbgmSC5NLrvgmw==
@@ -117,13 +117,13 @@ gcloud compute ssh cwl-node
 ```
 You will be prompted to generate SSH keys, with an optional passphrase.  Once you are logged in to the cwl-node VM, your prompt should look like ``<user-name>@cwl-node:~$`` rather than ``<user-name>@<project-id>:`` which was your prompt in the Cloud Shell.  You now have a much more powerful VM with more disk and more RAM at your disposal.  
 
-You can also see this VM from the [Google Console](https://console.developers.google.com/home/dashboard) under Compute Engine > VM instances.  You can also "STOP" and "DELETE" VM instances from the Console as well as see the machine's IP address and SSH directly to it.
+You can see this VM from the [Google Console](https://console.developers.google.com/home/dashboard) under Compute Engine > VM instances.  From the Console dashboard, you can "STOP" and "DELETE" VM instances, see the machine's IP address and SSH directly to it.
 
 The ``cwl-node-startup.sh`` script created a Unix group called ``docker``, and in order to run the sample workflows, you will need to add your user id to this group and restart the docker service.  This will be a one-time operation on this VM:
 ```
 sudo gpasswd -a ${USER} docker
 ```
-You can use ``whoami`` first to verify your username.  Now, restart docker:
+You can use ``echo $USER`` or ``whoami`` verify your username.  Now, restart docker:
 ```
 sudo service docker stop ; sleep 5s; sudo service docker start
 ```
