@@ -16,7 +16,7 @@ mkdir -p /git_home/isb-cgc
 cd /git_home/isb-cgc
 git clone https://github.com/isb-cgc/examples-Compute.git
 chgrp -R docker /git_home
-chgrp -R g+w /git_home
+chmod -R g+w /git_home
 
 # Create the /cwl-data directory used by the CWL examples
 mkdir -p /cwl-data/workflows/inputs 
