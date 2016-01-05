@@ -14,10 +14,4 @@ To run the Fastahack tool, run the following command in this directory:
 cwl-runner fastahack.cwl fastahack-inputs.json
 ```
 
-Or, if you need sudo privileges to run docker commands:
-
-```
-sudo cwl-runner fastahack.cwl fastahack-inputs.json
-```
-
 For more information about Fastahack, refer to the [documentation](https://github.com/ekg/fastahack).

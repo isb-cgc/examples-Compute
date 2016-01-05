@@ -46,10 +46,4 @@ To run the SNAPR workflow, run the following command in this directory:
 cwl-runner snapr-workflow.cwl snapr-workflow.json
 ```
 
-Or, if you need sudo privileges to run docker commands:
-
-```
-sudo cwl-runner snapr-workflow.cwl snapr-workflow-inputs.json
-```
-
 For more information about SNAPR, refer to the [documentation](https://price.systemsbiology.org/research/snapr).

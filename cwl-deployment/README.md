@@ -122,8 +122,9 @@ You can see this VM from the [Google Console](https://console.developers.google.
 The ``cwl-node-startup.sh`` script created a Unix group called ``docker``, and in order to run the sample workflows, you will need to add your user id to this group and restart the docker service.  This will be a one-time operation on this VM:
 ```
 sudo gpasswd -a ${USER} docker
+newgrp docker
 ```
-You can use ``echo $USER`` or ``whoami`` verify your username.  Now, restart docker:
+You can use ``echo $USER`` or ``whoami`` to verify your username.  Now, restart docker:
 ```
 sudo service docker stop ; sleep 5s; sudo service docker start
 ```

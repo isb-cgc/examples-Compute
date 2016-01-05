@@ -16,7 +16,7 @@ gsutil/
 To run the data staging workflow, run the following command in this directory:
 
 ```
-sudo cwl-runner gsutil-staging-workflow.cwl <example-files-list>.json
+cwl-runner gsutil-staging-workflow.cwl <example-files-list>.json
 ```
 
 Note that some files are duplicated across different examples.  You may wish to remove duplicates from the example file lists if you plan on running more than one of the examples on the same machine.
