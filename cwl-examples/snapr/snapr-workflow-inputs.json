@@ -1,11 +1,11 @@
 {
   "fasta_sequence_file": {
     "class": "File",
-    "path": "/cwl-data/workflows/snapr/inputs/Homo_sapiens.GRCh38.dna.primary_assembly.fa"
+    "path": "/cwl-data/workflows/inputs/h_sapiens.fa"
   },
   "gene_set_file": {
     "class": "File",
-    "path": "/cwl-data/workflows/snapr/inputs/Homo_sapiens.GRCh38.79.gtf"
+    "path": "/cwl-data/workflows/inputs/h_sapiens.gtf"
   },
   "bam_file": {
     "class": "File",
