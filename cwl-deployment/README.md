@@ -130,6 +130,12 @@ sudo service docker stop ; sleep 5s; sudo service docker start
 ```
 (Note that ``sudo service docker restart`` should work, but might fail, hence the inelegant suggestion above.)
 
+Finally, you need to also authenticate on this VM:
+```
+gcloud auth login
+```
+which will prompt you to go to a link in your browser where you will be asked to allow the Cloud SDK to access and manage information about you and your Google Cloud Platform resources.  Once you click on the ``Allow`` button, you will get a code that you should copy and paste back into your Cloud Shell window.
+
 ##Clean up
 
 Once you are done with your deployment, make sure to delete it to avoid being charged for resources.  In general, it is best practice to delete unused resources to save costs and free up quota.
