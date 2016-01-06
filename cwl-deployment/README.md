@@ -54,8 +54,6 @@ The template parameters can be found in ``examples-Compute/cwl-deployment/cwl-no
 
 - **startupScript**:  The startup script to run on the VM when it boots for the first time; currently set to point to the script "cwl-node-startup.sh" in this directory.
 
-- **serviceAcctEmail**:  The service account email to use; currently set to "default". 
-
 The "name" of the VM (listed under "resources") may also be changed as well.  This will be the name of the VM that's created for you as part of the deployment, and can be used to access the VM using the "gcloud" tool.  
 
 Any of the above values can be modified to suit your needs.  However, it should be noted that the above settings were developed with the examples in mind, so change them only if you know what you are doing.
