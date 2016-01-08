@@ -10,7 +10,7 @@ cd ~
 git clone https://github.com/isb-cgc/examples-Compute.git
 mkdir -p .elasticluster/config.d
 touch .elasticluster/config
-cp examples-Compute/grid-engine/elasticluster/config.d/* ./elasticluster/config.d
+cp examples-Compute/grid-engine/elasticluster/config.d/* ./.elasticluster/config.d
 ```
 
 You will also need to provide some additional configuration values for each configuration file in ./elasticluster/config.d.  Refer to the [Elasticluster configuration documentation](http://elasticluster.readthedocs.org/en/latest/configure.html) for more information about each required configuration parameter.
