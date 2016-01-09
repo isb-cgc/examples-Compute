@@ -61,3 +61,5 @@ target/
 # tilde files
 *.*~
 
+grid-engine/samtools-index/privatekey.json
+
