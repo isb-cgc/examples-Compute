@@ -19,7 +19,6 @@ cd isb_compute_examples
 git clone https://github.com/gc3-uzh-ch/elasticluster.git 
 cd elasticluster && python setup.py install && cd ..
 # install isb code repos
-git clone https://github.com/isb-cgc/examples-Compute.git
 git clone https://github.com/isb-cgc/ISB-CGC-Webapp.git
 git clone https://github.com/googlegenomics/grid-computing-tools.git
 # set up elasticluster configuration
