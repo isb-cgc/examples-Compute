@@ -3,7 +3,7 @@ import os
 import json
 import tempfile
 import argparse
-import isb_auth
+import isb_auth, isb_curl
 import requests
 import subprocess
 from shutil import copyfile
@@ -108,7 +108,8 @@ if __name__ == "__main__":
 	args = parser.parse_args()
 	
 	# authenticate to ISB-CGC
-	token = isb_auth.get_credentials().access_token
+	isb_auth.get_credentials()
+	token = isb_curl.get_access_token()
 
 	# create the cloud storage API object
 	storage_credentials = GoogleCredentials.get_application_default()
