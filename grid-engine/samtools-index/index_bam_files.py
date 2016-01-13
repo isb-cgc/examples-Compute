@@ -4,7 +4,7 @@ import json
 import tempfile
 import argparse
 import isb_auth
-import isb_curl
+import requests
 import subprocess
 from shutil import copyfile
 from urllib import urlencode
@@ -12,12 +12,6 @@ from googleapiclient.discovery import build
 from oauth2client.client import GoogleCredentials
 
 # This script will find all BAM files associated with a given cohort or sample, then copy those BAM files to the user's cloud storage space for indexing.
-
-api_root = 'https://mvm-dot-isb-cgc.appspot.com/_ah/api'  #TODO: Update this with the production URL
-api_name = 'cohort_api'
-api_ver = 'v1';
-bam_pattern = '^.*\.bam$'
-endpoint = "datafilenamekey_list"
 
 def index_bam_files(file_list, storage, job_name, output_bucket, logs_bucket, grid_computing_tools_dir, copy_original_bams, dry_run):
 	# Create a text file containing the file list (one file per line)
@@ -76,20 +70,17 @@ def index_bam_files(file_list, storage, job_name, output_bucket, logs_bucket, gr
 		copyfile(text_file_list.name, "%s-isb-cgc-bam-files.txt" % job_name)
 		
 	
-def generate_file_list(url, params):
+def generate_file_list(url):
+	bam_pattern = '^.*\.bam$'
 	file_list = []
-	try:
-		response = isb_curl.get(url, params)
-	except:
-		print "There was a problem with the format of the request -- exiting"
-		exit(-1)
+	response = requests.get(url)
+
+	if response.get("count", 0) > 0:
+		for datafilenamekey in response["datafilenamekeys"]:
+			if re.search(bam_pattern, datafilenamekey) is not None :
+				file_list.append(datafilenamekey)
 	else:
-		if response["count"] > 0:
-			for datafilenamekey in response["datafilenamekeys"]:
-				if re.search(bam_pattern, datafilenamekey) is not None :
-					file_list.append(datafilenamekey)
-		else:
-			print "No BAM files found"
+		print "No BAM files found"
 			
 	return file_list
 
@@ -116,26 +107,21 @@ if __name__ == "__main__":
 	args = parser.parse_args()
 	
 	# authenticate to ISB-CGC
-	auth_object = isb_auth.get_credentials()
+	token = isb_auth.get_credentials().access_token
 
 	# create the cloud storage API object
 	storage_credentials = GoogleCredentials.get_application_default()
 	storage = build("storage", "v1", credentials=storage_credentials)
 	
 	# generate a list of files to index
-	url = '/'.join( (api_root, api_name, api_ver, endpoint) )
+	url = 'https://mvm-dot-isb-cgc.appspot.com/_ah/api/cohort_api/v1/datafilenamekey_list/?{query_param}={query_param_value}'  #TODO: Update this with the production URL
 	if "cohort_id" in args:
-		params = {
-			"cohort_id": str(args.cohort_id),
-		}
-		file_list = generate_file_list(url, params)
+		url.format(query_param="cohort_id", query_param_value=args.cohort_id)
 		
 	elif "sample_barcode" in args:
-		params = {
-			"sample_barcode": sample_barcode,
-		}
-		file_list = generate_file_list(url, params)
+		url.format(query_param="sample_barcode", query_param_value=args.sample_barcode)
 	
+	file_list = generate_file_list(url)
 	if len(file_list) > 0:
 		# run the indexing job
 		index_bam_files(file_list, storage, args.job_name, args.output_bucket, args.logs_bucket, args.grid_computing_tools_dir, args.copy_original_bams, args.dry_run)
