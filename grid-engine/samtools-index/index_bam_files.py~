@@ -74,7 +74,8 @@ def generate_file_list(url):
 	bam_pattern = '^.*\.bam$'
 	file_list = []
 	response = requests.get(url)
-
+	print response.json()
+	print response.content
 	if response.json()["count"] > 0:
 		for datafilenamekey in response["datafilenamekeys"]:
 			if re.search(bam_pattern, datafilenamekey) is not None :

@@ -70,10 +70,10 @@ def index_bam_files(file_list, storage, job_name, output_bucket, logs_bucket, gr
 		copyfile(text_file_list.name, "%s-isb-cgc-bam-files.txt" % job_name)
 		
 	
-def generate_file_list(url):
+def generate_file_list(url, headers):
 	bam_pattern = '^.*\.bam$'
 	file_list = []
-	response = requests.get(url)
+	response = requests.get(url, headers)
 	print response.json()
 	print response.content
 	if response.json()["count"] > 0:
@@ -116,13 +116,16 @@ if __name__ == "__main__":
 	
 	# generate a list of files to index
 	url = 'https://mvm-dot-isb-cgc.appspot.com/_ah/api/cohort_api/v1/datafilenamekey_list/?{query_param}={query_param_value}'  #TODO: Update this with the production URL
+	headers = {
+		"Authorization": "Bearer {token}".format(token=token)
+	}
 	if "cohort_id" in args:
 		url.format(query_param="cohort_id", query_param_value=args.cohort_id)
 		
 	elif "sample_barcode" in args:
 		url.format(query_param="sample_barcode", query_param_value=args.sample_barcode)
 	
-	file_list = generate_file_list(url)
+	file_list = generate_file_list(url, headers)
 	if len(file_list) > 0:
 		# run the indexing job
 		index_bam_files(file_list, storage, args.job_name, args.output_bucket, args.logs_bucket, args.grid_computing_tools_dir, args.copy_original_bams, args.dry_run)
