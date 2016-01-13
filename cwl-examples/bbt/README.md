@@ -33,10 +33,4 @@ To run the BBT workflow, run the following command in this directory:
 cwl-runner bbt-workflow.cwl bbt-workflow-inputs.json
 ```
 
-Or, if you need sudo privileges to run docker commands:
-
-```
-sudo cwl-runner bbt-workflow.cwl bbt-workflow-inputs.json
-```
-
 For more information about BBT, refer to the [documentation](https://github.com/bcgsc/biobloom/).

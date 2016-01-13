@@ -2,11 +2,11 @@
   "biobloommaker_output_prefix": "h_pylori",
   "filter_fasta_sequence_file": {
     "class": "File",
-    "path": "/cwl-data/workflows/bbt/inputs/helicobacter_pylori.fa"
+    "path": "/cwl-data/workflows/inputs/h_pylori.fa"
   },
   "biobloomcategorizer_output_prefix": "h_pylori",
   "input_sequence": {
     "class": "File",
-    "path": "/cwl-data/workflows/bbt/inputs/Homo_sapiens.GRCh38.dna.primary_assembly.fa"
+    "path": "/cwl-data/workflows/inputs/h_sapiens.fa"
   }
 }

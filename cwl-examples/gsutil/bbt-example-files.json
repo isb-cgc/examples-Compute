@@ -6,7 +6,7 @@
     },
     {
       "url": "gs://isb-cgc-open/cwl-examples/helicobacter_pylori.fa",
-      "destination": "/cwl-data/workflows/bbt/inputs/h_pylori.fa"
+      "destination": "/cwl-data/workflows/inputs/h_pylori.fa"
     }
   ]
 }

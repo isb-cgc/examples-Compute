@@ -2,7 +2,13 @@
 
 This repo contains computational examples for use in conjunction with the ISB-CGC platform.
 
-There are currently three subdirectories, with more to be added as additional use-cases are defined and implemented:
-*  **cwl-deployment**: instructions on how to get set up on a single GCE VM to run CWL workflows; 
-*  **cwl-examples**: several examples of specific CWL workflows;
-*  **grid-engine**: instructions on using Elasticluster to create clusters of GCE VMs running Grid Engine.
+Current examples include how to run CWL workflows on a single VM, and how to use Grid Engine.  Additional examples will be added as new use-cases are defined and implemented.
+
+
+* **Using CWL (Common Workflow Language)**
+  *  **cwl-deployment**: instructions on how to get set up on a single GCE VM to run CWL workflows; 
+  *  **cwl-examples**: several examples of specific CWL workflows
+
+
+* **Using Grid Engine**  
+  *  **grid-engine**: instructions on using Elasticluster to create clusters of GCE VMs running Grid Engine.
