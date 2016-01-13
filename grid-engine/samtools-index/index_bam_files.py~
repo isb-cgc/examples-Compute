@@ -75,7 +75,7 @@ def generate_file_list(url):
 	file_list = []
 	response = requests.get(url)
 
-	if response.get("count", 0) > 0:
+	if response.json()["count"] > 0:
 		for datafilenamekey in response["datafilenamekeys"]:
 			if re.search(bam_pattern, datafilenamekey) is not None :
 				file_list.append(datafilenamekey)
