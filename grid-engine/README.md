@@ -13,7 +13,35 @@ touch .elasticluster/config
 cp examples-Compute/grid-engine/elasticluster/config.d/* ./.elasticluster/config.d
 ```
 
-You will also need to provide some additional configuration values for each configuration file in ./elasticluster/config.d.  Refer to the [Elasticluster configuration documentation](http://elasticluster.readthedocs.org/en/latest/configure.html) for more information about each required configuration parameter.
+Alternatively, you can just run the script "workstation-setup.sh" in this directory, which will install elasticluster for you in a virtualenv, along with all of its dependencies.
+
+You will also need to provide some additional configuration values for each configuration file in ./elasticluster/config.d.  The required manual configuration can be found in the individual files with in ~/.elasticluster/config.d, as follows:
+
+```
+...
+[cloud/google-cloud]
+...
+gce_project_id=<YOUR GOOGLE PROJECT ID HERE> 
+gce_client_id=<YOUR GOOGLE CLIENT ID HERE>
+gce_client_secret=<YOUR GOOGLE CLIENT SECRET HERE>
+...
+[login/google-login]
+image_user=<YOUR LOGIN USER NAME HERE>
+image_user_sudo=root
+image_sudo=True
+user_key_name=elasticluster
+user_key_private=~/.ssh/google_compute_engine # be sure to check that these exist
+user_key_public=~/.ssh/google_compute_engine.pub
+...
+```
+
+"image_user" will be the Linux username created for you on the Grid Engine cluster.
+
+You can find your GCE project id, client id, and client secret by logging into the Google Developer's Console (console.developers.google.com).  Your project id can be seen in the top-right corner of the Developer's Console.  For more information about how to find your client id and client secret, see the documentation [here](http://googlegenomics.readthedocs.org/en/latest/use_cases/setup_gridengine_cluster_on_compute_engine/index.html#index-obtaining-client-id-and-client-secrets).
+
+You will also need to make sure that you have generated an SSH keypair for accessing GCE.  By default, these keys are stored in ~/.ssh/google_compute_engine and ~/.ssh/google_compute_engine.pub.  For more information about how to generate the SSH keypair, see the documentation [here](http://googlegenomics.readthedocs.org/en/latest/use_cases/setup_gridengine_cluster_on_compute_engine/index.html#index-generating-ssh-keypair). 
+
+Refer to the [Elasticluster configuration documentation](http://elasticluster.readthedocs.org/en/latest/configure.html) for more information about each required configuration parameter.
 
 ###Step 2: Create the Grid Engine Cluster
 
