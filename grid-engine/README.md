@@ -52,12 +52,12 @@ elasticluster start <cluster-name>
 
 The "cluster-name" should match the name of a particular cluster in one of the configuration files.  The cluster names can be found in the "cluster" sections of each configuration file.  For example, the "samtools-index" cluster name can be found on the line "[cluster/samtools-index]" in [examples-Compute/grid-engine/elasticluster/config.d/samtools-index.config](elasticluster/config.d/samtools-index.config).
 
-###Step 3: Copy the setup script to the Grid Engine master 
+###Step 3: Copy the grid engine master setup script to the Grid Engine master 
 
 Once the setup has run successfully to completion, copy the setup script to the Grid Engine master node:
 ```
 elasticluster sftp <cluster-name> << 'EOF'
-put examples-Compute/grid-engine/isb-cgc-setup.sh
+put examples-Compute/grid-engine/grid-engine-master-setup.sh
 EOF
 ```
 
@@ -70,7 +70,7 @@ elasticluster ssh <cluster-name>
 
 Then run the setup script that you just copied to the master:
 ```
-./isb-cgc-setup.sh
+./grid-engine-master-setup.sh
 ```
 ###Step 5: Run the examples
 
