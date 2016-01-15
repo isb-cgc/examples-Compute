@@ -29,8 +29,6 @@ workflow/
 ```
 In general, each CommandLineTool represents a single step in the outer Workflow.  For more information about the relationship between CommandLineTool and Workflow, see the [CWL (Draft 2) specification](http://common-workflow-language.github.io/draft-2/).
 
-In order to run these examples on Google Compute Engine, you may use the deployment template located in the [cwl-deployment github repo](https://github.com/isb-cgc/examples-Compute/tree/master/cwl-deployment), which is preconfigured to run the examples.  Instructions for creating the deployment can be found in the README file in that repo.
-
 The general format of the command for running CWL workflows is as follows:
 ```
 cwl-runner [OPTIONS] cwl-workflow.cwl cwl-workflow-inputs.json
@@ -38,9 +36,9 @@ cwl-runner [OPTIONS] cwl-workflow.cwl cwl-workflow-inputs.json
 
 You can use the "--debug" flag for cwl-runner in order to produce verbose output for troubleshooting issues.  For more information about all of the possible options to cwl-runner, see the [cwl-tool source code](https://github.com/common-workflow-language/cwltool/blob/master/cwltool/main.py).
 
-Once you've created a GCE VM for the examples, ssh to it:
+Once you've created a GCE VM for the examples, you can ssh to it to run them.  Below is a command you can run to connect to the instance that was created in the "Setup" section of this document:
 ```
-gcloud compute ssh <cwl-node-name>
+gcloud compute ssh cwl-node
 ```
 Once you've created your GCE VM and ssh'ed to it, clone this repo into your home directory so that you can run the examples:
 ```
