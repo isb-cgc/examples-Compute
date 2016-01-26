@@ -7,8 +7,10 @@ wget https://bootstrap.pypa.io/get-pip.py && sudo python get-pip.py && rm get-pi
 sudo pip install virtualenv
 sudo gcloud -q components update
 # set up a virtualenv for elasticluster
-mkdir virtualenv
-cd virtualenv
+if [[ ! -d ~/virtualenv ]]; then
+	mkdir ~/virtualenv
+fi
+cd ~/virtualenv
 virtualenv elasticluster
 source elasticluster/bin/activate 
 pip install --upgrade google-api-python-client
@@ -17,7 +19,9 @@ cd elasticluster
 git clone https://github.com/gc3-uzh-ch/elasticluster.git src
 cd src && python setup.py install && cd ..
 # set up elasticluster configuration
-mkdir ~/.elasticluster && touch ~/.elasticluster/config
+if [[ ! -d ~/.elasticluster ]]; then
+	mkdir ~/.elasticluster && touch ~/.elasticluster/config
+fi
 cp -R elasticluster/config.d ~/.elasticluster
 
 
