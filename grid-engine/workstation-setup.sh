@@ -26,6 +26,9 @@ if [[ ! -d ~/.elasticluster ]]; then
 fi
 cd $SCRIPT_DIR
 cp -R elasticluster/config.d ~/.elasticluster
+if [[ ! -a ~/.ssh/google_compute_engine || ! -a ~/.ssh/google_compute_engine.pub ]]; then
+	gcloud compute config-ssh
+fi
 
 
 
