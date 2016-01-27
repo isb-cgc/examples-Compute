@@ -123,6 +123,7 @@ if __name__ == "__main__":
 	headers = {
 		"Authorization": "Bearer {token}".format(token=credentials.access_token)
 	}
+	print args
 	if "cohort_id" in args:
 		url.format(query_param="cohort_id", query_param_value=args.cohort_id)
 		file_list = generate_file_list(url, headers)
