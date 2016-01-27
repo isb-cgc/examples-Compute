@@ -13,6 +13,7 @@ from googleapiclient.discovery import build
 from oauth2client.client import GoogleCredentials
 
 # This script will find all BAM files associated with a given cohort or sample, then copy those BAM files to the user's cloud storage space for indexing.
+bam_pattern = '^.*\.bam$'
 
 def index_bam_files(file_list, storage, job_name, output_bucket, logs_bucket, grid_computing_tools_dir, copy_original_bams, dry_run):
 	# Create a text file containing the file list (one file per line)
@@ -72,7 +73,6 @@ def index_bam_files(file_list, storage, job_name, output_bucket, logs_bucket, gr
 		
 	
 def generate_file_list(url, headers):
-	bam_pattern = '^.*\.bam$'
 	file_list = []
 	response = requests.get(url, headers)
 	print response.json()
@@ -137,7 +137,8 @@ if __name__ == "__main__":
 		items_list = storage.objects().list(bucket=bucket, prefix=prefix).execute()["items"]
 		file_list = []
 		for item in items_list:
-			file_list.append("gs://{bucket}/{item}".format(bucket=bucket, item=item["name"]))
+			if re.search(bam_pattern, item):
+				file_list.append("gs://{bucket}/{item}".format(bucket=bucket, item=item["name"]))
 	
 	if len(file_list) > 0:
 		# run the indexing job
