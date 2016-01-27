@@ -129,7 +129,7 @@ if __name__ == "__main__":
 	elif "sample_barcode" in args:
 		url.format(query_param="sample_barcode", query_param_value=args.sample_barcode)
 		file_list = generate_file_list(url, headers)
-	else:
+	elif "gcs_dir_url" in args:
 		bucket = args.gcs_dir_object.split('/')[2]
 		prefix = '/'.join(args.gcs_dir_object.split('/')[3:])
 		items_list = storage.objects().list(bucket=bucket, prefix=prefix).execute()["items"]
