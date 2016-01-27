@@ -14,7 +14,6 @@ fi
 cd ~/virtualenv
 virtualenv elasticluster
 source elasticluster/bin/activate 
-pip install httplib2 requests
 pip install --upgrade google-api-python-client
 # install elasticluster
 cd elasticluster

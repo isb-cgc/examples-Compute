@@ -110,8 +110,8 @@ if __name__ == "__main__":
 	args = parser.parse_args()
 	
 	# authenticate to ISB-CGC
-	#credentials = isb_auth.get_credentials()
-	credentials = GoogleCredentials.get_application_default()
+	credentials = isb_auth.get_credentials()
+	#credentials = GoogleCredentials.get_application_default()
 	credentials.authorize(httplib2.Http())
 	if credentials.access_token_expired:
 		credentials.refresh(httplib2.Http())
@@ -137,7 +137,7 @@ if __name__ == "__main__":
 		items_list = storage.objects().list(bucket=bucket, prefix=prefix).execute()["items"]
 		file_list = []
 		for item in items_list:
-			if re.search(bam_pattern, item):
+			if re.search(bam_pattern, item["name"]):
 				file_list.append("gs://{bucket}/{item}".format(bucket=bucket, item=item["name"]))
 	
 	if len(file_list) > 0:
