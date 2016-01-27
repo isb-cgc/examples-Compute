@@ -124,15 +124,15 @@ if __name__ == "__main__":
 		"Authorization": "Bearer {token}".format(token=credentials.access_token)
 	}
 	print args
-	if "cohort_id" in args:
+	if args.cohort_id is not None:
 		url.format(query_param="cohort_id", query_param_value=args.cohort_id)
 		file_list = generate_file_list(url, headers)
-	elif "sample_barcode" in args:
+	elif args.sample_barcode is not None:
 		url.format(query_param="sample_barcode", query_param_value=args.sample_barcode)
 		file_list = generate_file_list(url, headers)
-	elif "gcs_dir_url" in args:
-		bucket = args.gcs_dir_object.split('/')[2]
-		prefix = '/'.join(args.gcs_dir_object.split('/')[3:])
+	elif args.gcs_dir_url is not None:
+		bucket = args.gcs_dir_url.split('/')[2]
+		prefix = '/'.join(args.gcs_dir_url.split('/')[3:])
 		items_list = storage.objects().list(bucket=bucket, prefix=prefix).execute()["items"]
 		file_list = []
 		for item in items_list:
