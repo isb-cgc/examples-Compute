@@ -3,6 +3,7 @@ import os
 import json
 import tempfile
 import argparse
+import http2lib
 import isb_auth, isb_curl
 import requests
 import subprocess
@@ -99,6 +100,7 @@ if __name__ == "__main__":
 	group1 = parser.add_mutually_exclusive_group(required=True)
 	group1.add_argument('--cohort_id', type=int, help='The cohort ID for which you\'d like to index associated BAM files.')
 	group1.add_argument('--sample_barcode', type=str, help='The sample barcode for which you\'d like to index associated BAM files.')
+	group1.add_argument('--gcs_dir_url', type=str, help='A URL to a directory in GCS to copy files from (rather than going through the API)')
 	group2 = parser.add_mutually_exclusive_group(required=True)
 	group2.add_argument('--copy_original_bams', action='store_true', default=False,
 		help='If set, will copy the original bam files from the ISB-CGC cloud storage space to the output bucket.  Otherwise a list of the original BAM locations in GCS will be generated in the current working directory.  Default: False')
@@ -108,12 +110,13 @@ if __name__ == "__main__":
 	args = parser.parse_args()
 	
 	# authenticate to ISB-CGC
-	isb_auth.get_credentials()
-	token = isb_curl.get_access_token()
+	credentials = isb_auth.get_credentials()
+	credentials.authorize(httplib2.Http())
+	if credentials.access_token_expired:
+		credentials.refresh(httplib2.Http())
 
-	# create the cloud storage API object
-	storage_credentials = GoogleCredentials.get_application_default()
-	storage = build("storage", "v1", credentials=storage_credentials)
+	# create the cloud storage and isb API objects
+	storage = build("storage", "v1", http=credentials.authorize(httplib2.Http()))
 	
 	# generate a list of files to index
 	url = 'https://mvm-dot-isb-cgc.appspot.com/_ah/api/cohort_api/v1/alt_datafilenamekey_list/?{query_param}={query_param_value}'  #TODO: Update this with the production URL
@@ -122,11 +125,18 @@ if __name__ == "__main__":
 	}
 	if "cohort_id" in args:
 		url.format(query_param="cohort_id", query_param_value=args.cohort_id)
-		
+		file_list = generate_file_list(url, headers)
 	elif "sample_barcode" in args:
 		url.format(query_param="sample_barcode", query_param_value=args.sample_barcode)
+		file_list = generate_file_list(url, headers)
+	else:
+		bucket = args.gcs_dir_object.split('/')[2]
+		prefix = '/'.join(args.gcs_dir_object.split('/')[3:])
+		items_list = storage.objects().list(bucket=bucket, prefix=prefix).execute()["items"]
+		file_list = []
+		for item in items_list:
+			file_list.append("gs://{bucket}/{item}".format(bucket=bucket, item=item["name"]))
 	
-	file_list = generate_file_list(url, headers)
 	if len(file_list) > 0:
 		# run the indexing job
 		index_bam_files(file_list, storage, args.job_name, args.output_bucket, args.logs_bucket, args.grid_computing_tools_dir, args.copy_original_bams, args.dry_run)
