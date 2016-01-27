@@ -3,7 +3,7 @@ import os
 import json
 import tempfile
 import argparse
-import http2lib
+import httplib2
 import isb_auth, isb_curl
 import requests
 import subprocess
