@@ -16,6 +16,8 @@ from oauth2client.client import GoogleCredentials
 bam_pattern = '^.*\.bam$'
 
 def index_bam_files(file_list, storage, job_name, output_bucket, logs_bucket, grid_computing_tools_dir, copy_original_bams, dry_run):
+	print dry_run
+	exit(0)
 	# Create a text file containing the file list (one file per line)
 	if not os.path.exists("{home}/samtools-index-config".format(home=os.environ['HOME'])):
 		os.makedirs("{home}/samtools-index-config".format(home=os.environ['HOME']))
@@ -142,5 +144,7 @@ if __name__ == "__main__":
 	if len(file_list) > 0:
 		# run the indexing job
 		index_bam_files(file_list, storage, args.job_name, args.output_bucket, args.logs_bucket, args.grid_computing_tools_dir, args.copy_original_bams, args.dry_run)
+	else:
+		print "No BAM files found"
 
 
