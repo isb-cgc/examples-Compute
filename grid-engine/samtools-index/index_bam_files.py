@@ -53,7 +53,10 @@ def index_bam_files(file_list, storage, job_name, output_bucket, logs_bucket, gr
 				# Write the new file path to the file list
 				f.write("{new_path}\n".format(new_path=new_path))
 			else:
-				f.write("{isb_cgc_bam_file}\n".format(isb_cgc_bam_file=isb_cgc_bam_file))
+				if dry_run:
+					print "would have created an index for file {isb_cgc_bam_file}".format(isb_cgc_bam_file=isb_cgc_bam_file)
+				else:
+					f.write("{isb_cgc_bam_file}\n".format(isb_cgc_bam_file=isb_cgc_bam_file))
 			
 	# create the job config file
 	with open(config_file.name, 'w') as g:
@@ -99,23 +102,21 @@ if __name__ == "__main__":
 	group1.add_argument('--cohort_id', type=int, help='The cohort ID for which you\'d like to index associated BAM files.')
 	group1.add_argument('--sample_barcode', type=str, help='The sample barcode for which you\'d like to index associated BAM files.')
 	group1.add_argument('--gcs_dir_url', type=str, help='A URL to a directory in GCS to copy files from (rather than going through the API)')
-	group2 = parser.add_mutually_exclusive_group(required=True)
-	group2.add_argument('--copy_original_bams', action='store_true', default=False,
+	parser.add_argument('--copy_original_bams', action='store_true', default=False,
 		help='If set, will copy the original bam files from the ISB-CGC cloud storage space to the output bucket.  Otherwise a list of the original BAM locations in GCS will be generated in the current working directory.  Default: False')
-	group2.add_argument('--dry_run', action='store_true', default=False,
+	parser.add_argument('--dry_run', action='store_true', default=False,
 		help='If set, will not copy or index any BAM files, but will display the copy and index operations that would have occurred during a real run. Default: False')
 	
 	args = parser.parse_args()
 	
 	# authenticate to ISB-CGC
 	credentials = isb_auth.get_credentials()
-	#credentials = GoogleCredentials.get_application_default()
 	http = credentials.authorize(httplib2.Http())
 	if credentials.access_token_expired:
 		credentials.refresh(http)
 
 	# create the cloud storage and isb API objects
-	storage = build("storage", "v1", http=credentials.authorize(httplib2.Http()))
+	storage = build("storage", "v1", http=http)
 	
 	# generate a list of files to index
 	url = 'https://mvm-dot-isb-cgc.appspot.com/_ah/api/cohort_api/v1/datafilenamekey_list?{query_param}={query_param_value}'  #TODO: Update this with the production URL
