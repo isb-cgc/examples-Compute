@@ -16,8 +16,6 @@ from oauth2client.client import GoogleCredentials
 bam_pattern = '^.*\.bam$'
 
 def index_bam_files(file_list, storage, job_name, output_bucket, logs_bucket, grid_computing_tools_dir, copy_original_bams, dry_run):
-	print dry_run
-	exit(0)
 	# Create a text file containing the file list (one file per line)
 	if not os.path.exists("{home}/samtools-index-config".format(home=os.environ['HOME'])):
 		os.makedirs("{home}/samtools-index-config".format(home=os.environ['HOME']))
@@ -121,7 +119,7 @@ if __name__ == "__main__":
 	storage = build("storage", "v1", http=http)
 	
 	# generate a list of files to index
-	url = 'https://mvm-dot-isb-cgc.appspot.com/_ah/api/cohort_api/v1/datafilenamekey_list?{query_param}={query_param_value}'  #TODO: Update this with the production URL
+	url = 'https://isb-cgc.appspot.com/_ah/api/cohort_api/v1/datafilenamekey_list?{query_param}={query_param_value}'  #TODO: Update this with the production URL
 	headers = {
 		"Authorization": "Bearer {token}".format(token=isb_curl.get_access_token())
 	}
