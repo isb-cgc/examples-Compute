@@ -74,11 +74,9 @@ def index_bam_files(file_list, storage, job_name, output_bucket, logs_bucket, gr
 	
 def generate_file_list(url, headers):
 	file_list = []
-	response = requests.get(url, headers)
-	print response.json()
-	print response.content
+	response = requests.get(url, headers=headers)
 	if response.json()["count"] > 0:
-		for datafilenamekey in response["datafilenamekeys"]:
+		for datafilenamekey in response.json()["datafilenamekeys"]:
 			if re.search(bam_pattern, datafilenamekey) is not None :
 				file_list.append(datafilenamekey)
 	else:
@@ -110,26 +108,26 @@ if __name__ == "__main__":
 	args = parser.parse_args()
 	
 	# authenticate to ISB-CGC
-	#credentials = isb_auth.get_credentials()
-	credentials = GoogleCredentials.get_application_default()
-	credentials.authorize(httplib2.Http())
+	credentials = isb_auth.get_credentials()
+	#credentials = GoogleCredentials.get_application_default()
+	http = credentials.authorize(httplib2.Http())
 	if credentials.access_token_expired:
-		credentials.refresh(httplib2.Http())
+		credentials.refresh(http)
 
 	# create the cloud storage and isb API objects
 	storage = build("storage", "v1", http=credentials.authorize(httplib2.Http()))
 	
 	# generate a list of files to index
-	url = 'https://mvm-dot-isb-cgc.appspot.com/_ah/api/cohort_api/v1/datafilenamekey_list/?{query_param}={query_param_value}'  #TODO: Update this with the production URL
+	url = 'https://mvm-dot-isb-cgc.appspot.com/_ah/api/cohort_api/v1/datafilenamekey_list?{query_param}={query_param_value}'  #TODO: Update this with the production URL
 	headers = {
-		"Authorization": "Bearer {token}".format(token=credentials.access_token)
+		"Authorization": "Bearer {token}".format(token=isb_curl.get_access_token())
 	}
 
 	if args.cohort_id is not None:
-		url.format(query_param="cohort_id", query_param_value=args.cohort_id)
+		url = url.format(query_param="cohort_id", query_param_value=args.cohort_id)
 		file_list = generate_file_list(url, headers)
 	elif args.sample_barcode is not None:
-		url.format(query_param="sample_barcode", query_param_value=args.sample_barcode)
+		url = url.format(query_param="sample_barcode", query_param_value=args.sample_barcode)
 		file_list = generate_file_list(url, headers)
 	elif args.gcs_dir_url is not None:
 		bucket = args.gcs_dir_url.split('/')[2]
