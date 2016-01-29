@@ -120,7 +120,7 @@ if __name__ == "__main__":
 	storage = build("storage", "v1", http=credentials.authorize(httplib2.Http()))
 	
 	# generate a list of files to index
-	url = 'https://mvm-dot-isb-cgc.appspot.com/_ah/api/cohort_api/v1/alt_datafilenamekey_list/?{query_param}={query_param_value}'  #TODO: Update this with the production URL
+	url = 'https://isb-cgc.appspot.com/_ah/api/cohort_api/v1/alt_datafilenamekey_list/?{query_param}={query_param_value}'  #TODO: Update this with the production URL
 	headers = {
 		"Authorization": "Bearer {token}".format(token=credentials.access_token)
 	}
