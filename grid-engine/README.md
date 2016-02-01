@@ -78,8 +78,9 @@ chmod u+x grid-engine-master-setup.sh
 
 You should now be ready to run the example scripts on your Grid Engine cluster.  For example, to run the "samtools-index" operation, run the following commands:
 ```
+source ~/virtualenv/isb_cgc_venv/bin/activate
 cd ~/examples-Compute/grid-engine/samtools-index
-python index_bam_files.py [OPTIONS]
+PYTHONPATH=$PYTHONPATH:~/ISB-CGC-Webapp/scripts python index_bam_files.py [OPTIONS]
 ```
 
 For more information about each of the required options for the script, run "python index_bam_files.py -h".
