@@ -97,7 +97,7 @@ if __name__ == "__main__":
 	parser.add_argument('--logs_bucket', required=True, 
 		help='The destination bucket for all logs.  Must be a valid Google Cloud Storage bucket URL, i.e. gs://bucket_name. Required')
 	parser.add_argument('--grid_computing_tools_dir', required=True,
-		help='Path to the root directory of the "grid-computing-tools" repository. Required')
+		help='Path to the root directory of the "grid-computing-tools" repository. If you used the grid-engine-master-setup.sh script to install the dependencies, this value should be ~/grid-computing-tools.  Required')
 	group1 = parser.add_mutually_exclusive_group(required=True)
 	group1.add_argument('--cohort_id', type=int, help='The cohort ID for which you\'d like to index associated BAM files.')
 	group1.add_argument('--sample_barcode', type=str, help='The sample barcode for which you\'d like to index associated BAM files.')
