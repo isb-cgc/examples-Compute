@@ -2,20 +2,19 @@
 
 ##Setup Instructions
 
-###Step 1: Install and Configure Elasticluster
+###Step 0: Read the ISB-CGC Compute Documentation
 
-Follow the steps for installing Elasticluster in the [Elasticluster installation documentation](http://elasticluster.readthedocs.org/en/latest/install.html).  Then, set up the Elasticluster configuration directory with the following commands:
+A link is coming soon... please check back again later.
+
+###Step 1: Install and Configure Elasticluster on a Compute Engine VM
+
+The easiest way to set up a VM to run the Grid Engine examples is to run some variation of the following command:
 ```
-cd ~
-git clone https://github.com/isb-cgc/examples-Compute.git
-mkdir -p .elasticluster/config.d
-touch .elasticluster/config
-cp examples-Compute/grid-engine/elasticluster/config.d/* ./.elasticluster/config.d
+gcloud compute instances create grid-engine-workstation --startup-script-url https://raw.githubusercontent.com/isb-cgc/examples-Compute/master/grid-engine/workstation-setup.sh
 ```
+The above command will install all of the necessary dependencies and github repos, and partially configure Elasticluster.  Be sure to read the [documentation](https://cloud.google.com/sdk/gcloud/reference/compute/instances/create) for the `gcloud compute instances create` command to figure out what additional command line flags you will need to configure your workstation.  Alternatively, you can create an instance under "Products and Services" -> "Compute Engine" in the Google Developer's Console.
 
-Alternatively, you can just run the script "workstation-setup.sh" in this directory, which will install elasticluster for you in a virtualenv, along with all of its dependencies.
-
-You will also need to provide some additional configuration values for each configuration file in ./elasticluster/config.d.  The required manual configuration can be found in the individual files with in ~/.elasticluster/config.d, as follows:
+You will also need to provide some additional configuration values for each configuration file created by the workstation setup script in ./elasticluster/config.d.  The required manual configuration can be found in the individual files with in ~/.elasticluster/config.d, as follows:
 
 ```
 ...
@@ -35,17 +34,19 @@ user_key_public=~/.ssh/google_compute_engine.pub
 ...
 ```
 
+"gce_project_id" will be the name of the Google Cloud Project that you want to create your instance in.  This is usually a string of all lowercase letters, numbers, and dashes.
+
+"gce_client_id" and "gce_client_secret" refer to an existing Oauth2 client identity in your Google Cloud Project.  If you haven't already, you can create a new Oauth2 client identity through the Google Developer's Console.  To do this, click on the "Products and Services" dropdown in the upper left-hand corner of the screen, then click "API Manager".  Once the API Manager screen loads, click "Credentials" -> "New Credentials" -> "Oauth2 client id", and then follow all the prompts.  For more information about how to find your client id and client secret, see the documentation [here](http://googlegenomics.readthedocs.org/en/latest/use_cases/setup_gridengine_cluster_on_compute_engine/index.html#index-obtaining-client-id-and-client-secrets).
+
 "image_user" will be the Linux username created for you on the Grid Engine cluster.
 
-You can find your GCE project id, client id, and client secret by logging into the Google Developer's Console (console.developers.google.com).  Your project id can be seen in the top-right corner of the Developer's Console.  For more information about how to find your client id and client secret, see the documentation [here](http://googlegenomics.readthedocs.org/en/latest/use_cases/setup_gridengine_cluster_on_compute_engine/index.html#index-obtaining-client-id-and-client-secrets).
-
-You will also need to make sure that you have generated an SSH keypair for accessing GCE.  By default, these keys are stored in ~/.ssh/google_compute_engine and ~/.ssh/google_compute_engine.pub.  For more information about how to generate the SSH keypair, see the documentation [here](http://googlegenomics.readthedocs.org/en/latest/use_cases/setup_gridengine_cluster_on_compute_engine/index.html#index-generating-ssh-keypair). 
+You will also need to make sure that you have generated an SSH keypair for accessing GCE.  By default, these keys are stored in ~/.ssh/google_compute_engine and ~/.ssh/google_compute_engine.pub.  This step is already done for you in the workstation setup script.  For reference, see the documentation [here](http://googlegenomics.readthedocs.org/en/latest/use_cases/setup_gridengine_cluster_on_compute_engine/index.html#index-generating-ssh-keypair). 
 
 Refer to the [Elasticluster configuration documentation](http://elasticluster.readthedocs.org/en/latest/configure.html) for more information about each required configuration parameter.
 
 ###Step 2: Create the Grid Engine Cluster
 
-To create a Grid Engine cluster, run the following command:
+To create a Grid Engine cluster, run the following command on your workstation VM:
 ```
 elasticluster start <cluster-name>
 ```
@@ -70,13 +71,14 @@ elasticluster ssh <cluster-name>
 
 Then run the setup script that you just copied to the master:
 ```
+chmod u+x grid-engine-master-setup.sh
 ./grid-engine-master-setup.sh
 ```
 ###Step 5: Run the examples
 
 You should now be ready to run the example scripts on your Grid Engine cluster.  For example, to run the "samtools-index" operation, run the following commands:
 ```
-cd examples-Compute/grid-engine/samtools-index
+cd ~/examples-Compute/grid-engine/samtools-index
 python index_bam_files.py [OPTIONS]
 ```
 
