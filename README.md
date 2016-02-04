@@ -6,7 +6,6 @@ Current examples include how to run CWL workflows on a single VM, and how to use
 
 
 * **Using CWL (Common Workflow Language)**
-  *  **cwl-deployment**: instructions on how to get set up on a single GCE VM to run CWL workflows; 
   *  **cwl-examples**: several examples of specific CWL workflows
 
 
