@@ -1,0 +1,83 @@
+{
+	"name": "snapr-test",
+	"cluster": {
+		"project_id": "isb-cgc-01-0001",
+		"zone": "us-central1-c",
+		"node_num": 2,
+		"network": "default",
+		"machine_type": "n1-highmem-16",
+		"cluster_node_disk_size": 200,
+		"cluster_nfs_volume_size": "200Gi",
+		"tear_down": "false"
+	},
+	"jobs": [
+			{
+				"name": "copy_snapr_index_script", 
+				"container_image": "google/cloud-sdk",
+				"container_script": "gsutil -o Credentials:gs_oauth2_refresh_token=$(cat /data-access/refresh-token) -o Oauth2:oauth2_refresh_retries=50 cp gs://snapr-workflow-scripts/snapr-index.sh share",
+				"restart_policy": "OnFailure"
+			},
+			{
+				"name": "copy_snapr_transcriptome_script",
+				"container_image": "google/cloud-sdk",
+				"container_script": "gsutil -o Credentials:gs_oauth2_refresh_token=$(cat /data-access/refresh-token) -o Oauth2:oauth2_refresh_retries=50 cp gs://snapr-workflow-scripts/snapr-transcriptome.sh share",
+				"restart_policy": "OnFailure"
+			},
+			{
+				"name": "copy_snapr_alignment_script",
+				"container_image": "google/cloud-sdk",
+				"container_script": "gsutil -o Credentials:gs_oauth2_refresh_token=$(cat /data-access/refresh-token) -o Oauth2:oauth2_refresh_retries=50 cp gs://snapr-workflow-scripts/snapr-single-alignment.sh share",
+				"restart_policy": "OnFailure"
+			},
+			{
+				"name": "copy_genome_file",
+				"container_image": "google/cloud-sdk",
+				"container_script": "gsutil -o Credentials:gs_oauth2_refresh_token=$(cat /data-access/refresh-token) -o Oauth2:oauth2_refresh_retries=50 cp gs://isb-cgc-open/cwl-examples/Homo_sapiens.GRCh38.dna.primary_assembly.fa share",
+				"restart_policy": "OnFailure"
+			},
+			{
+				"name": "copy_annotation_file",
+				"container_image": "google/cloud-sdk",
+				"container_script": "gsutil -o Credentials:gs_oauth2_refresh_token=$(cat /data-access/refresh-token) -o Oauth2:oauth2_refresh_retries=50 cp gs://isb-cgc-open/cwl-examples/Homo_sapiens.GRCh38.79.gtf share",
+				"restart_policy": "OnFailure"
+			},
+			{
+				"name": "copy_bam_file",
+				"container_image": "google/cloud-sdk",
+				"container_script": "gsutil -o Credentials:gs_oauth2_refresh_token=$(cat /data-access/refresh-token) -o Oauth2:oauth2_refresh_retries=50 cp gs://isb-cgc-open/ccle/BLCA/RNA-Seq/G20466.5637.2.bam share",
+				"restart_policy": "OnFailure"
+			},
+			{
+				"name": "alter_script_permissions",
+				"parents": ["copy_snapr_index_script", "copy_snapr_transcriptome_script", "copy_snapr_alignment_script"],
+				"container_image": "ubuntu",
+				"container_script": "chmod a+x share/*.sh"
+			},
+			{
+				"name": "build_genome_index",
+				"parents": ["copy_genome_file", "alter_script_permissions"],
+				"container_image": "isbdcampbell/snapr_1.0dev57_v4",
+				"container_script": "./share/snapr-index.sh"
+			},
+			{
+				"name": "build_transcriptome_index",
+				"parents": ["copy_genome_file", "copy_annotation_file", "alter_script_permissions"],
+				"container_image": "isbdcampbell/snapr_1.0dev57_v4",
+				"container_script": "./share/snapr-transcriptome.sh"
+			}, 
+			{
+				"name": "single_end_alignment",
+				"parents": ["build_genome_index", "build_transcriptome_index", "alter_script_permissions"],
+				"container_image": "isbdcampbell/snapr_1.0dev57_v4",
+				"container_script": "./share/snapr-single-alignment.sh"
+			},
+			{
+				"name": "retrieve_results",
+				"parents": ["single_end_alignment"],
+				"container_image": "google/cloud-sdk",
+				"container_script": "gsutil cp share/G20466.5637.2.aligned.bam gs://snapr-workflow-outputs"
+			}
+		]
+	
+}
+
