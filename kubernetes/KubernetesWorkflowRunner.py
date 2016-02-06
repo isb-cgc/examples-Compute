@@ -2,45 +2,44 @@ import re
 import sys
 import json
 import random
+import pprint
+import colander
 import httplib2
 import argparse
 import subprocess
 from copy import deepcopy
-from toil.job import Job, JobGraphDeadlockException
-from jsonspec.validators import load #jsonspec is licensed under BSD
-from jsonspec.reference import resolve
 from KubernetesToilJobs import *
-import pprint
+#from KubernetesWorkflowSchema import *
+from toil.job import Job, JobGraphDeadlockException
 
 class KubernetesWorkflowRunner():
 	def __init__(self, workflow_spec, job_store):
 		self.workflow_spec = workflow_spec
-		self.workflow_name = self.workflow_spec.keys()[0]
+		self.workflow_name = self.workflow_spec["name"]
 		self.job_store = job_store
 		self.toil_jobs = {}
 
 		# schema validation
-		#self._validate_schema()
-
+		self._validate_schema()
+		exit(0)
 		# assemble the workflow
 		self._construct_kubernetes_toil_workflow()
 
 		# graph (DAG) validation
-		workflow_name = workflow_spec.keys()[0]
 		try:
-			self.toil_jobs[workflow_name].checkJobGraphAcylic() # should be "checkJobGraphAcyclic" -- this is a real typo in the API!
+			self.toil_jobs[self.workflow_name].checkJobGraphAcylic() # should be "checkJobGraphAcyclic" -- this is a real typo in the API!
 		except JobGraphDeadlockException as e:
 			exit(-1)
 
 		try: 
-			self.toil_jobs[workflow_name].checkJobGraphConnected()
+			self.toil_jobs[self.workflow_name].checkJobGraphConnected()
 		except JobGraphDeadlockException as e:
 			exit(-1)
 		
 	def _construct_kubernetes_toil_workflow(self):
 		# create a root job which will be the parent of all jobs beneath it
-		workflow_object = self.workflow_spec[self.workflow_name]
-		cluster_config = self.workflow_spec[self.workflow_name]["cluster"]
+		#workflow_object = self.workflow_spec[self.workflow_name]
+		cluster_config = self.workflow_spec["cluster"]
 		
 		args =  [ self.workflow_name, cluster_config["project_id"], cluster_config["zone"], cluster_config["node_num"], cluster_config["machine_type"], cluster_config["cluster_node_disk_size"], cluster_config["cluster_nfs_volume_size"] ]
 
@@ -58,25 +57,29 @@ class KubernetesWorkflowRunner():
 	
 		# first create all of the root jobs
 		child_jobs = []
-		for job_name in workflow_object["jobs"].keys():
-			job_object = workflow_object["jobs"][job_name]
-			if "parents" not in job_object.keys() or job_object["parents"] is None or len(job_object["parents"]) == 0:
-				self._add_kubernetes_toil_job(self.toil_jobs[self.workflow_name], job_name, job_object)
+		for job in self.workflow_spec["jobs"]:
+			if "parents" not in job.keys() or job["parents"] is None or len(job["parents"]) == 0:
+				self._add_kubernetes_toil_job(self.toil_jobs[self.workflow_name], job["name"], job_object)
 			else:
-				child_jobs.append(job_name)
+				child_jobs.append(job["name"])
 	
 		# add the child jobs (iteratively)
+		def find_job(job_name):
+			for job in self.toil_jobs:
+				if job["name"] == job_name:
+					return job
+
 		while len(child_jobs) > 0:
 			job_name = child_jobs.pop(0)
 			parents_not_found = 0
-			job_object = workflow_object["jobs"][job_name]
-			for parent in job_object["parents"]:
+			job = find_job(job_name)
+			for parent in job["parents"]:
 				if parent not in self.toil_jobs.keys():
 					parents_not_found += 1
 
 			if parents_not_found == 0:
-				for parent in job_object["parents"]:
-					self._add_kubernetes_toil_job(self.toil_jobs[parent], job_name, job_object)
+				for parent in job["parents"]:
+					self._add_kubernetes_toil_job(self.toil_jobs[parent], job_name, job)
 
 			else:
 				child_jobs.append(job_name)
@@ -94,100 +97,23 @@ class KubernetesWorkflowRunner():
 		if not parent.hasChild(self.toil_jobs[job_name]):
 			parent.addChild(self.toil_jobs[job_name])
 
-	def _validate_schema(self): # currently broken
-		workflow_schema = {
-			"description": "Kubernetes Workflow Graph Schema",
-			"type": "object",
-			"additionalProperties": { "$ref": "#/definitions/workflow" },
-			"definitions": {
-				"workflow": {
-					"type": "object",
-					"properties": { "$ref": "#/definitions/workflow_properties" },
-				},
-				"workflow_properties": {
-					"cluster": {
-						"description": "Kubernetes cluster configuration",
-						"type": "object",
-						"properties": { "$ref": "#/definitions/cluster_properties" },
-						"required": True
-					},
-					"jobs": {
-						"description": "Kubernetes Jobs",
-						"type": "object",
-						"additionalProperties": { "$ref": "#/definitions/job" },
-						"required": True
-					}
-				},
-				"cluster_properties": {
-					"project_id": {
-						"type": "string",
-						"required": True
-					},
-					"zone": {
-						"type": "string",
-						"required": True
-					},
-					"node_num": {
-						"type": "int",
-						"required": True
-					},
-					"network": {
-						"type": "string",
-						"required": False
-					},
-					"machine_type": {
-						"type": "string",
-						"required": True
-					},
-					"cluster_node_disk_size": {
-						"type": "int",
-						"required": True
-
-					},
-					"cluster_nfs_volume_size": {
-						"type": "string",
-						"required": True
-					},
-					"logging_service": {
-						"type": "string",
-						"required": False
-				
-					},
-					"monitoring_service": {
-						"type": "string",
-						"required": False
-					}
-				},
-				"job": {
-					"type": "object",
-					"properties": { "$ref": "#/definitions/job_properties" } 
-				},
-				"job_properties": {
-					"container_image": {
-						"type": "string",
-						"required": True
-					},
-					"container_script": {
-						"type": "string",
-						"required": True
-					},
-					"parents": {
-						"type": "array", 
-						"items": {
-							"type": "string"
-						},
-						"required": False
-					}
-				}
-			}
-		}
-
-		validator = load(workflow_schema)
-		validator.validate(self.workflow_spec)
+	def _validate_schema(self): 
 		try:
-			validator.validate(self.workflow_spec)
-		except: # what kind of exception?
+			jobs_list = self.workflow_spec["jobs"]
+		except KeyError as e:
+			print "There was a problem getting the list of jobs from the workflow spec: {reason}".format(reason=e)
 			exit(-1)
+		else:
+			try:
+				workflow = Workflow(jobs_list=jobs_list)
+			except:
+				exit(-1)
+			else:
+				try: 
+					workflow.deserialize(self.workflow_spec)
+				except colander.Invalid as e:
+					print "Couldn't validate the workflow schema: {reason}".format(reason=e)
+					exit(-1)
 
 	def start(self):
 		options = Job.Runner.getDefaultOptions(self.job_store)
