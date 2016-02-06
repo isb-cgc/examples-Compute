@@ -15,13 +15,13 @@ from toil.job import Job, JobGraphDeadlockException
 class KubernetesWorkflowRunner():
 	def __init__(self, workflow_spec, job_store):
 		self.workflow_spec = workflow_spec
-		self.workflow_name = self.workflow_spec["name"]
+		self.workflow_name = workflow_spec["name"]
 		self.job_store = job_store
 		self.toil_jobs = {}
 
 		# schema validation
 		self._validate_schema()
-		exit(0)
+		
 		# assemble the workflow
 		self._construct_kubernetes_toil_workflow()
 
