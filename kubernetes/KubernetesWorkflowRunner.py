@@ -20,7 +20,7 @@ class KubernetesWorkflowRunner():
 		self.toil_jobs = {}
 
 		# schema validation
-		self._validate_schema()
+		#self._validate_schema()
 		
 		# assemble the workflow
 		self._construct_kubernetes_toil_workflow()
