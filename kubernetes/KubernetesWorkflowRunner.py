@@ -3,7 +3,6 @@ import sys
 import json
 import random
 import pprint
-import colander
 import httplib2
 import argparse
 import subprocess
