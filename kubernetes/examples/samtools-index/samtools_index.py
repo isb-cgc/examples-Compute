@@ -7,30 +7,30 @@ from random import SystemRandom
 
 def create_subworkflow(url, output_bucket):
 	filename = url.split('/')[-1]
-	data_staging_job_name = "stage-file-{filename}".format(filename=filename.replace('.', '-').lower())
 	data_staging_job = {
+		"name": "stage-file-{filename}".format(filename=filename.replace('.', '-').lower()),
 		"container_image": "google/cloud-sdk",
 		"container_script": """if [[ ! -a share/{filename} ]]; then gsutil -o Credentials:gs_oauth2_refresh_token=$(cat /data-access/refresh-token) -o Oauth2:oauth2_refresh_retries=50 cp {url} share; else echo 'File {filename} already staged -- skipping'; fi""".format(url=url, filename=filename),
 		"restart_policy": "OnFailure"
 	}
 	
-	samtools_job_name = "samtools-index-{filename}".format(filename=filename.replace('.', '-').lower())	
 	samtools_job = {
+		"name": "samtools-index-{filename}".format(filename=filename.replace('.', '-').lower()),
 		"container_image": "nasuno/samtools",
 		"container_script": """if [[ ! -a share/{filename}.success ]]; then cd scratch; cp ../share/{filename} .; samtools index {filename}; cp {filename}.bai ../share && touch ../share/{filename}.success; else echo 'File {filename} already indexed -- skipping'; fi""".format(filename=filename),
 		"parents": [data_staging_job_name],
 		"restart_policy": "OnFailure"
 	}
 	
-	cleanup_job_name = "retrieve-index-{filename}".format(filename=filename.replace('.', '-').lower())
 	cleanup_job = {
+		"name": "retrieve-index-{filename}".format(filename=filename.replace('.', '-').lower()),
 		"container_image": "google/cloud-sdk",
 		"container_script": """if [[ -a share/{filename}.bai ]]; then gsutil -o Credentials:gs_oauth2_refresh_token=$(cat /data-access/refresh-token) -o Oauth2:oauth2_refresh_retries=50 cp share/{filename}.bai {destination}; else echo 'Index {filename}.bai not found'; fi""".format(filename=filename, destination=output_bucket),
 		"parents": [samtools_job_name],
 		"restart_policy": "OnFailure"
 	}
 	
-	return [(data_staging_job_name, data_staging_job), (samtools_job_name, samtools_job), (cleanup_job_name, cleanup_job)]
+	return [data_staging_job, samtools_job, cleanup_job]
 	
 def main(args):
 	# set some variables
@@ -58,8 +58,8 @@ def main(args):
 			print "There was a problem with url {url} in the input file".format(url=url)
 		else:
 			subworkflow_jobs = create_subworkflow(url.strip(), args.output_bucket)
-			for job_name, job in subworkflow_jobs:
-				samtools_index_schema["jobs"][job_name] = job
+			for job in subworkflow_jobs:
+				samtools_index_schema["jobs"].append(job)
 	
 	pprint.pprint(samtools_index_schema)
 	workflow_runner = KubernetesWorkflowRunner(samtools_index_schema, "/tmp/samtools-index")
