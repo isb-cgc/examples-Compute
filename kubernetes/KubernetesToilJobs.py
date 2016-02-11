@@ -188,11 +188,6 @@ class KubernetesToilWorkflow(Job):
 		if self.tear_down != "false" and self.tear_down is not False:
 			cleanup = KubernetesToilWorkflowCleanup(self.workflow_name, self.project_id, self.zone)
 			self.addFollowOn(cleanup)
-		#else:
-		#	try:
-		#		subprocess.check_call(["kubectl", "delete", "jobs", "-l", "workflow={job}".format(job=self.workflow_name)])
-		#	except subprocess.CalledProcessError as e:
-		#		filestore.logToMaster("Couldn't delete remaining job objects: {reason}".format(reason=e))
 		
 	def run(self, filestore): 
 		if CREDENTIALS.access_token_expired:
@@ -452,7 +447,7 @@ class KubernetesToilComputeJob(Job):
 					{
 						"name": "{job_name}".format(job_name=self.job_name),
 						"image": container_image,
-						"command": ["bash", "-c", container_script],
+						"command": ["sh", "-c", container_script],
 						"workingDir": "/workflow",
 						"volumeMounts": [
 							{
