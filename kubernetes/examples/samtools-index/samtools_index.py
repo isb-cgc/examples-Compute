@@ -10,14 +10,14 @@ def create_subworkflow(url, output_bucket):
 	data_staging_job = {
 		"name": "stage-file-{filename}".format(filename=filename.replace('.', '-').lower()),
 		"container_image": "google/cloud-sdk",
-		"container_script": """if [[ ! -a share/{filename} ]]; then gsutil -o Credentials:gs_oauth2_refresh_token=$(cat /data-access/refresh-token) -o Oauth2:oauth2_refresh_retries=50 cp {url} share; else echo 'File {filename} already staged -- skipping'; fi""".format(url=url, filename=filename),
+		"container_script": """#!/bin/bash; if [[ ! -a share/{filename} ]]; then gsutil -o Credentials:gs_oauth2_refresh_token=$(cat /data-access/refresh-token) -o Oauth2:oauth2_refresh_retries=50 cp {url} share; else echo 'File {filename} already staged -- skipping'; fi""".format(url=url, filename=filename),
 		"restart_policy": "OnFailure"
 	}
 	
 	samtools_job = {
 		"name": "samtools-index-{filename}".format(filename=filename.replace('.', '-').lower()),
 		"container_image": "nasuno/samtools",
-		"container_script": """if [[ ! -a share/{filename}.success ]]; then cd scratch; cp ../share/{filename} .; samtools index {filename}; cp {filename}.bai ../share && touch ../share/{filename}.success; else echo 'File {filename} already indexed -- skipping'; fi""".format(filename=filename),
+		"container_script": """#!/bin/bash; if [[ ! -a share/{filename}.success ]]; then cd scratch; cp ../share/{filename} .; samtools index {filename}; cp {filename}.bai ../share && touch ../share/{filename}.success; else echo 'File {filename} already indexed -- skipping'; fi""".format(filename=filename),
 		"parents": [data_staging_job["name"]],
 		"restart_policy": "OnFailure"
 	}
@@ -25,7 +25,7 @@ def create_subworkflow(url, output_bucket):
 	cleanup_job = {
 		"name": "retrieve-index-{filename}".format(filename=filename.replace('.', '-').lower()),
 		"container_image": "google/cloud-sdk",
-		"container_script": """if [[ -a share/{filename}.bai ]]; then gsutil -o Credentials:gs_oauth2_refresh_token=$(cat /data-access/refresh-token) -o Oauth2:oauth2_refresh_retries=50 cp share/{filename}.bai {destination}; else echo 'Index {filename}.bai not found'; fi""".format(filename=filename, destination=output_bucket),
+		"container_script": """#!/bin/bash; if [[ -a share/{filename}.bai ]]; then gsutil -o Credentials:gs_oauth2_refresh_token=$(cat /data-access/refresh-token) -o Oauth2:oauth2_refresh_retries=50 cp share/{filename}.bai {destination}; else echo 'Index {filename}.bai not found'; fi""".format(filename=filename, destination=output_bucket),
 		"parents": [samtools_job["name"]],
 		"restart_policy": "OnFailure"
 	}
