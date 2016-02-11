@@ -59,12 +59,12 @@ class KubernetesWorkflowRunner():
 		child_jobs = []
 		for job in self.workflow_spec["jobs"]:
 			if "parents" not in job.keys() or job["parents"] is None or len(job["parents"]) == 0:
-				self._add_kubernetes_toil_job(self.toil_jobs[self.workflow_name], job["name"], job_object)
+				self._add_kubernetes_toil_job(self.toil_jobs[self.workflow_name], job)
 			else:
 				child_jobs.append(job["name"])
 	
 		# add the child jobs (iteratively)
-		def find_job(job_name):
+		def find_job(job["name"]):
 			for job in self.toil_jobs:
 				if job["name"] == job_name:
 					return job
@@ -79,23 +79,23 @@ class KubernetesWorkflowRunner():
 
 			if parents_not_found == 0:
 				for parent in job["parents"]:
-					self._add_kubernetes_toil_job(self.toil_jobs[parent], job_name, job)
+					self._add_kubernetes_toil_job(self.toil_jobs[parent], job)
 
 			else:
 				child_jobs.append(job_name)
 
-	def _add_kubernetes_toil_job(self, parent, job_name, job_object):
-		if job_name not in self.toil_jobs.keys():
+	def _add_kubernetes_toil_job(self, parent, job):
+		if job["name"] not in self.toil_jobs.keys():
 			# create a new job as long as this job doesn't exist yet
-			args = [ self.workflow_name, job_name, job_object["container_image"], job_object["container_script"] ]
+			args = [ self.workflow_name, job["name"], job["container_image"], job["container_script"] ]
 			kwargs = {}
-			if "restart_policy" in job_object.keys():
-				kwargs.update({"restart_policy": job_object["restart_policy"]})
+			if "restart_policy" in job.keys():
+				kwargs.update({"restart_policy": job["restart_policy"]})
 				
-			self.toil_jobs[job_name] = KubernetesToilComputeJob(*args, **kwargs)
+			self.toil_jobs[job["name"]] = KubernetesToilComputeJob(*args, **kwargs)
 
-		if not parent.hasChild(self.toil_jobs[job_name]):
-			parent.addChild(self.toil_jobs[job_name])
+		if not parent.hasChild(self.toil_jobs[job["name"]]):
+			parent.addChild(self.toil_jobs[job["name"]])
 
 	def _validate_schema(self): 
 		try:
