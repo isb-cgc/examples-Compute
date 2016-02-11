@@ -45,7 +45,7 @@ def main(args):
 			"cluster_node_disk_size": args.cluster_node_disk_size,
 			"cluster_nfs_volume_size": args.cluster_nfs_volume_size
 		},
-		"jobs": {}
+		"jobs": []
 	}
 	# generate a Kubernetes workflow schema for the samtools index jobs
 	with open(args.input_files) as f:
