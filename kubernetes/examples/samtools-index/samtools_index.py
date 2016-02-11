@@ -17,7 +17,7 @@ def create_subworkflow(url, output_bucket):
 	samtools_job = {
 		"name": "samtools-index-{filename}".format(filename=filename.replace('.', '-').lower()),
 		"container_image": "nasuno/samtools",
-		"container_script": """if [ ! -f share/{filename}.success ]; then cd scratch; cp ../share/{filename} .; samtools index {filename}; cp {filename}.bai ../share && touch ../share/{filename}.success; else echo 'File {filename} already indexed -- skipping'; fi""".format(filename=filename),
+		"container_script": """if [ ! -f share/{filename}.success ]; then cd scratch; cp ../share/{filename} .; samtools index {filename}; cp {filename}.bai ../share && touch ../share/{filename}.success && rm ../share/{filename}; else echo 'File {filename} already indexed -- skipping'; fi""".format(filename=filename),
 		"parents": [data_staging_job["name"]],
 		"restart_policy": "OnFailure"
 	}
