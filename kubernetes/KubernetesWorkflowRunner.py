@@ -9,7 +9,8 @@ import argparse
 import subprocess
 from copy import deepcopy
 from KubernetesToilJobs import *
-#from KubernetesWorkflowSchema import *
+from jsonspec.validators import load #jsonspec is licensed under BSD
+from jsonspec.reference import resolve
 from toil.job import Job, JobGraphDeadlockException
 
 class KubernetesWorkflowRunner():
@@ -20,7 +21,7 @@ class KubernetesWorkflowRunner():
 		self.toil_jobs = {}
 
 		# schema validation
-		#self._validate_schema()
+		self._validate_schema()
 		
 		# assemble the workflow
 		self._construct_kubernetes_toil_workflow()
@@ -99,21 +100,129 @@ class KubernetesWorkflowRunner():
 
 	def _validate_schema(self): 
 		try:
-			jobs_list = self.workflow_spec["jobs"]
+			jobs = self.workflow_spec["jobs"]
 		except KeyError as e:
-			print "There was a problem getting the list of jobs from the workflow spec: {reason}".format(reason=e)
+			print "There was a problem getting the list of jobs from the workflow specification"
 			exit(-1)
-		else:
-			try:
-				workflow = Workflow(jobs_list=jobs_list)
-			except:
-				exit(-1)
-			else:
-				try: 
-					workflow.deserialize(self.workflow_spec)
-				except colander.Invalid as e:
-					print "Couldn't validate the workflow schema: {reason}".format(reason=e)
-					exit(-1)
+
+		job_names = []
+		for job in jobs:
+			job_names.append(job["name"])
+	
+		if len(job_names) != len(set(job_names)):
+			print "Job names must be unique"
+			exit(-1)
+			
+		for job in jobs:
+			if "parents" in job.keys():
+				for parent in job["parents"]:
+					if parent not in job_names:
+						print "Job '{job_name}' specifies a parent that doesn't exist".format(job_name=job["name"])
+						exit(-1)
+
+		workflow_schema = {
+			"description": "Kubernetes Workflow Graph Schema",
+			"type": "object",
+			"additionalProperties": { "$ref": "#/definitions/workflow" },
+			"definitions": {
+				"workflow": {
+					"name": {
+						"description": "The name of the workflow",
+						"type": "string",
+						"required": True
+					},
+					"cluster": {
+						"description": "Kubernetes cluster configuration",
+						"type": "object",
+						"properties": { "$ref": "#/definitions/cluster_properties" },
+						"required": True
+					},
+					"jobs": {
+						"description": "Container jobs to run on the cluster",
+						"type": "array",
+						"items": {
+							"type": "object"
+						},
+						"properties": { "$ref": "#/definitions/job_properties" },
+						"required": True
+					}
+				},
+				"cluster_properties": {
+					"project_id": {
+						"type": "string",
+						"required": True
+					},
+					"zone": {
+						"type": "string",
+						"required": True
+					},
+					"node_num": {
+						"type": "int",
+						"required": True
+					},
+					"network": {
+						"type": "string",
+						"required": False
+					},
+					"machine_type": {
+						"type": "string",
+						"required": True
+					},
+					"cluster_node_disk_size": {
+						"type": "int",
+						"required": True
+
+					},
+					"cluster_nfs_volume_size": {
+						"type": "string",
+						"required": True
+					},
+					"logging_service": {
+						"type": "string",
+						"required": False
+				
+					},
+					"monitoring_service": {
+						"type": "string",
+						"required": False
+					}
+				},
+				"job_properties": {
+					"name": {
+						"type": "string",
+						"required": True
+					},
+					"container_image": {
+						"type": "string",
+						"required": True
+					},
+					"container_script": {
+						"type": "string",
+						"required": True
+					},
+					"parents": {
+						"type": "array", 
+						"items": {
+							"type": "string",
+							"oneOf": job_names
+						},
+						"required": False
+					}, 
+					"restart_policy": {
+						"type": "string",
+						"oneOf": ["OnFailure", "Always", "Never"],
+						"required": False
+					}
+				}
+			}
+		}
+
+		validator = load(workflow_schema)
+		validator.validate(self.workflow_spec)
+		try:
+			validator.validate(self.workflow_spec)
+		except: # what kind of exception?
+			exit(-1)
 
 	def start(self):
 		options = Job.Runner.getDefaultOptions(self.job_store)
