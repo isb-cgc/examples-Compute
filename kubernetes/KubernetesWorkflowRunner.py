@@ -64,7 +64,7 @@ class KubernetesWorkflowRunner():
 				child_jobs.append(job["name"])
 	
 		# add the child jobs (iteratively)
-		def find_job(job["name"]):
+		def find_job(job_name):
 			for job in self.toil_jobs:
 				if job["name"] == job_name:
 					return job
