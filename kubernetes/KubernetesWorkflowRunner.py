@@ -58,21 +58,16 @@ class KubernetesWorkflowRunner():
 		# first create all of the root jobs
 		child_jobs = []
 		for job in self.workflow_spec["jobs"]:
-			if "parents" not in job.keys() or job["parents"] is None or len(job["parents"]) == 0:
+			if "parents" not in job.keys() or len(job["parents"]) == 0:
 				self._add_kubernetes_toil_job(self.toil_jobs[self.workflow_name], job)
 			else:
-				child_jobs.append(job["name"])
+				child_jobs.append(job)
 	
 		# add the child jobs (iteratively)
-		def find_job(job_name):
-			for job in self.toil_jobs:
-				if job["name"] == job_name:
-					return job
-
 		while len(child_jobs) > 0:
-			job_name = child_jobs.pop(0)
+			job = child_jobs.pop(0)
 			parents_not_found = 0
-			job = find_job(job_name)
+			
 			for parent in job["parents"]:
 				if parent not in self.toil_jobs.keys():
 					parents_not_found += 1
@@ -82,7 +77,7 @@ class KubernetesWorkflowRunner():
 					self._add_kubernetes_toil_job(self.toil_jobs[parent], job)
 
 			else:
-				child_jobs.append(job_name)
+				child_jobs.append(job)
 
 	def _add_kubernetes_toil_job(self, parent, job):
 		if job["name"] not in self.toil_jobs.keys():
