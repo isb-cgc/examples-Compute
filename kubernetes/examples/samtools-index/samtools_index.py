@@ -2,7 +2,7 @@ import sys
 import pprint
 import argparse
 import subprocess
-from workflow_graph_runner import KubernetesWorkflowRunner
+from KubernetesWorkflowRunner import KubernetesWorkflowRunner
 from random import SystemRandom
 
 def create_subworkflow(url, output_bucket):
