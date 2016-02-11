@@ -59,7 +59,7 @@ def main(args):
 		else:
 			subworkflow_jobs = create_subworkflow(url.strip(), args.output_bucket)
 			for job_name, job in subworkflow_jobs:
-				samtools_index_schema["samtools_index"]["jobs"][job_name] = job
+				samtools_index_schema["jobs"][job_name] = job
 	
 	pprint.pprint(samtools_index_schema)
 	workflow_runner = KubernetesWorkflowRunner(samtools_index_schema, "/tmp/samtools-index")
