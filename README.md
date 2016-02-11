@@ -2,11 +2,12 @@
 
 This repo contains computational examples for use in conjunction with the ISB-CGC platform.
 
-Current examples include how to run CWL workflows on a single VM, and how to use Grid Engine.  Additional examples will be added as new use-cases are defined and implemented.
+Current examples include how to run workflows on a cluster using Kubernetes, how to run CWL workflows on a single VM, and how to use Grid Engine.  Additional examples will be added as new use-cases are defined and implemented.
 
+* **Using Kubernetes**
+  *  **kubernetes**: contains code and examples for running an arbitrary DAG specified as either a JSON formatted file or a python dictionary
 
 * **Using CWL (Common Workflow Language)**
-  *  **cwl-deployment**: instructions on how to get set up on a single GCE VM to run CWL workflows; 
   *  **cwl-examples**: several examples of specific CWL workflows
 
 
