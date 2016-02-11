@@ -35,18 +35,17 @@ def create_subworkflow(url, output_bucket):
 def main(args):
 	# set some variables
 	samtools_index_schema = {
-		"samtools_index": {
-			"cluster": {
-				"project_id": args.project_id,
-				"zone": args.zone,
-				"node_num": args.node_num,
-				"network": "default",
-				"machine_type": args.machine_type,
-				"cluster_node_disk_size": args.cluster_node_disk_size,
-				"cluster_nfs_volume_size": args.cluster_nfs_volume_size
-			},
-			"jobs": {}
-		}
+		"name": "samtools-index",
+		"cluster": {
+			"project_id": args.project_id,
+			"zone": args.zone,
+			"node_num": args.node_num,
+			"network": "default",
+			"machine_type": args.machine_type,
+			"cluster_node_disk_size": args.cluster_node_disk_size,
+			"cluster_nfs_volume_size": args.cluster_nfs_volume_size
+		},
+		"jobs": {}
 	}
 	# generate a Kubernetes workflow schema for the samtools index jobs
 	with open(args.input_files) as f:
