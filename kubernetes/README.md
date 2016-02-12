@@ -48,7 +48,7 @@ The workflow runner class accepts a python object matching the following schema:
 }
 ```
 
-The workflow runner class compiles the above schema into a "tree" (specifically a DAG) of containerized processes, which will be posted to the Kubernetes API server on the workflow's dedicated cluster.  A job will not start until all of it's parents have run to completion.  If a job fails and the restart policy for the job is "Never", the workflow will terminate in error.
+The workflow runner class compiles the above schema into a "graph" (specifically a DAG) of containerized processes (aka jobs), which will be posted to the Kubernetes API server on the workflow's dedicated cluster.  Each job in the graph will not start until all of its parents have run to completion.  If a job fails and the restart policy for the job is "Never", the workflow will terminate with an error.
 
 ## Writing container scripts
 
@@ -82,16 +82,16 @@ Once your computational job ends, you can run another job to copy your results t
 gsutil -o Credentials:gs_oauth2_refresh_token=$(cat /data-access/refresh-token) -o Oauth2:oauth2_refresh_retries=50 cp share/my-results.out gs://my-output-bucket
 ```
 
-## Ways to specify a container script
+## How to specify a container script
 
 There are two options for specifying a container script to use for a job in a workflow:
 
-1) You can embed it directly in the workflow specification as a single string, made up of a sequence of semi-colon delimited commands.  Borne Shell is used by default to execute the command string in the container when it runs, so if you want to embed the script inline in the workflow specification document, you must adhere to Bourne Shell syntax.
+1) You can embed it directly in the workflow specification as a single string, made up of a sequence of semi-colon delimited commands.  Bourne Shell is used by default to execute the command string in the container when it runs, so if you want to embed the script inline in the workflow specification document, you must adhere to Bourne Shell syntax.
 
-2) You can store the container scripts in Google Cloud Storage first, and use an extra step in the workflow to stage the script files to the NFS share before they are run.  One benefit of this method is that you can specify the shell interpreter that you want to use at the top of your script file using the "#!/path/so/shell" syntax.  One drawback is that you may also need to alter permissions on the script file to be globally executable before attempting to run it in from another containerized job.
+2) You can store the container scripts in Google Cloud Storage first, and use an extra step in the workflow to stage the script files to the NFS share before they are run.  One benefit of this method is that you can specify the shell interpreter that you want to use at the top of your script file using the "#!/path/to/shell" syntax.  One drawback is that you may also need to alter permissions on the script file to be globally executable before attempting to run it in from another containerized job.
 
 
-## Running a workflow
+## How to run a workflow
 
 There are two options for running a workflow:
 
