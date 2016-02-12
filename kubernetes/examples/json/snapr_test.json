@@ -3,7 +3,7 @@
 	"cluster": {
 		"project_id": "isb-cgc-01-0001",
 		"zone": "us-central1-c",
-		"node_num": 2,
+		"nodes": 2,
 		"network": "default",
 		"machine_type": "n1-highmem-16",
 		"cluster_node_disk_size": 200,

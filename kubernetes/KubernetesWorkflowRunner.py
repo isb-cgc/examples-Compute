@@ -150,7 +150,7 @@ class KubernetesWorkflowRunner():
 						"type": "string",
 						"required": True
 					},
-					"node_num": {
+					"nodes": {
 						"type": "int",
 						"required": True
 					},
