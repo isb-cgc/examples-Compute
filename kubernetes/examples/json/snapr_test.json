@@ -7,7 +7,7 @@
 		"network": "default",
 		"machine_type": "n1-highmem-16",
 		"cluster_node_disk_size": 200,
-		"cluster_nfs_volume_size": "200Gi",
+		"cluster_nfs_volume_size": 200,
 		"tear_down": "false"
 	},
 	"jobs": [

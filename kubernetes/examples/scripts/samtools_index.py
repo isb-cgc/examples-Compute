@@ -72,7 +72,7 @@ if __name__ == "__main__":
 	parser.add_argument('--output_bucket', required=True, help="The output bucket for the BAM index files (BAI)")
 	parser.add_argument('--project_id', required=True, help="")
 	parser.add_argument('--zone', required=True, help="")
-	parser.add_argument('--node_num', required=True, help="")
+	parser.add_argument('--nodes', required=True, help="")
 	parser.add_argument('--cluster_node_disk_size', required=True, help="")
 	parser.add_argument('--cluster_nfs_volume_size', required=True, help="")
 	parser.add_argument('--machine_type', required=True, help="")
