@@ -41,7 +41,7 @@ class KubernetesWorkflowRunner():
 		#workflow_object = self.workflow_spec[self.workflow_name]
 		cluster_config = self.workflow_spec["cluster"]
 		
-		args =  [ self.workflow_name, cluster_config["project_id"], cluster_config["zone"], cluster_config["node_num"], cluster_config["machine_type"], cluster_config["cluster_node_disk_size"], cluster_config["cluster_nfs_volume_size"] ]
+		args =  [ self.workflow_name, cluster_config["project_id"], cluster_config["zone"], cluster_config["nodes"], cluster_config["machine_type"], cluster_config["cluster_node_disk_size"], cluster_config["cluster_nfs_volume_size"] ]
 
 		kwargs = {}
 		if "logging_service" in cluster_config.keys():
