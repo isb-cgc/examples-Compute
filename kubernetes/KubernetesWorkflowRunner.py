@@ -168,7 +168,7 @@ class KubernetesWorkflowRunner():
 
 					},
 					"cluster_nfs_volume_size": {
-						"type": "string",
+						"type": "int",
 						"required": True
 					},
 					"logging_service": {

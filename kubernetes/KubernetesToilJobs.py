@@ -146,7 +146,7 @@ class KubernetesToilWorkflow(Job):
 			},
 			"spec": {
 				"capacity": {
-					"storage": cluster_nfs_volume_size
+					"storage": "{size}G".format(size=cluster_nfs_volume_size)
 				},
 				"nfs": {
 					"server": None,
@@ -166,7 +166,7 @@ class KubernetesToilWorkflow(Job):
 		  		"accessModes": [ "ReadWriteMany" ],
 				"resources": {
 					"requests": {
-						"storage": cluster_nfs_volume_size
+						"storage": "{size}G".format(size=cluster_nfs_volume_size)
 					}
 				}
 			}

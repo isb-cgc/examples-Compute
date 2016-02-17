@@ -39,7 +39,7 @@ def main(args):
 		"cluster": {
 			"project_id": args.project_id,
 			"zone": args.zone,
-			"node_num": args.node_num,
+			"node_num": args.nodes,
 			"network": "default",
 			"machine_type": args.machine_type,
 			"cluster_node_disk_size": args.cluster_node_disk_size,
@@ -72,7 +72,7 @@ if __name__ == "__main__":
 	parser.add_argument('--output_bucket', required=True, help="The output bucket for the BAM index files (BAI)")
 	parser.add_argument('--project_id', required=True, help="")
 	parser.add_argument('--zone', required=True, help="")
-	parser.add_argument('--node_num', required=True, help="")
+	parser.add_argument('--nodes', required=True, help="")
 	parser.add_argument('--cluster_node_disk_size', required=True, help="")
 	parser.add_argument('--cluster_nfs_volume_size', required=True, help="")
 	parser.add_argument('--machine_type', required=True, help="")
