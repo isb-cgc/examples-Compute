@@ -1,12 +1,5 @@
 #ISB-CGC Kubernetes Examples
 
-This directory contains all that you need to setup and run a containerized workflow on Google Container Engine (Kubernetes):
-* workstation_setup.sh - This script will install all of the workflow runner dependencies on your workstation.  It's highly recommended that you use a Google Compute Engine VM for your workstation.
-* KubernetesWorkflowRunner.py - This file contains the workflow runner class.
-* KubernetesToilJobs.py - This file contains additional classes that the workflow runner class uses to build the job graph.
-* examples/json - This directory contains some sample JSON formatted schemas that you can run from the command line (see "Running a workflow" below).
-* examples/scripts - This directory contains some sample scripts for generating and running a workflow completely programmatically (see "Running a workflow" below)
-
 ## Setup
 
 Before you get started running workflows, you need to be sure of the following:
@@ -17,7 +10,15 @@ Before you get started running workflows, you need to be sure of the following:
 
 It is also recommended to read the following ISB-CGC documentation in order to learn more about using Google Compute Engine and how it fits within the ISB-CGC computational model:
 * Google Compute Engine 101 (link coming soon!)
+* Google Developer's Console 101 (link coming soon!)
 * ISB-CGC Computational Model (link coming soon!)
+
+This directory contains all that you need to setup and run a containerized workflow on Google Container Engine (Kubernetes):
+* workstation_setup.sh - This script will install all of the workflow runner dependencies on your workstation.  It's highly recommended that you use a Google Compute Engine VM for your workstation.  For general information about setting up an ISB-CGC compute workstation, see our Google Compute Engine 101 document. (link coming soon!)
+* KubernetesWorkflowRunner.py - This file contains the workflow runner class.  You can import this class into a Python script in order to generate workflows completely programmatically.
+* KubernetesToilJobs.py - This file contains additional classes that the workflow runner class uses to build the job graph.
+* examples/json - This directory contains some sample JSON formatted schemas that you can run as workflows from the command line (see "Running a workflow" below).
+* examples/scripts - This directory contains some sample scripts illustrating how you could generate and run a workflow completely programmatically (see "Running a workflow" below)
 
 ## Specifying a workflow
 
@@ -138,8 +139,10 @@ PYTHONPATH=$PYTHONPATH:/path/to/examples-Compute/kubernetes
 python my-workflow-script.py [ARGS]
 ```
 
-Additional programmatic examples can be found in the examples/scripts subdirectory.  
+Additional programmatic examples can be found in the [examples/scripts](./examples/scripts) subdirectory.  
 
 ## Monitoring workflow progress
 
 In order to check the status of your job containers, you will need to enable Cloud Logging in your Google Cloud Project.  While your workflow is running, you can easily access the logs by clicking on "Logging" in the Google Developer's Console "Products and Services" menu.  From there, you can select the Container Engine logs you want to view by cluster name and namespace, both of which will share the same name with your specified workflow.  You can also further filter the logs by container name.
+
+For more information about enabling Cloud Logging in the Developer's Console, see our Google Developer's Console 101 document. (link coming soon!)
