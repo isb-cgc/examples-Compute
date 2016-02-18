@@ -139,7 +139,7 @@ PYTHONPATH=$PYTHONPATH:/path/to/examples-Compute/kubernetes
 python my-workflow-script.py [ARGS]
 ```
 
-Additional programmatic examples can be found in the examples/scripts subdirectory.  
+Additional programmatic examples can be found in the [examples/scripts](./examples/scripts) subdirectory.  
 
 ## Monitoring workflow progress
 
