@@ -257,7 +257,7 @@ class KubernetesToilWorkflow(Job):
 			exit(-1) # raise an exception
 
 		try:
-			subprocess.check_call(["gcloud", "beta", "container", "clusters", "get-credentials", self.workflow_name])
+			subprocess.check_call(["gcloud", "container", "clusters", "get-credentials", self.workflow_name])
 		except subprocess.CalledProcessError as e:
 			filestore.logToMaster("Couldn't get cluster credentials: {reason}".format(reason=e))
 			exit(-1) # raise an exception
