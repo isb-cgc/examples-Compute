@@ -159,7 +159,7 @@ def main(args):
 
 if __name__ == "__main__":
 	# parse args -- project id, zone, node num, cluster node disk size, cluster nfs volume size, output bucket, list of gcs urls
-	parser = argparse.ArgumentParser(description="ISB-CGC Internal Pipelines")
+	parser = argparse.ArgumentParser(description="ISB-CGC Compute Workflows")
 	parser.add_argument('--project_id', required=True, help="GCP project id")
 	parser.add_argument('--zone', required=True, help="GCE zone")
 	parser.add_argument('--nodes', required=True, help="Number of nodes in the cluster")
@@ -169,12 +169,12 @@ if __name__ == "__main__":
 
 	subparsers = parser.add_subparsers(help="sub-command help", dest="workflow")
 	
-	samtools_subparser = subparsers.add_parser('samtools-index', help="samtools-index pipeline arguments")
+	samtools_subparser = subparsers.add_parser('samtools-index', help="samtools-index workflow arguments")
 	samtools_subparser.add_argument('--input_files', required=True, help="A plain text file containing a list of GCS URLs representing BAM files to index, one per line")
 	samtools_subparser.add_argument('--output_bucket', required=False, default=None, help="The output bucket for the results files; if not provided, will default to the object hierarchy of the original input file")
 	
 	
-	fastqc_subparser = subparsers.add_parser('fastqc', help="fastq pipeline arguments")
+	fastqc_subparser = subparsers.add_parser('fastqc', help="fastq workflow arguments")
 	fastqc_subparser.add_argument('--input_files', required=True, help="A plain text file containing a list of GCS URLs representing fastq files (fastq, fastq.gz, fastq.tar, or tar.gz extensions), one per line")
 	fastqc_subparser.add_argument('--output_bucket', required=False, help="The output bucket for the results files; if not provided, will default to the object hierarchy of the original input file")
 	
