@@ -145,7 +145,7 @@ class FastQcWorkflow(Workflow):
 		cleanup_job = {
 			"name": "retrieve-stats-{filename}".format(filename=filename.replace('.', '-').lower()),
 			"container_image": "google/cloud-sdk",
-			"container_script": """if [ -f share/{filename}.success ]; then gsutil -o Credentials:gs_oauth2_refresh_token=$(cat /data-access/refresh-token) -o Oauth2:oauth2_refresh_retries=50 cp share/{filename}* {destination}; else echo 'Success indicator file not found'; fi""".format(filename=filename, destination=self.output_bucket),
+			"container_script": """if [ -f share/{filename}.success ]; then gsutil -o Credentials:gs_oauth2_refresh_token=$(cat /data-access/refresh-token) -o Oauth2:oauth2_refresh_retries=50 cp share/{basename}* {destination}; else echo 'Success indicator file not found'; fi""".format(basename='.'.join(filename.split('.')[0:-1]), destination=self.output_bucket),
 			"parents": [fastqc_job["name"]],
 			"restart_policy": "OnFailure"
 		}
