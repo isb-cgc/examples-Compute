@@ -116,7 +116,7 @@ class FastQcWorkflow(Workflow):
 		data_staging_job = {
 			"name": "stage-file-{filename}".format(filename=filename.replace('.', '-').lower()),
 			"container_image": "google/cloud-sdk",
-			"container_script": """if [ ! -f share/{filename} ]; then gsutil -o Credentials:gs_oauth2_refresh_token=$(cat /data-access/refresh-token) -o Oauth2:oauth2_refresh_retries=50 cp {url} share; else echo 'File {filename} already staged -- skipping'; fi""".format(url=url, filename=filename),
+			"container_script": """if [ ! -f share/{filename} && ! -f share/{filename}.success ]; then gsutil -o Credentials:gs_oauth2_refresh_token=$(cat /data-access/refresh-token) -o Oauth2:oauth2_refresh_retries=50 cp {url} share; else echo 'File {filename} already staged -- skipping'; fi""".format(url=url, filename=filename),
 			"restart_policy": "OnFailure"
 		}
 
