@@ -131,7 +131,7 @@ class FastQcWorkflow(Workflow):
 		fastqc_job = {
 			"name": "fastqc-{filename}".format(filename=filename.replace('.', '-').lower()),
 			"container_image": "b.gcr.io/isb-cgc-public-docker-images/fastqc",
-			"container_script": """if [ ! -f share/{filename}.success ]; then if [ -f share/{filename}.contents ]; then cd scratch; cp ../share/{filename}* .; cat {filename}.contents | tr '\n' | xargs -0 -n1 fastqc; else cd scratch; cp ../share/{filename} .; fastqc {filename}; fi; cp {filename}*_fastqc.zip {filename}*_fastqc.html ../share && touch ../share/{filename}.success && rm ../share/{filename}; else echo 'File {filename} already processed -- skipping'; fi""".format(filename=filename),
+			"container_script": """if [ ! -f share/{filename}.success ]; then if [ -f share/{filename}.contents ]; then cd scratch; cp ../share/{filename}* .; cat {filename}.contents | tr '\n' | xargs -0 -n1 fastqc; else cd scratch; cp ../share/{filename} .; fastqc {filename}; fi; ls -al; cp {filename}*_fastqc.zip {filename}*_fastqc.html ../share && touch ../share/{filename}.success && rm ../share/{filename}; else echo 'File {filename} already processed -- skipping'; fi""".format(filename=filename),
 			"parents": [],
 			"restart_policy": "OnFailure"
 		}
