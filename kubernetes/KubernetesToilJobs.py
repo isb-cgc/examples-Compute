@@ -311,6 +311,7 @@ class KubernetesToilWorkflow(Job):
 
 		filestore.logToMaster("{timestamp}  Cluster configuration was successful!".format(timestamp=self.create_timestamp()))
 
+
 	def create_secret(self, filestore):
 		# create a secret
 		full_url = API_ROOT + SECRETS_URI.format(namespace=self.namespace_spec["metadata"]["name"])
