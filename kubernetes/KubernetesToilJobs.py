@@ -447,10 +447,12 @@ class KubernetesToilComputeJob(Job):
 						"name": "{job_name}".format(job_name=self.job_name),
 						"image": container_image,
 						"command": ["sh", "-c", container_script],
-						"env": {
-							"name": "LANG",
-							"value": "en_US.UTF-8"
-						},
+						"env": [
+							{
+								"name": "LANG",
+								"value": "en_US.UTF-8"
+							}
+						],
 						"workingDir": "/workflow",
 						"volumeMounts": [
 							{
