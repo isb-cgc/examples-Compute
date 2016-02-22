@@ -22,7 +22,7 @@ class Workflow(object):
 			},
 			"jobs": []
 		}
-		self.dry_run = cluster["dry_run"]
+		self.dry_run = cluster.dry_run
 
 	def __build(self):
 		pass # to be overridden in subclasses
