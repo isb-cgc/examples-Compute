@@ -22,6 +22,7 @@ class Workflow(object):
 			},
 			"jobs": []
 		}
+		self.dry_run = cluster["dry_run"]
 
 	def __build(self):
 		pass # to be overridden in subclasses
@@ -31,7 +32,7 @@ class Workflow(object):
 
 	def run(self):
 		pprint.pprint(self.schema)
-		if not args.dry_run:
+		if not self.dry_run:
 			KubernetesWorkflowRunner(self.schema, "/tmp/{workflow}".format(workflow=self.schema["name"])).start()
 
 class SamtoolsIndexWorkflow(Workflow):
