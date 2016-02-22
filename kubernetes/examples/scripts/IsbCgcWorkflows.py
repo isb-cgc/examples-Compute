@@ -31,7 +31,7 @@ class Workflow(object):
 
 	def run(self):
 		pprint.pprint(self.schema)
-		if !args.dry_run:
+		if not args.dry_run:
 			KubernetesWorkflowRunner(self.schema, "/tmp/{workflow}".format(workflow=self.schema["name"])).start()
 
 class SamtoolsIndexWorkflow(Workflow):
