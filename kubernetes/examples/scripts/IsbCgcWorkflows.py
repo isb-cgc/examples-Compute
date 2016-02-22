@@ -31,7 +31,8 @@ class Workflow(object):
 
 	def run(self):
 		pprint.pprint(self.schema)
-		KubernetesWorkflowRunner(self.schema, "/tmp/{workflow}".format(workflow=self.schema["name"])).start()
+		if !args.dry_run:
+			KubernetesWorkflowRunner(self.schema, "/tmp/{workflow}".format(workflow=self.schema["name"])).start()
 
 class SamtoolsIndexWorkflow(Workflow):
 	def __init__(self, args):
@@ -167,6 +168,7 @@ if __name__ == "__main__":
 	parser.add_argument('--cluster_node_disk_size', required=True, help="Cluster boot disk size in GB")
 	parser.add_argument('--cluster_nfs_volume_size', required=True, help="NFS shared volume size in GB")
 	parser.add_argument('--machine_type', required=True, help="GCE machine type")
+	parser.add_argument('--dry_run', required=False, help="If set to true, will only print the workflow graph that would have run")
 
 	subparsers = parser.add_subparsers(help="sub-command help", dest="workflow")
 	
