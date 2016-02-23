@@ -38,7 +38,7 @@ API_HEADERS = {
 	"Authorization": "Bearer {access_token}"
 }
 
-CLUSTER_HOSTS = None
+CLUSTER_HOSTS = []
 	
 class KubernetesToilWorkflow(Job):
 	def __init__(self, workflow_name, project_id, zone, node_num, machine_type, cluster_node_disk_size, cluster_nfs_volume_size, network="default", logging_service=None, monitoring_service=None, tear_down=True):
@@ -268,7 +268,7 @@ class KubernetesToilWorkflow(Job):
 		try:
 			instance_group_name = subprocess.check_output(["gcloud", "compute", "instance-groups", "list", "--regexp", "^gke-{workflow}-.*-group$".format(workflow=self.workflow_name)])
 			global CLUSTER_HOSTS
-			CLUSTER_HOSTS = subprocess.check_output(["gcloud", "compute", "instance-groups", "list-instances", instance_group_name]).split('\n')
+			CLUSTER_HOSTS.extend(subprocess.check_output(["gcloud", "compute", "instance-groups", "list-instances", instance_group_name]).split('\n'))
 		except subprocess.CalledProcessError as e:
 			filestore.logToMaster("Couldn't get cluster hostnames: {reason}".format(reason=e))
 			exit(-1) # raise an exception
