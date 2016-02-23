@@ -500,10 +500,12 @@ class KubernetesToilComputeJob(Job):
 			}
 		}
 		self.restart_policy = restart_policy
-		if host_key is not None:
-			self.job_spec["spec"]["nodeName"] = cluster_hosts[host_key]
+		self.host_key = host_key
+		self.cluster_hosts = cluster_hosts
 
 	def run(self, filestore):
+		if host_key is not None:
+			self.job_spec["spec"]["nodeName"] = cluster_hosts[host_key]
 		filestore.logToMaster("{timestamp}  Starting job {job_name} ...".format(timestamp=self.create_timestamp(), job_name=self.job_spec["metadata"]["name"]))
 		submit = self.start_job(filestore) 
 		filestore.logToMaster("{timestamp}  Job submission response: {submit}".format(timestamp=self.create_timestamp(), submit=submit.text))
