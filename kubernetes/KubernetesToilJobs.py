@@ -267,7 +267,9 @@ class KubernetesToilWorkflow(Job):
 		try:
 			instance_group_name = subprocess.check_output(["gcloud", "compute", "instance-groups", "list", "--regexp", "^gke-{workflow}-.*-group$".format(workflow=self.workflow_name)]).split('\n')[1].split(' ')[0]
 			instance_list = subprocess.check_output(["gcloud", "compute", "instance-groups", "list-instances", instance_group_name]).split('\n').pop(0)
+			filestore.logToMaster(instance_list)
 			for instance in instance_list:
+				filestore.logToMaster(instance)
 				self.cluster_hosts.append(instance.split(' ')[0])
 
 		except subprocess.CalledProcessError as e:
