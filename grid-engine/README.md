@@ -10,8 +10,22 @@ A link is coming soon... please check back again later.
 
 The easiest way to set up a VM to run the Grid Engine examples is to run some variation of the following command:
 ```
-gcloud compute instances create grid-engine-workstation --metadata startup-script-url=https://raw.githubusercontent.com/isb-cgc/examples-Compute/master/grid-engine/workstation-setup.sh
+gcloud compute instances create grid-engine-workstation --metadata startup-script-url=https://raw.githubusercontent.com/isb-cgc/examples-Compute/master/grid-engine/workstation-startup.sh
 ```
+
+Once the instance has started, you can ssh to it using the `gcloud compute ssh` command:
+```
+gcloud compute ssh grid-engine-workstation
+```
+
+Once logged in, you can finish the setup process by cloning this repo and running an additional setup script:
+```
+git clone https://github.com/isb-cgc/examples-Compute.git
+cd examples-Compute
+chmod u+x workstation-setup.sh
+./workstation-setup.sh
+```
+
 The above command will install all of the necessary dependencies and github repos, and partially configure Elasticluster.  Be sure to read the [documentation](https://cloud.google.com/sdk/gcloud/reference/compute/instances/create) for the `gcloud compute instances create` command to figure out what additional command line flags you will need to configure your workstation.  Alternatively, you can create an instance under "Products and Services" -> "Compute Engine" in the Google Developer's Console.
 
 You will also need to provide some additional configuration values for each configuration file created by the workstation setup script in ./elasticluster/config.d.  The required manual configuration can be found in the individual files with in ~/.elasticluster/config.d, as follows:
