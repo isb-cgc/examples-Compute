@@ -198,7 +198,6 @@ class KubernetesToilWorkflow(Job):
 		filestore.logToMaster("{timestamp}  Starting workflow {workflow_name} ...".format(timestamp=self.create_timestamp(), workflow_name=self.workflow_name))
 		self.ensure_cluster(filestore)
 		filestore.logToMaster("{timestamp}  Cluster created successfully!".format(timestamp=self.create_timestamp()))
-		self.get_cluster_hosts(filestore)
 		self.configure_cluster_access(filestore) 
 		filestore.logToMaster("{timestamp}  Cluster configured successfully!".format(timestamp=self.create_timestamp()))
 		self.create_secret(filestore)
