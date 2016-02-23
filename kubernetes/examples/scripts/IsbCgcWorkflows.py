@@ -86,10 +86,10 @@ class SamtoolsIndexWorkflow(Workflow):
 	
 		self.schema["jobs"].extend([data_staging_job, samtools_job, cleanup_job])
 
-class FastQcWorkflow(Workflow):
+class QcWorkflow(Workflow):
 	def __init__(self, args):
-		super(FastQcWorkflow, self).__init__(args)
-		self.schema["name"] = "fastqc"
+		super(QcWorkflow, self).__init__(args)
+		self.schema["name"] = "fastqc-picard"
 		self.input_files = args.input_files
 		self.output_bucket = args.output_bucket
 		self.__build()
@@ -130,7 +130,7 @@ class FastQcWorkflow(Workflow):
 			"restart_policy": "Never"
 		}
 
-		fastqc_job = {
+		qc_job = {
 			"name": "fastqc-{filename}".format(filename=filename.replace('.', '-').lower()),
 			"container_image": "b.gcr.io/isb-cgc-public-docker-images/fastqc",
 			"container_script": """if [ ! -f share/{filename}.success ]; then if [ -f share/{filename}.contents ]; then cd scratch; cp ../share/{filename}* .; cat {filename}.contents | tr '\n' | xargs -0 -n1 fastqc; else cd scratch; cp ../share/{filename} .; fastqc {filename}; fi; cp {basename}*_fastqc.zip {basename}*_fastqc.html ../share && touch ../share/{filename}.success && rm ../share/{filename}; else echo 'File {filename} already processed -- skipping'; fi""".format(filename=filename, basename='.'.join(filename.split('.')[0:-1])),
@@ -139,16 +139,16 @@ class FastQcWorkflow(Workflow):
 		}
 		
 		if re.match(fastq_tar_pattern, filename) or re.match(tar_gz_pattern, filename):
-			fastqc_job["parents"].append(tar_job["name"])
+			qc_job["parents"].append(tar_job["name"])
 			self.schema["jobs"].append(tar_job)
 		else:
-			fastqc_job["parents"].append(data_staging_job["name"])
+			qc_job["parents"].append(data_staging_job["name"])
 	
 		cleanup_job = {
 			"name": "retrieve-stats-{filename}".format(filename=filename.replace('.', '-').lower()),
 			"container_image": "google/cloud-sdk",
 			"container_script": """if [ -f share/{filename}.success ]; then gsutil -o Credentials:gs_oauth2_refresh_token=$(cat /data-access/refresh-token) -o Oauth2:oauth2_refresh_retries=50 cp share/{basename}* {destination}; else echo 'Success indicator file not found'; fi""".format(filename=filename, basename='.'.join(filename.split('.')[0:-1]), destination=self.output_bucket),
-			"parents": [fastqc_job["name"]],
+			"parents": [qc_job["name"]],
 			"restart_policy": "OnFailure"
 		}
 	
