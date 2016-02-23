@@ -266,7 +266,7 @@ class KubernetesToilWorkflow(Job):
 		# get the cluster hosts for reference
 		try:
 			instance_group_name = subprocess.check_output(["gcloud", "compute", "instance-groups", "list", "--regexp", "^gke-{workflow}-.*-group$".format(workflow=self.workflow_name)]).split('\n')[1].split(' ')[0]
-			instance_list = subprocess.check_output(["gcloud", "compute", "instance-groups", "list-instances", instance_group_name]).split('\n')
+			instance_list = subprocess.check_output(["gcloud", "compute", "instance-groups", "list-instances", instance_group_name]).split('\n').pop(0)
 			for instance in instance_list:
 				self.cluster_hosts.append(instance.split(' ')[0])
 
