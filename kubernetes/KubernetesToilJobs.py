@@ -37,8 +37,6 @@ API_HEADERS = {
 	"Content-type": "application/json", 
 	"Authorization": "Bearer {access_token}"
 }
-
-CLUSTER_HOSTS = []
 	
 class KubernetesToilWorkflow(Job):
 	def __init__(self, workflow_name, project_id, zone, node_num, machine_type, cluster_node_disk_size, cluster_nfs_volume_size, network="default", logging_service=None, monitoring_service=None, tear_down=True):
@@ -70,6 +68,8 @@ class KubernetesToilWorkflow(Job):
 				}
 			}
 		}
+
+		self.cluster_hosts = []
 
 		if logging_service is not None:
 			self.cluster_spec["cluster"]["loggingService"] = logging_service
@@ -205,7 +205,7 @@ class KubernetesToilWorkflow(Job):
 		filestore.logToMaster("{timestamp}  Secret created successfully!".format(timestamp=self.create_timestamp()))
 		self.configure_nfs_share(filestore) 
 		filestore.logToMaster("{timestamp}  NFS share created successfully!".format(timestamp=self.create_timestamp()))
-		return True
+		return self.cluster_hosts
 
 	def create_timestamp(self):
 		return datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
@@ -267,17 +267,11 @@ class KubernetesToilWorkflow(Job):
 		# get the cluster hosts for reference
 		try:
 			instance_group_name = subprocess.check_output(["gcloud", "compute", "instance-groups", "list", "--regexp", "^gke-{workflow}-.*-group$".format(workflow=self.workflow_name)])
-			
+			self.cluster_hosts.extend(subprocess.check_output(["gcloud", "compute", "instance-groups", "list-instances", instance_group_name]).split('\n'))
+
 		except subprocess.CalledProcessError as e:
 			filestore.logToMaster("Couldn't get cluster hostnames: {reason}".format(reason=e))
 			exit(-1) # raise an exception
-		else:
-			global CLUSTER_HOSTS
-			try:
-				CLUSTER_HOSTS.extend(subprocess.check_output(["gcloud", "compute", "instance-groups", "list-instances", instance_group_name]).split('\n'))
-			except subprocess.CalledProcessError as e:
-				filestore.logToMaster("Couldn't get cluster hostnames: {reason}".format(reason=e))
-				exit(-1) # raise an exception
 	
 		# run kubectl in proxy mode in a background process
 		try:
@@ -444,7 +438,7 @@ class KubernetesToilWorkflowCleanup(Job):
 		delete_cluster = GKE.projects().zones().clusters().delete(projectId=self.project_id, zone=self.zone, clusterId=self.workflow_name).execute(http=HTTP)
 
 class KubernetesToilComputeJob(Job):
-	def __init__(self, workflow_name, job_name, container_image, container_script, restart_policy="Never", host_key=None):
+	def __init__(self, workflow_name, job_name, container_image, container_script, cluster_hosts, restart_policy="Never", host_key=None):
 		super(KubernetesToilComputeJob, self).__init__()
 		self.workflow_name = workflow_name.replace("_", "-")
 		self.headers = API_HEADERS
@@ -507,7 +501,7 @@ class KubernetesToilComputeJob(Job):
 		}
 		self.restart_policy = restart_policy
 		if host_key is not None:
-			self.job_spec["spec"]["nodeName"] = CLUSTER_HOSTS[host_key]
+			self.job_spec["spec"]["nodeName"] = cluster_hosts[host_key]
 
 	def run(self, filestore):
 		filestore.logToMaster("{timestamp}  Starting job {job_name} ...".format(timestamp=self.create_timestamp(), job_name=self.job_spec["metadata"]["name"]))
