@@ -267,11 +267,17 @@ class KubernetesToilWorkflow(Job):
 		# get the cluster hosts for reference
 		try:
 			instance_group_name = subprocess.check_output(["gcloud", "compute", "instance-groups", "list", "--regexp", "^gke-{workflow}-.*-group$".format(workflow=self.workflow_name)])
-			global CLUSTER_HOSTS
-			CLUSTER_HOSTS.extend(subprocess.check_output(["gcloud", "compute", "instance-groups", "list-instances", instance_group_name]).split('\n'))
+			
 		except subprocess.CalledProcessError as e:
 			filestore.logToMaster("Couldn't get cluster hostnames: {reason}".format(reason=e))
 			exit(-1) # raise an exception
+		else:
+			global CLUSTER_HOSTS
+			try:
+				CLUSTER_HOSTS.extend(subprocess.check_output(["gcloud", "compute", "instance-groups", "list-instances", instance_group_name]).split('\n'))
+			except subprocess.CalledProcessError as e:
+				filestore.logToMaster("Couldn't get cluster hostnames: {reason}".format(reason=e))
+				exit(-1) # raise an exception
 	
 		# run kubectl in proxy mode in a background process
 		try:
