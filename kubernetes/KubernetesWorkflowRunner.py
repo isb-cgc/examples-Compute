@@ -112,6 +112,8 @@ class KubernetesWorkflowRunner():
 	
 		if len(job_names) != len(set(job_names)):
 			print "Job names must be unique"
+			print len(job_names)
+			print len(set(job_names))
 			exit(-1)
 			
 		for job in jobs:
