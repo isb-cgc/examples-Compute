@@ -426,7 +426,7 @@ class KubernetesToilWorkflowCleanup(Job):
 		delete_cluster = GKE.projects().zones().clusters().delete(projectId=self.project_id, zone=self.zone, clusterId=self.workflow_name).execute(http=HTTP)
 
 class KubernetesToilComputeJob(Job):
-	def __init__(self, workflow_name, job_name, container_image, container_script, cluster_hosts, restart_policy="Never", cpu_limit=None, memory_limit=None):
+	def __init__(self, workflow_name, job_name, container_image, container_script, restart_policy="Never", cpu_limit=None, memory_limit=None):
 		super(KubernetesToilComputeJob, self).__init__()
 		self.workflow_name = workflow_name.replace("_", "-")
 		self.headers = API_HEADERS

@@ -179,8 +179,8 @@ if __name__ == "__main__":
 	samtools_subparser.add_argument('--output_bucket', required=False, default=None, help="The output bucket for the results files; if not provided, will default to the object hierarchy of the original input file")
 	
 	
-	fastqc_subparser = subparsers.add_parser('fastqc', help="fastq workflow arguments")
-	fastqc_subparser.add_argument('--input_files', required=True, help="A plain text file containing a list of GCS URLs representing fastq files (fastq, fastq.gz, fastq.tar, or tar.gz extensions), one per line")
+	fastqc_subparser = subparsers.add_parser('qc', help="QC workflow arguments")
+	fastqc_subparser.add_argument('--input_files', required=True, help="A plain text file containing a list of GCS URLs representing fastq files (fastq, fastq.gz, fastq.tar, or tar.gz extensions) or BAM files, one per line")
 	fastqc_subparser.add_argument('--output_bucket', required=False, help="The output bucket for the results files; if not provided, will default to the object hierarchy of the original input file")
 	
 	args = parser.parse_args()
