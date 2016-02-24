@@ -82,13 +82,17 @@ class KubernetesWorkflowRunner():
 	def _add_kubernetes_toil_job(self, parent, job):
 		if job["name"] not in self.toil_jobs.keys():
 			# create a new job as long as this job doesn't exist yet
-			args = [ self.workflow_name, job["name"], job["container_image"], job["container_script"], self.toil_jobs[self.workflow_name].rv() ]
+			args = [ self.workflow_name, job["name"], job["container_image"], job["container_script"] ]
 			kwargs = {}
 			if "restart_policy" in job.keys():
 				kwargs.update({"restart_policy": job["restart_policy"]})
 
-			if "host_key" in job.keys():
-				kwargs.update({"host_key": job["host_key"]})
+			if "resources" in job.keys():
+				if "cpu_limit" in job["resources"].keys():
+					kwargs.update({"cpu_limit": job["resources"]["cpu_limit"]})
+					
+				if "memory_limit" in job["resources"].keys():
+					kwargs.update({"memory_limit": job["resources"]["memory_limit"]})
 				
 			self.toil_jobs[job["name"]] = KubernetesToilComputeJob(*args, **kwargs)
 
@@ -208,6 +212,21 @@ class KubernetesWorkflowRunner():
 					"restart_policy": {
 						"type": "string",
 						"oneOf": ["OnFailure", "Always", "Never"],
+						"required": False
+					},
+					"resources": {
+						"type": "object",
+						"properties": { "$ref": "#/definitions/job_resources_properties" },
+						"required": False
+					}
+				},
+				"job_resources_properties": {
+					"cpu_limit": {
+						"type": "int",
+						"required": False
+					},
+					"memory_limit": {
+						"type": "int",
 						"required": False
 					}
 				}

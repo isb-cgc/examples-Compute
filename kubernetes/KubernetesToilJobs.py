@@ -69,8 +69,6 @@ class KubernetesToilWorkflow(Job):
 			}
 		}
 
-		self.cluster_hosts = []
-
 		if logging_service is not None:
 			self.cluster_spec["cluster"]["loggingService"] = logging_service
 
@@ -204,7 +202,7 @@ class KubernetesToilWorkflow(Job):
 		filestore.logToMaster("{timestamp}  Secret created successfully!".format(timestamp=self.create_timestamp()))
 		self.configure_nfs_share(filestore) 
 		filestore.logToMaster("{timestamp}  NFS share created successfully!".format(timestamp=self.create_timestamp()))
-		return self.cluster_hosts
+		return True
 
 	def create_timestamp(self):
 		return datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
@@ -261,17 +259,6 @@ class KubernetesToilWorkflow(Job):
 			subprocess.check_call(["gcloud", "container", "clusters", "get-credentials", self.workflow_name])
 		except subprocess.CalledProcessError as e:
 			filestore.logToMaster("Couldn't get cluster credentials: {reason}".format(reason=e))
-			exit(-1) # raise an exception
-
-		# get the cluster hosts for reference
-		try:
-			instance_group_name = subprocess.check_output(["gcloud", "compute", "instance-groups", "list", "--regexp", "^gke-{workflow}-.*-group$".format(workflow=self.workflow_name)]).split('\n')[1].split(' ')[0]
-			instance_list = subprocess.check_output(["gcloud", "compute", "instance-groups", "list-instances", instance_group_name]).split('\n')[1:-1]
-			for instance in instance_list:
-				self.cluster_hosts.append(instance.split(' ')[0])
-
-		except subprocess.CalledProcessError as e:
-			filestore.logToMaster("Couldn't get cluster hostnames: {reason}".format(reason=e))
 			exit(-1) # raise an exception
 	
 		# run kubectl in proxy mode in a background process
@@ -439,7 +426,7 @@ class KubernetesToilWorkflowCleanup(Job):
 		delete_cluster = GKE.projects().zones().clusters().delete(projectId=self.project_id, zone=self.zone, clusterId=self.workflow_name).execute(http=HTTP)
 
 class KubernetesToilComputeJob(Job):
-	def __init__(self, workflow_name, job_name, container_image, container_script, cluster_hosts, restart_policy="Never", host_key=None):
+	def __init__(self, workflow_name, job_name, container_image, container_script, cluster_hosts, restart_policy="Never", cpu_limit=None, memory_limit=None):
 		super(KubernetesToilComputeJob, self).__init__()
 		self.workflow_name = workflow_name.replace("_", "-")
 		self.headers = API_HEADERS
@@ -497,12 +484,17 @@ class KubernetesToilComputeJob(Job):
 						}
 					}
 				],
-				"restartPolicy": "Never"
+				"restartPolicy": restart_policy
 			}
 		}
 		self.restart_policy = restart_policy
-		self.host_key = host_key
-		self.cluster_hosts = cluster_hosts
+		
+		if cpu_limit is not None:
+			self.job_spec["spec"]["containers"]["resources"]["cpu"] = cpu_limit
+			
+		if memory_limit is not None:
+			self.job_spec["spec"]["containers"]["resources"]["memory"] = "{memory}G".format(memory=memory_limit)
+		
 
 	def run(self, filestore):
 		if self.host_key is not None:
