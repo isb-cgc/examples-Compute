@@ -21,7 +21,7 @@ gcloud compute ssh grid-engine-workstation
 Once logged in, you can finish the setup process by cloning this repo and running an additional setup script:
 ```
 git clone https://github.com/isb-cgc/examples-Compute.git
-cd examples-Compute
+cd examples-Compute/grid-engine
 chmod u+x workstation-setup.sh
 ./workstation-setup.sh
 ```
@@ -98,3 +98,10 @@ PYTHONPATH=$PYTHONPATH:~/ISB-CGC-Webapp/scripts python index_bam_files.py [OPTIO
 ```
 
 For more information about each of the required options for the script, run "python index_bam_files.py -h".
+
+###Step 6: Clean up
+
+To delete your grid engine cluster once you're finished with it, run the following Elasticluster command:
+```
+elasticluster stop <cluster-name>
+```
