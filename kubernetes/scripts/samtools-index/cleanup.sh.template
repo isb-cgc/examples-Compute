@@ -1,0 +1,3 @@
+if [ -f share/{filename}.bai ]; then 
+	gsutil -o Credentials:gs_oauth2_refresh_token=$(cat /data-access/refresh-token) -o Oauth2:oauth2_refresh_retries=50 cp share/{filename}.bai {destination}
+else echo 'Index {filename}.bai not found'; fi

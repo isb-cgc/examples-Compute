@@ -1,0 +1,6 @@
+if [ ! -f share/{filename}.success ]; then 
+	cd scratch
+	cp ../share/{filename} .
+	samtools index {filename}
+	cp {filename}.bai ../share && touch ../share/{filename}.success && rm ../share/{filename}
+else echo 'File {filename} already indexed -- skipping'; fi
