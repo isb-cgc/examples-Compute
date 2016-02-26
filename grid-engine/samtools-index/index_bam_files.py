@@ -5,17 +5,27 @@ import tempfile
 import argparse
 import httplib2
 import isb_auth, isb_curl
-import requests
 import subprocess
 from shutil import copyfile
 from urllib import urlencode
 from googleapiclient.discovery import build
-from oauth2client.client import GoogleCredentials
 
 # This script will find all BAM files associated with a given cohort or sample, then copy those BAM files to the user's cloud storage space for indexing.
-bam_pattern = '^.*\.bam$'
+BAM_PATTERN = '^.*\.bam$'
+API_ROOT = "https://isb-cgc.appspot.com/_ah/api"
+COHORT_DISCOVERY_URL = '{root}/discovery/v1/apis/cohort_api/v1/rest'.format(root=API_ROOT)
 
-def index_bam_files(file_list, storage, job_name, output_bucket, logs_bucket, grid_computing_tools_dir, copy_original_bams, dry_run):
+# authenticate to ISB-CGC
+CREDENTIALS = isb_auth.get_credentials()
+HTTP = CREDENTIALS.authorize(httplib2.Http())
+if CREDENTIALS.access_token_expired:
+	CREDENTIALS.refresh(http)
+
+# Service objects
+STORAGE = build("storage", "v1", http=HTTP)
+COHORT = build("cohort", "v1", discoveryServiceUrl=COHORT_DISCOVERY_URL, http=HTTP)
+
+def index_bam_files(file_list, job_name, output_bucket, logs_bucket, grid_computing_tools_dir, copy_original_bams, dry_run):
 	# Create a text file containing the file list (one file per line)
 	if not os.path.exists("{home}/samtools-index-config".format(home=os.environ['HOME'])):
 		os.makedirs("{home}/samtools-index-config".format(home=os.environ['HOME']))
@@ -44,7 +54,7 @@ def index_bam_files(file_list, storage, job_name, output_bucket, logs_bucket, gr
 					print "would have copied source bucket %s, source object %s, to destination bucket %s, destination object %s"
 				else:
 					try:
-						storage.objects().copy(sourceBucket=source_bucket, sourceObject=source_object, destinationBucket=destination_bucket, destinationObject=my_bam_file, body={}).execute()				
+						STORAGE.objects().copy(sourceBucket=source_bucket, sourceObject=source_object, destinationBucket=destination_bucket, destinationObject=my_bam_file, body={}).execute()				
 					except: 
 						# not sure what this will throw yet
 						print "couldn't copy bam file from isb-cgc to personal cloud storage!"
@@ -73,19 +83,6 @@ def index_bam_files(file_list, storage, job_name, output_bucket, logs_bucket, gr
 
 	if not copy_original_bams:
 		copyfile(text_file_list.name, "%s-isb-cgc-bam-files.txt" % job_name)
-		
-	
-def generate_file_list(url, headers):
-	file_list = []
-	response = requests.get(url, headers=headers)
-	if response.json()["count"] > 0:
-		for datafilenamekey in response.json()["datafilenamekeys"]:
-			if re.search(bam_pattern, datafilenamekey) is not None :
-				file_list.append(datafilenamekey)
-	else:
-		print "No BAM files found"
-			
-	return file_list
 
 if __name__ == "__main__":
 	# parse args
@@ -109,31 +106,32 @@ if __name__ == "__main__":
 	
 	args = parser.parse_args()
 	
-	# authenticate to ISB-CGC
-	credentials = isb_auth.get_credentials()
-	http = credentials.authorize(httplib2.Http())
-	if credentials.access_token_expired:
-		credentials.refresh(http)
-
-	# create the cloud storage and isb API objects
-	storage = build("storage", "v1", http=http)
-	
-	# generate a list of files to index
-	url = 'https://isb-cgc.appspot.com/_ah/api/cohort_api/v1/datafilenamekey_list?{query_param}={query_param_value}'  #TODO: Update this with the production URL
+	# generate a list of files to index 
 	headers = {
 		"Authorization": "Bearer {token}".format(token=isb_curl.get_access_token())
 	}
+	
+	def bam_file_search(response):
+		file_list = []
+		if response.json()["count"] > 0:
+			for datafilenamekey in response.json()["datafilenamekeys"]:
+				if re.search(bam_pattern, datafilenamekey) is not None :
+					file_list.append(datafilenamekey)
+
+		return file_list
 
 	if args.cohort_id is not None:
-		url = url.format(query_param="cohort_id", query_param_value=args.cohort_id)
-		file_list = generate_file_list(url, headers)
+		response = COHORT.cohort_endpoints().cohorts().datafilenamekey_list_from_cohort(cohort_id=args.cohort_id).execute()
+		file_list = bam_file_search(response)
+		
 	elif args.sample_barcode is not None:
-		url = url.format(query_param="sample_barcode", query_param_value=args.sample_barcode)
-		file_list = generate_file_list(url, headers)
+		response = COHORT.cohort_endpoints().cohorts().datafilenamekey_list_from_sample(sample_barcode=args.sample_barcode).execute()
+		file_list = bam_file_search(response)
+
 	elif args.gcs_dir_url is not None:
 		bucket = args.gcs_dir_url.split('/')[2]
 		prefix = '/'.join(args.gcs_dir_url.split('/')[3:])
-		items_list = storage.objects().list(bucket=bucket, prefix=prefix).execute()["items"]
+		items_list = STORAGE.objects().list(bucket=bucket, prefix=prefix).execute()["items"]
 		file_list = []
 		for item in items_list:
 			if re.search(bam_pattern, item["name"]):
