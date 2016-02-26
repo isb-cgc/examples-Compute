@@ -35,8 +35,6 @@ def index_bam_files(file_list, job_name, output_bucket, logs_bucket, grid_comput
 	
 	with open(text_file_list.name, 'w') as f:
 		for isb_cgc_bam_file in file_list:
-			print isb_cgc_bam_file
-			exit(0)
 			if copy_original_bams:
 				# Update the path to the new location in the user's cloud storage space
 				my_bam_file = isb_cgc_bam_file.split('/')[-1]
