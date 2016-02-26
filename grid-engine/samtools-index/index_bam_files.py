@@ -23,7 +23,7 @@ if CREDENTIALS.access_token_expired:
 
 # Service objects
 STORAGE = build("storage", "v1", http=HTTP)
-COHORT = build("cohort", "v1", discoveryServiceUrl=COHORT_DISCOVERY_URL, http=HTTP)
+COHORT = build("cohort_api", "v1", discoveryServiceUrl=COHORT_DISCOVERY_URL, http=HTTP)
 
 def index_bam_files(file_list, job_name, output_bucket, logs_bucket, grid_computing_tools_dir, copy_original_bams, dry_run):
 	# Create a text file containing the file list (one file per line)
