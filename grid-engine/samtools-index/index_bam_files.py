@@ -115,7 +115,7 @@ if __name__ == "__main__":
 		file_list = []
 		if response["count"] > 0:
 			for datafilenamekey in response["datafilenamekeys"]:
-				if re.search(bam_pattern, datafilenamekey) is not None :
+				if re.search(BAM_PATTERN, datafilenamekey) is not None :
 					file_list.append(datafilenamekey)
 
 		return file_list
@@ -134,7 +134,7 @@ if __name__ == "__main__":
 		items_list = STORAGE.objects().list(bucket=bucket, prefix=prefix).execute()["items"]
 		file_list = []
 		for item in items_list:
-			if re.search(bam_pattern, item["name"]):
+			if re.search(BAM_PATTERN, item["name"]):
 				file_list.append("gs://{bucket}/{item}".format(bucket=bucket, item=item["name"]))
 	
 	if len(file_list) > 0:
