@@ -12,7 +12,7 @@ from googleapiclient.discovery import build
 
 # This script will find all BAM files associated with a given cohort or sample, then copy those BAM files to the user's cloud storage space for indexing.
 BAM_PATTERN = '^.*\.bam$'
-API_ROOT = "https://api-dot-mvm-dot-isb-cgc.appspot.com/_ah/api"
+API_ROOT = "https://api-dot-isb-cgc.appspot.com/_ah/api"
 COHORT_DISCOVERY_URL = '{root}/discovery/v1/apis/cohort_api/v1/rest'.format(root=API_ROOT)
 
 # authenticate to ISB-CGC
