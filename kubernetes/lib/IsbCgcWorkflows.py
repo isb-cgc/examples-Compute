@@ -33,9 +33,6 @@ class Workflow(object):
 		with open(path) as f:
 			for line in f:
 				script_lines.append(line.strip())
-				
-		print ';'.join(script_lines).format(**params)
-		exit(0)
 
 		return ';'.join(script_lines).format(**params)
 
