@@ -52,17 +52,17 @@ class SamtoolsIndexWorkflow(Workflow):
 		self.input_files = args.input_files
 
 		if data_staging_script is None:
-			self.data_staging_script_path = os.path.join(os.path.dirname(__file__), '/../scripts/samtools-index/data-staging.sh.template')
+			self.data_staging_script_path = os.path.join(os.path.dirname(__file__), '../scripts/samtools-index/data-staging.sh.template')
 		else:
 			self.data_staging_script_path = data_staging_script
 
 		if samtools_index_script is None:
-			self.samtools_index_script_path = os.path.join(os.path.dirname(__file__), '/../scripts/samtools-index/samtools-index.sh.template')
+			self.samtools_index_script_path = os.path.join(os.path.dirname(__file__), '../scripts/samtools-index/samtools-index.sh.template')
 		else:
 			self.samtools_index_script_path = samtools_index_script
 
 		if cleanup_job_script is None:
-			self.cleanup_job_script_path = os.path.join(os.path.dirname(__file__), '/../scripts/samtools-index/cleanup.sh.template')
+			self.cleanup_job_script_path = os.path.join(os.path.dirname(__file__), '../scripts/samtools-index/cleanup.sh.template')
 		else:
 			self.cleanup_script_path = cleanup_script
 
@@ -102,14 +102,14 @@ class SamtoolsIndexWorkflow(Workflow):
 			self.output_bucket = '/'.join(self.file_url.split('/')[0:-1])
 
 		self.data_staging_job_template["name"].format(filename=filename.replace('.', '-').lower())
-		self.data_staging_job_template["container_script"] = self.__load_script_template(self.data_staging_script_path, url=file_url, filename=filename)
+		self.data_staging_job_template["container_script"] = self.load_script_template(self.data_staging_script_path, url=file_url, filename=filename)
 	
 		self.samtools_index_job_template["name"].format(filename=filename.replace('.', '-').lower())
-		self.samtools_index_job_template["container_script"].self.__load_script_template(self.samtools_index_script_path, filename=filename)
+		self.samtools_index_job_template["container_script"].self.load_script_template(self.samtools_index_script_path, filename=filename)
 		self.samtools_index_job_template["parents"] = [self.data_staging_job_template["name"]]
 	
 		self.cleanup_job_template["name"].format(filename=filename.replace('.', '-').lower())
-		self.cleanup_job_template["container_script"] = self.__load_script_template(self.cleanup_script_path, filename=filename, destination=self.output_bucket)
+		self.cleanup_job_template["container_script"] = self.load_script_template(self.cleanup_script_path, filename=filename, destination=self.output_bucket)
 		self.cleanup_job_template["parents"] = [self.samtools_index_job_template["name"]]
 
 		self.schema["jobs"].extend([self.data_staging_job_template, self.samtools_index_job_template, self.cleanup_job_template])
@@ -122,17 +122,17 @@ class QcWorkflow(Workflow):
 		self.output_bucket = args.output_bucket
 
 		if data_staging_script is None:
-			self.data_staging_script_path = os.path.join(os.path.dirname(__file__), '/../scripts/qc/data-staging.sh.template')
+			self.data_staging_script_path = os.path.join(os.path.dirname(__file__), '../scripts/qc/data-staging.sh.template')
 		else:
 			self.data_staging_script_path = data_staging_script
 
 		if qc_script is None:
-			self.qc_script_path = os.path.join(os.path.dirname(__file__), '/../scripts/qc/qc.sh.template')
+			self.qc_script_path = os.path.join(os.path.dirname(__file__), '../scripts/qc/qc.sh.template')
 		else:
 			self.qc_script_path = qc_script
 
 		if cleanup_job_script is None:
-			self.cleanup_job_script_path = os.path.join(os.path.dirname(__file__), '/../scripts/qc/cleanup.sh.template')
+			self.cleanup_job_script_path = os.path.join(os.path.dirname(__file__), '../scripts/qc/cleanup.sh.template')
 		else:
 			self.cleanup_script_path = cleanup_script
 
@@ -174,12 +174,12 @@ class QcWorkflow(Workflow):
 			self.output_bucket = '/'.join(url.split('/')[0:-1])
 
 		self.data_staging_job_template["name"].format(filename=filename.replace('.', '-').lower())
-		self.data_staging_job_template["container_script"] = self.__load_script_template(self.data_staging_script_path, url=url, filename=filename)
+		self.data_staging_job_template["container_script"] = self.load_script_template(self.data_staging_script_path, url=url, filename=filename)
 		self.qc_job_template["name"].format(filename=filename.replace('.', '-').lower())
-		self.qc_job_template["container_script"] = self.__load_script_template(self.qc_script_path, filename=filename, basename='.'.join(filename.split('.')[0:-1]))
+		self.qc_job_template["container_script"] = self.load_script_template(self.qc_script_path, filename=filename, basename='.'.join(filename.split('.')[0:-1]))
 		self.qc_job_template["parents"] = [self.data_staging_job_template["name"]]
 		self.cleanup_job_template["name"].format(filename=filename.replace('.', '-').lower())
-		self.cleanup_job_template["container_script"] = self.__load_script_template(self.cleanup_script_path, filename=filename, basename='.'.join(filename.split('.')[0:-1]), destination=self.output_bucket)
+		self.cleanup_job_template["container_script"] = self.load_script_template(self.cleanup_script_path, filename=filename, basename='.'.join(filename.split('.')[0:-1]), destination=self.output_bucket)
 		self.cleanup_job_template["parents"] = [self.qc_job_template["name"]]
 		
 		self.schema["jobs"].extend([self.data_staging_job_template, self.qc_job_template, self.cleanup_job_template])
