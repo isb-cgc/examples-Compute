@@ -28,7 +28,7 @@ class Workflow(object):
 	def __build(self):
 		pass # to be overridden in subclasses
 
-	def __load_script_template(self, path, **params):
+	def load_script_template(self, path, **params):
 		script_lines = []
 		with open(path) as f:
 			for line in f:
