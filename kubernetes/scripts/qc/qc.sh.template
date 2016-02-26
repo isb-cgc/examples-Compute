@@ -14,6 +14,8 @@ if [ ! -f share/{filename}.success ]; then # success indicator file shows that a
 			java -jar /usr/picard.jar CollectMultipleMetrics INPUT={filename} OUTPUT={filename}.multiple_metrics PROGRAM=CollectAlignmentSummaryMetrics PROGRAM=CollectInsertSizeMetrics PROGRAM=CollectQualityYieldMetrics PROGRAM=QualityScoreDistribution
 		fi
 	fi
+	for output_file in $(ls):
+		mv $output_file "{analysis_id}-$output_file"
 	cd .. && cp -R qc-{filename} ../share && touch ../share/{filename}.success && rm ../share/{filename}
 	rm -r qc-{filename}
 else echo 'File {filename} already processed -- skipping'; fi
