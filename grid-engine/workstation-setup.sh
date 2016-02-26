@@ -1,5 +1,6 @@
 #!/bin/bash
 
+this_dir=$PWD
 # set up a virtualenv for elasticluster
 if [[ ! -d ~/virtualenv ]]; then
 	mkdir ~/virtualenv
@@ -16,9 +17,9 @@ cd src && python setup.py install && cd ..
 if [[ ! -d ~/.elasticluster ]]; then
 	mkdir ~/.elasticluster && touch ~/.elasticluster/config
 fi
-cd $HOME
-git clone https://github.com/isb-cgc/examples-Compute.git
-cp -R examples-Compute/grid-engine/elasticluster/config.d ~/.elasticluster
+cd $this_dir
+
+cp -R elasticluster/config.d ~/.elasticluster
 if [[ ! -a ~/.ssh/google_compute_engine || ! -a ~/.ssh/google_compute_engine.pub ]]; then
 	gcloud compute config-ssh
 fi
