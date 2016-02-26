@@ -35,6 +35,10 @@ def index_bam_files(file_list, job_name, output_bucket, logs_bucket, grid_comput
 	
 	with open(text_file_list.name, 'w') as f:
 		for isb_cgc_bam_file in file_list:
+			hack = str(isb_cgc_bam_file).split("gs://") # this is a hack for working around an API endpoints issue currently under investigation
+			if len(hack) > 2:
+			       isb_cgc_bam_file = "gs://{url}".format(url=hack[-1])
+
 			if copy_original_bams:
 				# Update the path to the new location in the user's cloud storage space
 				my_bam_file = isb_cgc_bam_file.split('/')[-1]
@@ -79,7 +83,14 @@ def index_bam_files(file_list, job_name, output_bucket, logs_bucket, grid_comput
 		print "would've run {grid_computing_tools_dir}/src/samtools/launch_samtools.sh {config}".format(grid_computing_tools_dir=grid_computing_tools_dir, config=config_file.name)
 	else:
 		# submit the job
-		output = subprocess.check_output(["{grid_computing_tools_dir}/src/samtools/launch_samtools.sh".format(grid_computing_tools_dir=grid_computing_tools_dir), "{config}".format(config=config_file.name)])
+		try:
+			output = subprocess.check_output(["{grid_computing_tools_dir}/src/samtools/launch_samtools.sh".format(grid_computing_tools_dir=grid_computing_tools_dir), "{config}".format(config=config_file.name)])
+		except subprocess.CalledProcessError as e:
+			print "There was a problem submitting the job: {e}".format(e=e)
+			exit(-1)
+		else:
+			print output
+			print "To monitor the progress of your job, check the output and error logs in $HOME"
 
 	if not copy_original_bams:
 		copyfile(text_file_list.name, "%s-isb-cgc-bam-files.txt" % job_name)
