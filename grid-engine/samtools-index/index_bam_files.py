@@ -17,13 +17,13 @@ COHORT_DISCOVERY_URL = '{root}/discovery/v1/apis/cohort_api/v1/rest'.format(root
 
 # authenticate to ISB-CGC
 CREDENTIALS = isb_auth.get_credentials()
-HTTP = CREDENTIALS.authorize(httplib2.Http())
+http = CREDENTIALS.authorize(httplib2.Http())
 if CREDENTIALS.access_token_expired:
 	CREDENTIALS.refresh(http)
 
 # Service objects
-STORAGE = build("storage", "v1", http=HTTP)
-COHORT = build("cohort_api", "v1", discoveryServiceUrl=COHORT_DISCOVERY_URL, http=HTTP)
+STORAGE = build("storage", "v1", http=http)
+COHORT = build("cohort_api", "v1", discoveryServiceUrl=COHORT_DISCOVERY_URL, http=http)
 
 def index_bam_files(file_list, job_name, output_bucket, logs_bucket, grid_computing_tools_dir, copy_original_bams, dry_run):
 	# Create a text file containing the file list (one file per line)
@@ -139,7 +139,7 @@ if __name__ == "__main__":
 	
 	if len(file_list) > 0:
 		# run the indexing job
-		index_bam_files(file_list, storage, args.job_name, args.output_bucket, args.logs_bucket, args.grid_computing_tools_dir, args.copy_original_bams, args.dry_run)
+		index_bam_files(file_list, args.job_name, args.output_bucket, args.logs_bucket, args.grid_computing_tools_dir, args.copy_original_bams, args.dry_run)
 	else:
 		print "No BAM files found"
 
