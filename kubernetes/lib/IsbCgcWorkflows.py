@@ -8,7 +8,7 @@ import subprocess
 from KubernetesWorkflowRunner import KubernetesWorkflowRunner
 from random import SystemRandom
 
-class Workflow(object):
+class Workflow:
 	def __init__(self, cluster):
 		self.schema = {
 			"name": None,
