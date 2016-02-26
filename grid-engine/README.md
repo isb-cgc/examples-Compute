@@ -104,7 +104,7 @@ cd ~/examples-Compute/grid-engine/samtools-index
 PYTHONPATH=$PYTHONPATH:~/ISB-CGC-Webapp/scripts python index_bam_files.py [OPTIONS]
 ```
 
-For more information about each of the required options for the script, run "python index_bam_files.py -h".
+For more information about each of the required options for the script, run "python index_bam_files.py -h".  Additional information about the script can also be found on the script's [README](./samtools-index/README.md) page.
 
 ###Step 6: Clean up
 
