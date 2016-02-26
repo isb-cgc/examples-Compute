@@ -10,7 +10,7 @@ A link is coming soon... please check back again later.
 
 The easiest way to set up a VM to run the Grid Engine examples is to run some variation of the following command:
 ```
-gcloud compute instances create grid-engine-workstation --metadata startup-script-url=https://raw.githubusercontent.com/isb-cgc/examples-Compute/master/grid-engine/workstation-startup.sh
+gcloud compute instances create grid-engine-workstation --metadata startup-script-url=https://raw.githubusercontent.com/isb-cgc/examples-Compute/master/grid-engine/workstation-startup.sh --scopes https://www.googleapis.com/auth/compute,https://www.googleapis.com/auth/devstorage.full_control
 ```
 
 Once the instance has started, you can ssh to it using the `gcloud compute ssh` command:
