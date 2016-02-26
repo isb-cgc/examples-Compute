@@ -70,7 +70,7 @@ class SamtoolsIndexWorkflow(Workflow):
 			"container_image": "google/cloud-sdk",
 			"restart_policy": "OnFailure"
 		}
-		self.samtools_index_job_template =  = {
+		self.samtools_index_job_template = {
 			"name": "samtools-index-{filename}",
 			"container_image": "nasuno/samtools",
 			"restart_policy": "OnFailure"
