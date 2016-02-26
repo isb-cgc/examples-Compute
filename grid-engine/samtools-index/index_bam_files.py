@@ -113,8 +113,8 @@ if __name__ == "__main__":
 	
 	def bam_file_search(response):
 		file_list = []
-		if response.json()["count"] > 0:
-			for datafilenamekey in response.json()["datafilenamekeys"]:
+		if response["count"] > 0:
+			for datafilenamekey in response["datafilenamekeys"]:
 				if re.search(bam_pattern, datafilenamekey) is not None :
 					file_list.append(datafilenamekey)
 
