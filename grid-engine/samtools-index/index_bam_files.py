@@ -19,11 +19,11 @@ COHORT_DISCOVERY_URL = '{root}/discovery/v1/apis/cohort_api/v1/rest'.format(root
 CREDENTIALS = isb_auth.get_credentials()
 http = CREDENTIALS.authorize(httplib2.Http())
 if CREDENTIALS.access_token_expired:
-	CREDENTIALS.refresh(http)
+	CREDENTIALS.refresh(HTTP)
 
 # Service objects
 STORAGE = build("storage", "v1", http=http)
-COHORT = build("cohort_api", "v1", discoveryServiceUrl=COHORT_DISCOVERY_URL, http=http)
+COHORT = build("cohort_api", "v1", discoveryServiceUrl=COHORT_DISCOVERY_URL, http=HTTP)
 
 def index_bam_files(file_list, job_name, output_bucket, logs_bucket, grid_computing_tools_dir, copy_original_bams, dry_run):
 	# Create a text file containing the file list (one file per line)
@@ -35,6 +35,8 @@ def index_bam_files(file_list, job_name, output_bucket, logs_bucket, grid_comput
 	
 	with open(text_file_list.name, 'w') as f:
 		for isb_cgc_bam_file in file_list:
+			print isb_cgc_bam_file
+			exit(0)
 			if copy_original_bams:
 				# Update the path to the new location in the user's cloud storage space
 				my_bam_file = isb_cgc_bam_file.split('/')[-1]
