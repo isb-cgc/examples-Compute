@@ -1,21 +1,20 @@
-if [ ! -f share/{filename}.success ]; then # success indicator file shows that all qc operations completed successfully
-	mkdir scratch/qc-{filename}
+if [ ! -f share/{filename}.success ] # success indicator file shows that all qc operations completed successfully
+	then mkdir scratch/qc-{filename}
 	cd scratch/qc-{filename}
 	cp ../share/{filename}* .
-	if [ {filename} =~ '^.*\.tar$' || {filename} =~ '^.*\.tar.gz$' ]; then 
-		if [ ! -f {filename}.contents ]; then  # the ".contents" file contains a list of fastq files from an archive downloaded from cloud storage
-			tar -xfvt share/{filename} > {filename}.contents
+	if [ {filename} =~ '^.*\.tar$' || {filename} =~ '^.*\.tar.gz$' ]
+		then if [ ! -f {filename}.contents ] # the ".contents" file contains a list of fastq files from an archive downloaded from cloud storage
+			then tar -xfvt share/{filename} > {filename}.contents
 
 		cat {filename}.contents | tr '\n' | xargs -0 -n1 fastqc
 
-	else 
-		fastqc {filename}
-		if [ {filename} =~ '^.*\.bam$' ]; then
-			java -jar /usr/picard.jar CollectMultipleMetrics INPUT={filename} OUTPUT={filename}.multiple_metrics PROGRAM=CollectAlignmentSummaryMetrics PROGRAM=CollectInsertSizeMetrics PROGRAM=CollectQualityYieldMetrics PROGRAM=QualityScoreDistribution
+	else fastqc {filename}
+		if [ {filename} =~ '^.*\.bam$' ]
+			then java -jar /usr/picard.jar CollectMultipleMetrics INPUT={filename} OUTPUT={filename}.multiple_metrics PROGRAM=CollectAlignmentSummaryMetrics PROGRAM=CollectInsertSizeMetrics PROGRAM=CollectQualityYieldMetrics PROGRAM=QualityScoreDistribution
 		fi
 	fi
-	for output_file in $(ls):
-		mv $output_file "{analysis_id}-$output_file"
+	for output_file in $(ls)
+		do mv $output_file "{analysis_id}-$output_file"
 	cd .. && cp -R qc-{filename} ../share && touch ../share/{filename}.success && rm ../share/{filename}
 	rm -r qc-{filename}
 else echo 'File {filename} already processed -- skipping'; fi
