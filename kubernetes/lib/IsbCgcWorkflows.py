@@ -19,7 +19,8 @@ class Workflow(object):
 				"network": "default",
 				"machine_type": cluster.machine_type,
 				"cluster_node_disk_size": cluster.cluster_node_disk_size,
-				"cluster_nfs_volume_size": cluster.cluster_nfs_volume_size
+				"cluster_nfs_volume_size": cluster.cluster_nfs_volume_size,
+				"tear_down": cluster.tear_down
 			},
 			"jobs": []
 		}
@@ -200,7 +201,7 @@ if __name__ == "__main__":
 	parser.add_argument('--cluster_node_disk_size', required=True, help="Cluster boot disk size in GB")
 	parser.add_argument('--cluster_nfs_volume_size', required=True, help="NFS shared volume size in GB")
 	parser.add_argument('--machine_type', required=True, help="GCE machine type")
-	parser.add_argument('--no_tear_down', required=False, action='store_true', help="If set, the cluster won't be cleaned up at the end of the workflow.  Default is False")
+	parser.add_argument('--tear_down', required=False, action='store_true', help="If set, the cluster will be cleaned up at the end of the workflow.  Default is False")
 	parser.add_argument('--dry_run', required=False, action='store_true', help="If set, will only print the workflow graph that would have run. Default is False")
 
 	subparsers = parser.add_subparsers(help="sub-command help", dest="workflow")

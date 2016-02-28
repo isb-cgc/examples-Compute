@@ -188,6 +188,10 @@ class KubernetesWorkflowRunner():
 					"monitoring_service": {
 						"type": "string",
 						"required": False
+					}, 
+					"tear_down": {
+						"type": "boolean",
+						"required": False
 					}
 				},
 				"job_properties": {

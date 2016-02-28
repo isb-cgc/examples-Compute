@@ -38,7 +38,7 @@ API_HEADERS = {
 }
 	
 class KubernetesToilWorkflow(Job):
-	def __init__(self, workflow_name, project_id, zone, node_num, machine_type, cluster_node_disk_size, cluster_nfs_volume_size, network="default", logging_service=None, monitoring_service=None, tear_down=True):
+	def __init__(self, workflow_name, project_id, zone, node_num, machine_type, cluster_node_disk_size, cluster_nfs_volume_size, network="default", logging_service=None, monitoring_service=None, tear_down=False):
 		super(KubernetesToilWorkflow, self).__init__()
 		self.workflow_name = workflow_name.replace("_", "-")
 		self.project_id = project_id
