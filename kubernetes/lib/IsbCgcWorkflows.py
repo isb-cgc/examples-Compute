@@ -63,7 +63,7 @@ class SamtoolsIndexWorkflow(Workflow):
 			self.samtools_index_script_path = samtools_index_script
 
 		if cleanup_job_script is None:
-			self.cleanup_job_script_path = os.path.join(os.path.dirname(__file__), '../scripts/samtools-index/cleanup.sh.template')
+			self.cleanup_script_path = os.path.join(os.path.dirname(__file__), '../scripts/samtools-index/cleanup.sh.template')
 		else:
 			self.cleanup_script_path = cleanup_script
 
@@ -132,8 +132,8 @@ class QcWorkflow(Workflow):
 		else:
 			self.qc_script_path = qc_script
 
-		if cleanup_job_script is None:
-			self.cleanup_job_script_path = os.path.join(os.path.dirname(__file__), '../scripts/qc/cleanup.sh.template')
+		if cleanup_script is None:
+			self.cleanup_script_path = os.path.join(os.path.dirname(__file__), '../scripts/qc/cleanup.sh.template')
 		else:
 			self.cleanup_script_path = cleanup_script
 
