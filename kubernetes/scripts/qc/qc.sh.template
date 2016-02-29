@@ -1,5 +1,4 @@
 if [ ! -f share/{filename}.success ] 
-	analysis_id=$(cat share/{filename}.analysis_id)
 	then mkdir scratch/qc-{filename}
 	cd scratch/qc-{filename}
 	cp ../share/{filename}* .
@@ -14,7 +13,9 @@ if [ ! -f share/{filename}.success ]
 			then java -jar /usr/picard.jar CollectMultipleMetrics INPUT={filename} OUTPUT={filename}.multiple_metrics PROGRAM=CollectAlignmentSummaryMetrics PROGRAM=CollectInsertSizeMetrics PROGRAM=CollectQualityYieldMetrics PROGRAM=QualityScoreDistribution
 		fi
 	fi
+	analysis_id=$(cat share/{filename}.analysis_id)
 	for output_file in $(ls)
 		do mv $output_file "$analysis_id.$output_file"
+	done
 	cd .. && cp -R qc-{filename} ../share && touch ../share/{filename}.success && rm ../share/{filename} && rm -r qc-{filename}
 else echo 'File {filename} already processed -- skipping'; fi
