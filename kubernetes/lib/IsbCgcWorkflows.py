@@ -190,7 +190,7 @@ def main(args):
 	if args.workflow == "samtools-index":
 		SamtoolsIndexWorkflow(args).run()
 	elif args.workflow == "qc":
-		FastQcWorkflow(args).run()
+		QcWorkflow(args).run()
 
 if __name__ == "__main__":
 	# parse args -- project id, zone, node num, cluster node disk size, cluster nfs volume size, output bucket, list of gcs urls
