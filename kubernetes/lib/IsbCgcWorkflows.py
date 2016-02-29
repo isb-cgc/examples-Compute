@@ -68,17 +68,14 @@ class SamtoolsIndexWorkflow(Workflow):
 			self.cleanup_script_path = cleanup_script
 
 		self.data_staging_job_template = {
-			"name": "stage-file-{filename}",
 			"container_image": "google/cloud-sdk",
 			"restart_policy": "OnFailure"
 		}
 		self.samtools_index_job_template = {
-			"name": "samtools-index-{filename}",
 			"container_image": "nasuno/samtools",
 			"restart_policy": "OnFailure"
 		}
 		self.cleanup_job_template = {
-			"name": "retrieve-index-{filename}",
 			"container_image": "google/cloud-sdk",
 			"restart_policy": "OnFailure"
 		}
@@ -103,16 +100,16 @@ class SamtoolsIndexWorkflow(Workflow):
 			self.output_bucket = '/'.join(self.file_url.split('/')[0:-1])
 
 		data_staging_job = self.data_staging_job_template.copy()
-		data_staging_job["name"].format(filename=filename.replace('.', '-').lower())
+		data_staging_job["name"] = "stage-file-{filename}".format(filename=filename.replace('.', '-').lower())
 		data_staging_job["container_script"] = self.load_script_template(self.data_staging_script_path, url=file_url, filename=filename)
 	
 		samtools_index_job = self.samtools_index_job_template.copy()
-		samtools_index_job["name"].format(filename=filename.replace('.', '-').lower())
+		samtools_index_job["name"] = "samtools-index-{filename}".format(filename=filename.replace('.', '-').lower())
 		samtools_index_job["container_script"].self.load_script_template(self.samtools_index_script_path, filename=filename)
 		samtools_index_job["parents"] = [data_staging_job["name"]]
 	
 		cleanup_job = self.cleanup_job_template.copy()
-		cleanup_job["name"].format(filename=filename.replace('.', '-').lower())
+		cleanup_job["name"] = "name": "retrieve-index-{filename}".format(filename=filename.replace('.', '-').lower())
 		cleanup_job["container_script"] = self.load_script_template(self.cleanup_script_path, filename=filename, destination=self.output_bucket)
 		cleanup_job["parents"] = [samtools_index_job["name"]]
 
@@ -141,17 +138,14 @@ class QcWorkflow(Workflow):
 			self.cleanup_script_path = cleanup_script
 
 		self.data_staging_job_template = {
-			"name": "stage-file-{filename}",
 			"container_image": "google/cloud-sdk",
 			"restart_policy": "OnFailure"
 		}
 		self.qc_job_template = {
-			"name": "fastqc-{filename}",
 			"container_image": "b.gcr.io/isb-cgc-public-docker-images/fastqc",
 			"restart_policy": "OnFailure"
 		}
 		self.cleanup_job_template = {
-			"name": "retrieve-stats-{filename}",
 			"container_image": "google/cloud-sdk",
 			"restart_policy": "OnFailure"
 		}
@@ -178,16 +172,16 @@ class QcWorkflow(Workflow):
 			self.output_bucket = '/'.join(url.split('/')[0:-1])
 
 		data_staging_job = self.data_staging_job_template.copy()
-		data_staging_job["name"].format(filename=filename.replace('.', '-').lower())
+		data_staging_job["name"] = "stage-file-{filename}".format(filename=filename.replace('.', '-').lower())
 		data_staging_job["container_script"] = self.load_script_template(self.data_staging_script_path, url=url, filename=filename)
 	
 		qc_job = self.qc_job_template.copy()
-		qc_job["name"].format(filename=filename.replace('.', '-').lower())
+		qc_job["name"] = "fastqc-{filename}".format(filename=filename.replace('.', '-').lower())
 		qc_job["container_script"] = self.load_script_template(self.qc_script_path, filename=filename, basename='.'.join(filename.split('.')[0:-1]))
 		qc_job["parents"] = [data_staging_job["name"]]
 
 		cleanup_job = self.cleanup_job_template.copy()
-		cleanup_job["name"].format(filename=filename.replace('.', '-').lower())
+		cleanup_job["name"] = "retrieve-stats-{filename}".format(filename=filename.replace('.', '-').lower())
 		cleanup_job["container_script"] = self.load_script_template(self.cleanup_script_path, filename=filename, basename='.'.join(filename.split('.')[0:-1]), destination=self.output_bucket)
 		cleanup_job["parents"] = [qc_job["name"]]
 		
