@@ -2,15 +2,25 @@
 
 ##Setup Instructions
 
-###Step 0: Read the ISB-CGC Compute Documentation
+###Step 0: Read the ISB-CGC Introduction to GCE Documentation
 
-A link is coming soon... please check back again later.
+As part of the ISB-CGC documentation on [readthedocs](http://isb-cancer-genomics-cloud.readthedocs.org/en/latest/index.html) 
+we have an [introduction](http://isb-cancer-genomics-cloud.readthedocs.org/en/latest/sections/gcp-info/GCE-101.html) to Google Compute Engine (GCE) which you may find useful if you are fairly new to this, including many links to more detailed Google documentation.
 
 ###Step 1: Install and Configure Elasticluster on a Compute Engine VM
 
+As described in the above-mentioned introduction, we will use the **gcloud** tool to launch a VM.  You can do this either from the Cloud Shell or from your local workstation where you have installed the Google Cloud SDK.
 The easiest way to set up a VM to run the Grid Engine examples is to run some variation of the following command:
 ```
-gcloud compute instances create grid-engine-workstation --metadata startup-script-url=https://raw.githubusercontent.com/isb-cgc/examples-Compute/master/grid-engine/workstation-startup.sh --scopes https://www.googleapis.com/auth/compute,https://www.googleapis.com/auth/devstorage.full_control
+gcloud compute instances create grid-engine-workstation \
+    --metadata startup-script-url=https://raw.githubusercontent.com/isb-cgc/examples-Compute/master/grid-engine/workstation-startup.sh \
+    --scopes https://www.googleapis.com/auth/compute,https://www.googleapis.com/auth/devstorage.full_control
+```
+If you have not specified your default compute zone, you will be prompted to choose one.  If all goes well, in a minute or less you should get a confirmation that looks like this:
+```
+Created [https://www.googleapis.com/compute/v1/projects/<your-project>/zones/<your-zone>/instances/grid-engine-workstation].
+NAME                    ZONE          MACHINE_TYPE  PREEMPTIBLE INTERNAL_IP EXTERNAL_IP     STATUS
+grid-engine-workstation <your-zone>   n1-standard-1             10.128.0.3  130.211.180.137 RUNNING
 ```
 
 Once the instance has started, you can ssh to it using the `gcloud compute ssh` command:
