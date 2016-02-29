@@ -5,9 +5,8 @@ if [ ! -f share/{filename}.success ]
 	if [ {filename} =~ '^.*\.tar$' || {filename} =~ '^.*\.tar.gz$' ]
 		then if [ ! -f {filename}.contents ] 
 			then tar -xfvt share/{filename} > {filename}.contents
-
+		fi
 		cat {filename}.contents | tr '\n' | xargs -0 -n1 fastqc
-
 	else fastqc {filename}
 		if [ {filename} =~ '^.*\.bam$' ]
 			then java -jar /usr/picard.jar CollectMultipleMetrics INPUT={filename} OUTPUT={filename}.multiple_metrics PROGRAM=CollectAlignmentSummaryMetrics PROGRAM=CollectInsertSizeMetrics PROGRAM=CollectQualityYieldMetrics PROGRAM=QualityScoreDistribution
