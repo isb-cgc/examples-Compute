@@ -1,9 +1,10 @@
-if [ ! -f share/{filename}.success ] # success indicator file shows that all qc operations completed successfully
+if [ ! -f share/{filename}.success ] 
+	analysis_id=$(cat share/{filename}.analysis_id)
 	then mkdir scratch/qc-{filename}
 	cd scratch/qc-{filename}
 	cp ../share/{filename}* .
 	if [ {filename} =~ '^.*\.tar$' || {filename} =~ '^.*\.tar.gz$' ]
-		then if [ ! -f {filename}.contents ] # the ".contents" file contains a list of fastq files from an archive downloaded from cloud storage
+		then if [ ! -f {filename}.contents ] 
 			then tar -xfvt share/{filename} > {filename}.contents
 
 		cat {filename}.contents | tr '\n' | xargs -0 -n1 fastqc
@@ -14,7 +15,6 @@ if [ ! -f share/{filename}.success ] # success indicator file shows that all qc 
 		fi
 	fi
 	for output_file in $(ls)
-		do mv $output_file "{analysis_id}-$output_file"
-	cd .. && cp -R qc-{filename} ../share && touch ../share/{filename}.success && rm ../share/{filename}
-	rm -r qc-{filename}
+		do mv $output_file "$analysis_id.$output_file"
+	cd .. && cp -R qc-{filename} ../share && touch ../share/{filename}.success && rm ../share/{filename} && rm -r qc-{filename}
 else echo 'File {filename} already processed -- skipping'; fi

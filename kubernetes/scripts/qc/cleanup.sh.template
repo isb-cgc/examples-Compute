@@ -1,4 +1,4 @@
 if [ -f share/{filename}.success ]
 	then analysis_id=$(cat share/{filename}.analysis_id)
-	gsutil -h "x-goog-meta-analysis-id:$analysis_id" -o Credentials:gs_oauth2_refresh_token=$(cat /data-access/refresh-token) -o Oauth2:oauth2_refresh_retries=50 cp share/{basename}* {destination}
+	gsutil -h "x-goog-meta-analysis-id:$analysis_id" -o Credentials:gs_oauth2_refresh_token=$(cat /data-access/refresh-token) -o Oauth2:oauth2_refresh_retries=50 cp share/qc-{filename}/* {destination}
 else echo 'Success indicator file not found'; fi
