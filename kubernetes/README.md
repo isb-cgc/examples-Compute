@@ -30,8 +30,8 @@ gcloud compute instances create isb-cgc-workflows --machine-type n1-standard-4 -
 ```
 gcloud compute ssh isb-cgc-workflows
 >> git clone https://github.com/isb-cgc/examples-Compute.git
->> cd examples-Compute/kubernetes/scripts
->> ./workstation_setup
+>> cd examples-Compute/kubernetes/scripts/setup
+>> ./workstation_setup.sh
 ```
 - Authenticate to Google by running `gcloud auth login` on your workstation and following all prompts.
 - Source the "toil" python virtual environment created by running the [workstation setup script](./scripts/setup/workstation_setup.sh):
@@ -40,7 +40,7 @@ source ~/virtualenv/toil/bin/activate
 ```
 - Make sure the Kubernetes workflow runner classes are appended to the PYTHONPATH variable:
 ```
-export PYTHONPATH=$PYTHONPATH:/home/<user>/examples-Compute/kubernetes/lib
+export PYTHONPATH=$PYTHONPATH:$HOME/examples-Compute/kubernetes/lib
 ```
 
 ## Command Structure
