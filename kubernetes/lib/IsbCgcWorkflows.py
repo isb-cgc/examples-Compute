@@ -109,7 +109,7 @@ class SamtoolsIndexWorkflow(Workflow):
 		samtools_index_job["parents"] = [data_staging_job["name"]]
 	
 		cleanup_job = self.cleanup_job_template.copy()
-		cleanup_job["name"] = "name": "retrieve-index-{filename}".format(filename=filename.replace('.', '-').lower())
+		cleanup_job["name"] = "retrieve-index-{filename}".format(filename=filename.replace('.', '-').lower())
 		cleanup_job["container_script"] = self.load_script_template(self.cleanup_script_path, filename=filename, destination=self.output_bucket)
 		cleanup_job["parents"] = [samtools_index_job["name"]]
 
