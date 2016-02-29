@@ -9,63 +9,59 @@ we have an [introduction](http://isb-cancer-genomics-cloud.readthedocs.org/en/la
 
 ###Step 1: Install and Configure Elasticluster on a Compute Engine VM
 
-As described in the above-mentioned introduction, we will use the **gcloud** tool to launch a VM.  You can do this either from the Cloud Shell or from your local workstation where you have installed the Google Cloud SDK.
-The easiest way to set up a VM to run the Grid Engine examples is to run some variation of the following command:
+As described in the above-mentioned introduction, we will use the **gcloud** tool to launch a VM.  You can do this either from the Cloud Shell or from your local workstation where you have installed the Google Cloud SDK.  Using the "startup" script provided (which uses apt-get and pip to install certain packages that will be needed), you can set up a VM to run the Grid Engine example using the following command:
 ```
 gcloud compute instances create grid-engine-workstation \
     --metadata startup-script-url=https://raw.githubusercontent.com/isb-cgc/examples-Compute/master/grid-engine/workstation-startup.sh \
     --scopes https://www.googleapis.com/auth/compute,https://www.googleapis.com/auth/devstorage.full_control
 ```
-If you have not specified your default compute zone, you will be prompted to choose one.  If all goes well, in a minute or less you should get a confirmation that looks like this:
+If you have not specified your default compute zone, you will be prompted to choose one -- if this occurs, we sugget you set your default compute zone, *eg*: ``gcloud config set compute/zone us-central1-a``.  
+
+If all goes well, in a minute or less you should get a confirmation that looks like this:
 ```
 Created [https://www.googleapis.com/compute/v1/projects/<your-project>/zones/<your-zone>/instances/grid-engine-workstation].
 NAME                    ZONE          MACHINE_TYPE  PREEMPTIBLE INTERNAL_IP EXTERNAL_IP     STATUS
 grid-engine-workstation <your-zone>   n1-standard-1             10.128.0.3  130.211.180.137 RUNNING
 ```
 
-Once the instance has started, you can ssh to it using the `gcloud compute ssh` command:
+Once the instance has started, you can ssh to it using the ``gcloud compute ssh`` command:
 ```
 gcloud compute ssh grid-engine-workstation
 ```
+You may again be prompted to specify the zone if you have not set it as part of your configuration.  You may also be warned that an SSH key needs to be generated.  If so, enter "Y" (or press return) to continue.  (You may then also be prompted to enter a passphrase if you want, though you can leave that blank and press return again.)
 
-Once logged in, you can finish the setup process by authenticating to Google, cloning this repo and running an additional setup script:
+Once logged in, you can finish the setup process by authenticating to Google, using either the ``gcloud init`` or the ``gcloud auth login`` flows.  (This step is necessary because ``gcloud compute ssh`` will have signed you in using a "service account" rather than your "user credentials", and access to data hosted by the ISB-CGC is granted based on user credentials rather than service accounts.)
+
+Once you have gone through the auth flow, the next step is to clone this repo and run an additional setup script:
 ```
-gcloud auth login  # use the same identity that you used to create the instance
 git clone https://github.com/isb-cgc/examples-Compute.git
 cd examples-Compute/grid-engine
 chmod u+x workstation-setup.sh
 ./workstation-setup.sh
 ```
+These commands will install all of the necessary dependencies and github repos, and partially configure Elasticluster.  Be sure to read the [documentation](https://cloud.google.com/sdk/gcloud/reference/compute/instances/create) for the `gcloud compute instances create` command to determine whether you may need additional command line flags to configure your workstation.  Alternatively, you can create an instance under ["Products and Services" -> "Compute Engine"](https://console.cloud.google.com/compute) in the Google Developers Console.
 
-The above command will install all of the necessary dependencies and github repos, and partially configure Elasticluster.  Be sure to read the [documentation](https://cloud.google.com/sdk/gcloud/reference/compute/instances/create) for the `gcloud compute instances create` command to figure out what additional command line flags you will need to configure your workstation.  Alternatively, you can create an instance under ["Products and Services" -> "Compute Engine"](https://console.cloud.google.com/compute) in the Google Developer's Console.
-
-You will also need to provide some additional configuration values for each configuration file created by the workstation setup script in ~/.elasticluster/config.d.  The required manual configuration can be found in the individual files with in ~/.elasticluster/config.d, as follows:
-
+You will also need to customize the configuration defined in ~/.elasticluster/config.d/.  The required configuration file can be found under ~/.elasticluster/config.d/.  For this particular SAMtools example, the file is called samtools-index.conf and there are four specific places where you need to replace text such as <PROJECT ID> with your own information.  The relevant portion of the config file looks like this:
 ```
 ...
 [cloud/google-cloud]
-...
-gce_project_id=<YOUR GOOGLE PROJECT ID HERE> 
-gce_client_id=<YOUR GOOGLE CLIENT ID HERE>
-gce_client_secret=<YOUR GOOGLE CLIENT SECRET HERE>
+provider=google
+gce_project_id=<PROJECT ID> 
+gce_client_id=<CLIENT ID>
+gce_client_secret=<CLIENT SECRET>
 ...
 [login/google-login]
-image_user=<YOUR LOGIN USER NAME HERE>
-image_user_sudo=root
-image_sudo=True
-user_key_name=elasticluster
-user_key_private=~/.ssh/google_compute_engine # be sure to check that these exist
-user_key_public=~/.ssh/google_compute_engine.pub
+image_user=<GOOGLE ACCOUNT USER NAME>
 ...
 ```
 
 "gce_project_id" will be the name of the Google Cloud Project that you want to create your instance in.  This is usually a string of all lowercase letters, numbers, and dashes.
 
-"gce_client_id" and "gce_client_secret" refer to an existing Oauth2 client identity in your Google Cloud Project.  If you haven't already, you can create a new Oauth2 client identity through the Google Developer's Console.  To do this, navigate to  ["Products and Services" -> "API Manager" -> "Credentials"](https://console.cloud.google.com/apis/credentials) in the Developer's Console.  Once the API Manager screen loads, click "New Credentials" -> "Oauth2 client id", and then follow all the prompts.  For more information about how to find your client id and client secret, see the documentation [here](http://googlegenomics.readthedocs.org/en/latest/use_cases/setup_gridengine_cluster_on_compute_engine/index.html#index-obtaining-client-id-and-client-secrets).
+"gce_client_id" and "gce_client_secret" refer to an existing Oauth2 client identity in your Google Cloud Project.  If you haven't already, you can create a new Oauth2 client identity through the Google Developer's Console.  To do this, navigate to  ["Products and Services" -> "API Manager" -> "Credentials"](https://console.cloud.google.com/apis/credentials) in the Developer's Console.  Once the API Manager screen loads, click "New Credentials" -> "Oauth2 client id", and then follow all the prompts.  For more information about how to find your client id and client secret, see this [documentation](http://googlegenomics.readthedocs.org/en/latest/use_cases/setup_gridengine_cluster_on_compute_engine/index.html#index-obtaining-client-id-and-client-secrets).
 
 "image_user" will be the Linux username created for you on the Grid Engine cluster.
 
-You will also need to make sure that you have generated an SSH keypair for accessing GCE.  By default, these keys are stored in ~/.ssh/google_compute_engine and ~/.ssh/google_compute_engine.pub.  This step is already done for you in the workstation setup script.  For reference, see the documentation [here](http://googlegenomics.readthedocs.org/en/latest/use_cases/setup_gridengine_cluster_on_compute_engine/index.html#index-generating-ssh-keypair). 
+You will also need to make sure that you have generated an SSH keypair for accessing GCE.  By default, these keys are stored in ~/.ssh/google_compute_engine and ~/.ssh/google_compute_engine.pub.  This step is already done for you in the workstation setup script.  For reference, see this [documentation](http://googlegenomics.readthedocs.org/en/latest/use_cases/setup_gridengine_cluster_on_compute_engine/index.html#index-generating-ssh-keypair). 
 
 Refer to the [Elasticluster configuration documentation](http://elasticluster.readthedocs.org/en/latest/configure.html) for more information about each required configuration parameter.
 
