@@ -1,8 +1,8 @@
 #ISB-CGC Workflow Examples 
 
 `IsbCgcWorkflows.py` is a command line tool for running pre-coded workflows on Kubernetes.  Currently, the following workflows are supported:
-- samtools-index
-- fastqc
+- samtools-index: Runs `samtools index` on a list of BAM files
+- qc: Runs `fastqc` and `picard` on a list of fastq and/or BAM files
 
 More pre-coded workflows will be added in the future, so check often for updates.
 
@@ -24,7 +24,7 @@ It is also recommended to read the following ISB-CGC documentation in order to l
 Once you have met the prerequisites above, follow these setup steps to prepare your workstation:
 - Create Google Compute Engine VM instance for your workstation in your Google Cloud Project:
 ```
-gcloud compute instances create isb-cgc-workflows --machine_type n1-standard4 --metadata startup-script-url="https://raw.githubusercontent.com/isb-cgc/examples-Compute/develop/kubernetes/scripts/setup/workstation-startup.sh"
+gcloud compute instances create isb-cgc-workflows --machine-type n1-standard-4 --metadata startup-script-url="https://raw.githubusercontent.com/isb-cgc/examples-Compute/develop/kubernetes/scripts/setup/workstation_startup.sh" --scopes https://www.googleapis.com/auth/compute,https://www.googleapis.com/auth/devstorage.full_control
 ```
 - SSH to the workstation and run the workstation setup script:
 ```
@@ -73,12 +73,12 @@ python IsbCgcWorkflows.py [global-args] samtools-index --input_files open-access
 The `--input_files` flag allows you to specify a path to a list of GCS URLs, one per line, each representing a single input file to process.
 The `--output_bucket` flag allows you to specify a GCS output bucket (or directory object) URL for uploading the results files.  If not provided, the results will follow the same object hierarchy of the original input file; therefore, unless you have WRITE permissions on the location of the original object, you must specify an output destination for your results.
 
-### Running the `fastqc` workflow
+### Running the `qc` workflow
 
-To run the example `fastqc` workflow, run the following command:
+To run the example `qc` workflow, run the following command:
 
 ```
-python IsbCgcWorkflows.py [global-args] fastqc --input_files open-access-bam-files.txt --output_bucket gs://my-bucket/destination
+python IsbCgcWorkflows.py [global-args] qc --input_files open-access-bam-files.txt --output_bucket gs://my-bucket/destination
 ```
 
 The `--input_files` flag allows you to specify a path to a list of GCS URLs, one per line, each representing a single input file to process.
