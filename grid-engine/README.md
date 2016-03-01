@@ -79,13 +79,14 @@ Then run the following command to start the cluster setup process:
 elasticluster start <cluster-name>
 ```
 
-The "cluster-name" was defined in the configuration file, and for this example is "samtools-index".  (The cluster names can be found in the "cluster" sections of a configuration file.  For example, the "samtools-index" cluster name can be found on the line "[cluster/samtools-index]" in [examples-Compute/grid-engine/elasticluster/config.d/samtools-index.conf](./elasticluster/config.d/samtools-index.conf).)
+The "cluster-name" was defined in the configuration file, and for this example is "samtools-index".  (The cluster names can be found in the "cluster" sections of a configuration file.  For example, the "samtools-index" cluster name can be found on the line ``[cluster/samtools-index]`` in [examples-Compute/grid-engine/elasticluster/config.d/samtools-index.conf](./elasticluster/config.d/samtools-index.conf).)
 
 Note that projects have quota limits to protect you from accidentally spinning up thousands of VMs at once.  If your quota is insufficient to run this example, you may see the following type of error: 
 ```
 grid-engine-workstation gc3.elasticluster[10019] ERROR Error creating instance The following error occurred while interactin
 g with the cloud provider Quota 'CPUS' exceeded.  Limit: 8.0
 ```
+If this occurs, you can check your [resource quotas](https://cloud.google.com/compute/docs/resource-quotas?hl=en_US&_ga=1.140308788.601337122.1456702511) in the Cloud Console, under Compute Engine > Quotas, and if necessary you can request an increase.
 
 ###Step 3: Copy the grid engine master setup script to the Grid Engine master 
 
