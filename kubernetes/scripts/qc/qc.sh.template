@@ -5,8 +5,7 @@ if [ ! -f share/{filename}.success ]
 	if [ {filename} =~ '^.*\.tar$' || {filename} =~ '^.*\.tar.gz$' && ! -f ../../scratch/{filename}.fastqc.success ]
 		then if [ ! -f {filename}.contents ] 
 			then tar -xfvt share/{filename} > {filename}.contents
-		fi
-		(cat {filename}.contents | tr '\n' | xargs -0 -n1 fastqc) && (touch ../../share/{filename}.fastqc.success)
+		fi && (cat {filename}.contents | tr '\n' | xargs -0 -n1 fastqc) && (touch ../../share/{filename}.fastqc.success)
 	elif [ ! -f ../../scratch/{filename}.fastqc.success ]
 		then fastqc {filename} && touch ../../share/{filename}.fastqc.success
 		if [ {filename} =~ '^.*\.bam$' && ! -f ../../share/{filename}.picard.success ]

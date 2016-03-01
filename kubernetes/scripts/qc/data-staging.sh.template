@@ -1,4 +1,3 @@
 if [ ! -f share/{filename} ]
-	then python -c "import subprocess; metadata = subprocess.check_output(['gsutil', 'ls', '-L', '{url}']); metadata_tag = metadata.partition('Metadata:')[2].partition('Hash')[0]; analysis_id = metadata_tag.strip().split()[-1]; print analysis_id" > share/{filename}.analysis_id
-	gsutil -m -o Credentials:gs_oauth2_refresh_token=$(cat /data-access/refresh-token) -o Oauth2:oauth2_refresh_retries=50 cp {url} {url}.bai share
+	then python -c "import subprocess; metadata = subprocess.check_output(['gsutil', 'ls', '-L', '{url}']); metadata_tag = metadata.partition('Metadata:')[2].partition('Hash')[0]; analysis_id = metadata_tag.strip().split()[-1]; print analysis_id" > share/{filename}.analysis_id && gsutil -m -o Credentials:gs_oauth2_refresh_token=$(cat /data-access/refresh-token) -o Oauth2:oauth2_refresh_retries=50 cp {url} {url}.bai share
 else echo 'File {filename} already staged -- skipping'; fi
