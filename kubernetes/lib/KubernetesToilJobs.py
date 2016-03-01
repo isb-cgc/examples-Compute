@@ -313,7 +313,7 @@ class KubernetesToilWorkflow(Job):
 		grep = subprocess.Popen(["grep", self.workflow_name], stdout=subprocess.PIPE, stdin=managed_instance_groups.stdout, stderr=subprocess.STDOUT)
 		group_name = grep.communicate()[0].split(' ')[0]
 		try:
-			subprocess.check_call(["gcloud", "compute", "instance-groups", "managed", "set-autoscaling", group_name, "--max-num-replicas", self.nodes, "--min-num-replicas", 1, "--scale-based-on-cpu", "--target-cpu-utilization", "0.6"])
+			subprocess.check_call(["gcloud", "compute", "instance-groups", "managed", "set-autoscaling", group_name, "--max-num-replicas", self.cluster_spec["cluster"]["initialNodeCount"], "--min-num-replicas", 1, "--scale-based-on-cpu", "--target-cpu-utilization", "0.6"])
 		except subprocess.CalledProcessError as e:
 			filestore.logToMaster("Couldn't set autoscaling on the cluster: {e}".format(e=e))
 			exit(-1)
@@ -395,7 +395,7 @@ class KubernetesToilWorkflow(Job):
 				
 		# autoscale the NFS service controller
 		try:
-			subprocess.check_call(["kubectl", "autoscale", "rc", self.nfs_service_controller_spec["metadata"]["name"], "--max={max_pods}".format(max_pods=self.nodes), "--min=1"])
+			subprocess.check_call(["kubectl", "autoscale", "rc", self.nfs_service_controller_spec["metadata"]["name"], "--max={max_pods}".format(max_pods=self.cluster_spec["cluster"]["initialNodeCount"]), "--min=1"])
 		except subprocess.CalledProcessError as e:
 			filestore.logToMaster("Couldn't autoscale the NFS service container: {e}".format(e=e))
 			exit(-1)
