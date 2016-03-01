@@ -313,7 +313,7 @@ class KubernetesToilWorkflow(Job):
 		grep = subprocess.Popen(["grep", self.workflow_name], stdout=subprocess.PIPE, stdin=managed_instance_groups.stdout, stderr=subprocess.STDOUT)
 		group_name = grep.communicate()[0].split(' ')[0]
 		try:
-			subprocess.check_call(["gcloud", "compute", "instance-groups", "managed", "set-autoscaling", group_name, "--max-num-replicas", self.cluster_spec["cluster"]["initialNodeCount"], "--min-num-replicas", 1, "--scale-based-on-cpu", "--target-cpu-utilization", "0.6"])
+			subprocess.check_call(["gcloud", "compute", "instance-groups", "managed", "set-autoscaling", group_name, "--max-num-replicas", "{max_r}".format(max_r=self.cluster_spec["cluster"]["initialNodeCount"]), "--min-num-replicas", "1", "--scale-based-on-cpu", "--target-cpu-utilization", "0.6"])
 		except subprocess.CalledProcessError as e:
 			filestore.logToMaster("Couldn't set autoscaling on the cluster: {e}".format(e=e))
 			exit(-1)
