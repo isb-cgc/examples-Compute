@@ -6,8 +6,8 @@ Current examples include how to run CWL workflows on a single VM, and how to use
 
 
 * **Using CWL (Common Workflow Language)**
-  *  **cwl-examples**: several examples of specific CWL workflows
+  *  **cwl-examples**: Several examples of specific CWL workflows.
 
 
 * **Using Grid Engine**  
-  *  **grid-engine**: instructions on using Elasticluster to create clusters of GCE VMs running Grid Engine.
+  *  **grid-engine**: An example using Elasticluster to create clusters of GCE VMs running Grid Engine.  (This example was inspired by the Google Genomics example described [here](http://googlegenomics.readthedocs.org/en/latest/use_cases/run_samtools_over_many_files/).  Please be sure to also have a look at the other [data-processing](http://googlegenomics.readthedocs.org/en/latest/sections/process_data.html) examples!)
