@@ -307,6 +307,16 @@ class KubernetesToilWorkflow(Job):
 		except subprocess.CalledProcessError as e:
 			filestore.logToMaster("Couldn't set cluster context: {reason}".format(reason=e))
 			exit(-1) # raise an exception
+			
+		# set autoscaling on the cluster
+		managed_instance_groups = subprocess.Popen(["gcloud", "compute", "instance-groups", "managed", "list"], stdout=subprocess.PIPE)
+		grep = subprocess.Popen(["grep", self.workflow_name], stdout=subprocess.PIPE, stdin=managed_instance_groups.stdout, stderr=subprocess.STDOUT)
+		group_name = grep.communicate()[0].split(' ')[0]
+		try:
+			subprocess.check_call(["gcloud", "compute", "instance-groups", "managed", "set-autoscaling", group_name, "--max-num-replicas", self.nodes, "--min-num-replicas", 1, "--scale-based-on-cpu", "--target-cpu-utilization", "0.6"])
+		except subprocess.CalledProcessError as e:
+			filestore.logToMaster("Couldn't set autoscaling on the cluster: {e}".format(e=e))
+			exit(-1)
 
 		filestore.logToMaster("{timestamp}  Cluster configuration was successful!".format(timestamp=self.create_timestamp()))
 
@@ -382,6 +392,14 @@ class KubernetesToilWorkflow(Job):
 			else:
 				filestore.logToMaster("NFS persistent volume claim creation failed: {reason}".format(reason=response.content))
 				exit(-1) # probably should raise an exception
+				
+		# autoscale the NFS service controller
+		try:
+			subprocess.check_call(["kubectl", "autoscale", "rc", self.nfs_service_controller_spec["metadata"]["name"], "--max={max_pods}".format(max_pods=self.nodes), "--min=1"])
+		except subprocess.CalledProcessError as e:
+			filestore.logToMaster("Couldn't autoscale the NFS service container: {e}".format(e=e)
+			exit(-1)
+			
 
 	def create_cluster_admin_password(self):
 		return ''.join(SystemRandom().choice(string.ascii_uppercase + string.ascii_lowercase + string.digits) for _ in range(16))	
