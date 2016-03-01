@@ -397,7 +397,7 @@ class KubernetesToilWorkflow(Job):
 		try:
 			subprocess.check_call(["kubectl", "autoscale", "rc", self.nfs_service_controller_spec["metadata"]["name"], "--max={max_pods}".format(max_pods=self.nodes), "--min=1"])
 		except subprocess.CalledProcessError as e:
-			filestore.logToMaster("Couldn't autoscale the NFS service container: {e}".format(e=e)
+			filestore.logToMaster("Couldn't autoscale the NFS service container: {e}".format(e=e))
 			exit(-1)
 			
 
