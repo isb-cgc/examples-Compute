@@ -14,7 +14,7 @@ if [ ! -f share/{filename}.success ]
 			then java -jar /usr/picard/picard.jar BuildBamIndex I={filename} O={filename}.bai
 		fi && java -jar /usr/picard/picard.jar CollectMultipleMetrics INPUT={filename} OUTPUT={filename}.multiple_metrics PROGRAM=CollectAlignmentSummaryMetrics PROGRAM=CollectInsertSizeMetrics PROGRAM=CollectQualityYieldMetrics PROGRAM=QualityScoreDistribution && touch ../../share/{filename}.picard.success
 	fi
-	analysis_id=$(cat share/{filename}.analysis_id)
+	analysis_id=$(cat ../../share/{filename}.analysis_id)
 	mkdir ../../share/qc-{filename}
 	for output_file in $(ls)
 		do cp $output_file ../../share/qc-{filename}/$analysis_id.$output_file

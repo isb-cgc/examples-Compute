@@ -142,7 +142,7 @@ class QcWorkflow(Workflow):
 			"restart_policy": "OnFailure"
 		}
 		self.qc_job_template = {
-			"container_image": "b.gcr.io/isb-cgc-public-docker-images/fastqc",
+			"container_image": "b.gcr.io/isb-cgc-public-docker-images/qctools",
 			"restart_policy": "OnFailure"
 		}
 		self.cleanup_job_template = {
