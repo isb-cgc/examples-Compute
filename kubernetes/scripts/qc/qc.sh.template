@@ -1,20 +1,21 @@
 if [ ! -f share/{filename}.success ] 
 	then mkdir scratch/qc-{filename}
 	cd scratch/qc-{filename}
-	cp ../share/{filename}* .
-	if [ {filename} =~ '^.*\.tar$' || {filename} =~ '^.*\.tar.gz$' ]
+	cp ../../share/{filename}* .
+	if [ {filename} =~ '^.*\.tar$' || {filename} =~ '^.*\.tar.gz$' && ! -f ../../scratch/{filename}.fastqc.success ]
 		then if [ ! -f {filename}.contents ] 
 			then tar -xfvt share/{filename} > {filename}.contents
 		fi
-		cat {filename}.contents | tr '\n' | xargs -0 -n1 fastqc
-	else fastqc {filename}
-		if [ {filename} =~ '^.*\.bam$' ]
-			then java -jar /usr/picard.jar CollectMultipleMetrics INPUT={filename} OUTPUT={filename}.multiple_metrics PROGRAM=CollectAlignmentSummaryMetrics PROGRAM=CollectInsertSizeMetrics PROGRAM=CollectQualityYieldMetrics PROGRAM=QualityScoreDistribution
+		(cat {filename}.contents | tr '\n' | xargs -0 -n1 fastqc) && (touch ../../share/{filename}.fastqc.success)
+	elif [ ! -f ../../scratch/{filename}.fastqc.success ]
+		then fastqc {filename} && touch ../../share/{filename}.fastqc.success
+		if [ {filename} =~ '^.*\.bam$' && ! -f ../../share/{filename}.picard.success ]
+			then java -jar /usr/picard.jar CollectMultipleMetrics INPUT={filename} OUTPUT={filename}.multiple_metrics PROGRAM=CollectAlignmentSummaryMetrics PROGRAM=CollectInsertSizeMetrics PROGRAM=CollectQualityYieldMetrics PROGRAM=QualityScoreDistribution && ../../share/{filename}.picard.success
 		fi
 	fi
 	analysis_id=$(cat share/{filename}.analysis_id)
+	mkdir ../share/qc-{filename}
 	for output_file in $(ls)
-		do mv $output_file "$analysis_id.$output_file"
-	done
-	cd .. && cp -R qc-{filename} ../share && touch ../share/{filename}.success && rm ../share/{filename} && rm -r qc-{filename}
+		do cp $output_file "$analysis_id.$output_file" ../share/qc-{filename} 
+	done && touch ../share/{filename}.success && rm ../share/{filename} && rm -r qc-{filename}
 else echo 'File {filename} already processed -- skipping'; fi
