@@ -68,7 +68,7 @@ class SamtoolsIndexWorkflow(Workflow):
 			self.cleanup_script_path = cleanup_script
 
 		self.data_staging_job_template = {
-			"container_image": "google/cloud-sdk",
+			"container_image": "b.gcr.io/isb-cgc-public-docker-images/cloud-sdk-crcmod",
 			"restart_policy": "OnFailure"
 		}
 		self.samtools_index_job_template = {
