@@ -152,3 +152,4 @@ To delete your grid engine cluster once you're finished with it, run the followi
 ```
 elasticluster stop <cluster-name>
 ```
+Finally, you should either [stop](https://cloud.google.com/compute/docs/reference/latest/instances/stop) or [delete](https://cloud.google.com/compute/docs/reference/latest/instances/delete) the ``grid-engine-workstation`` VM as well, unless you plan to continue using it.
