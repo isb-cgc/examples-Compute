@@ -11,12 +11,12 @@ if [ ! -f share/{filename}.success ]
 		if [ {filename} =~ '^.*\.bam$' && ! -f ../../share/{filename}.picard.success ]
 			then if [ ! -f {filename}.bai ]
 				then java -jar /usr/picard.jar BuildBamIndex I={filename} O={filename}.bai
-			fi && java -jar /usr/picard.jar CollectMultipleMetrics INPUT={filename} OUTPUT={filename}.multiple_metrics PROGRAM=CollectAlignmentSummaryMetrics PROGRAM=CollectInsertSizeMetrics PROGRAM=CollectQualityYieldMetrics PROGRAM=QualityScoreDistribution && ../../share/{filename}.picard.success
+			fi && java -jar /usr/picard.jar CollectMultipleMetrics INPUT={filename} OUTPUT={filename}.multiple_metrics PROGRAM=CollectAlignmentSummaryMetrics PROGRAM=CollectInsertSizeMetrics PROGRAM=CollectQualityYieldMetrics PROGRAM=QualityScoreDistribution && touch ../../share/{filename}.picard.success
 		fi
 	fi
 	analysis_id=$(cat share/{filename}.analysis_id)
 	mkdir ../share/qc-{filename}
 	for output_file in $(ls)
-		do cp $output_file "$analysis_id.$output_file" ../share/qc-{filename} 
-	done && touch ../share/{filename}.success && rm ../share/{filename} && rm -r qc-{filename}
+		do cp $output_file ../share/qc-{filename}/"$analysis_id.$output_file"
+	done && touch ../share/{filename}.success && rm ../share/{filename} && cd .. && rm -r qc-{filename}
 else echo 'File {filename} already processed -- skipping'; fi
