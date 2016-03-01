@@ -106,7 +106,7 @@ class KubernetesToilWorkflow(Job):
 				"name": "nfs-server"
 			},
 			"spec": {
-				"replicas": 1,
+				"replicas": 4,
 				"selector": {
 					"role": "nfs-server"
 				},
