@@ -9,7 +9,9 @@ if [ ! -f share/{filename}.success ]
 	elif [ ! -f ../../scratch/{filename}.fastqc.success ]
 		then fastqc {filename} && touch ../../share/{filename}.fastqc.success
 		if [ {filename} =~ '^.*\.bam$' && ! -f ../../share/{filename}.picard.success ]
-			then java -jar /usr/picard.jar CollectMultipleMetrics INPUT={filename} OUTPUT={filename}.multiple_metrics PROGRAM=CollectAlignmentSummaryMetrics PROGRAM=CollectInsertSizeMetrics PROGRAM=CollectQualityYieldMetrics PROGRAM=QualityScoreDistribution && ../../share/{filename}.picard.success
+			then if [ ! -f {filename}.bai ]
+				then java -jar /usr/picard.jar BuildBamIndex I={filename} O={filename}.bai
+			fi && java -jar /usr/picard.jar CollectMultipleMetrics INPUT={filename} OUTPUT={filename}.multiple_metrics PROGRAM=CollectAlignmentSummaryMetrics PROGRAM=CollectInsertSizeMetrics PROGRAM=CollectQualityYieldMetrics PROGRAM=QualityScoreDistribution && ../../share/{filename}.picard.success
 		fi
 	fi
 	analysis_id=$(cat share/{filename}.analysis_id)
