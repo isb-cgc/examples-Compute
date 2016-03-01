@@ -148,7 +148,7 @@ For more information about each of the required options for the script, run "pyt
 
 ###Step 6: Clean up
 
-To delete your grid engine cluster once you're finished with it, run the following Elasticluster command:
+To delete your grid engine cluster once you're finished with it, run the following Elasticluster command *from* the ``grid-engine-workstation`` from which you created the cluster:
 ```
 elasticluster stop <cluster-name>
 ```
