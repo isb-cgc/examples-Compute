@@ -157,6 +157,7 @@ class QcWorkflow(Workflow):
 			file_list = f.readlines()
 		
 		for url in file_list:
+			url = url.strip()
 			try: 
 				subprocess.check_call(["gsutil", "stat", url])
 			except ValueError:
