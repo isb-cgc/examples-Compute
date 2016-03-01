@@ -88,12 +88,36 @@ g with the cloud provider Quota 'CPUS' exceeded.  Limit: 8.0
 ```
 If this occurs, you can check your [resource quotas](https://cloud.google.com/compute/docs/resource-quotas?hl=en_US&_ga=1.140308788.601337122.1456702511) in the Cloud Console, under Compute Engine > Quotas, and if necessary you can request an increase.
 
+*Note*: If you see errors during this "start" process, which may end with a warning saying that "YOUR CLUSTER IS NOT READY  YET!", it may be necessary to run the "setup" command so that Ansible will rerun any steps that failed due to transient issues the first.  To do this, please run this command:
+```
+elasticluster setup <cluster-name>
+```
+
+The start/setup process should conclude with the following message indicating that your cluster is ready and giving you some tips on how to interact with it:
+```
+Your cluster is ready!
+
+Cluster name:     samtools-index
+Cluster template: samtools-index
+Default ssh to node: master001
+- master nodes: 1
+- compute nodes: 5
+
+To login on the frontend node, run the command:
+
+    elasticluster ssh samtools-index
+
+To upload or download files to the cluster, use the command:
+
+    elasticluster sftp samtools-index
+```
+
 ###Step 3: Copy the grid engine master setup script to the Grid Engine master 
 
-Once the setup has run successfully to completion, copy the setup script to the Grid Engine master node:
+Once the setup has run successfully to completion, copy the setup script to the Grid Engine master node.  (Note that you should be in the ``~/examples-Compute/grid-engine/`` directory at this point.)
 ```
 elasticluster sftp <cluster-name> << 'EOF'
-put examples-Compute/grid-engine/grid-engine-master-setup.sh
+put grid-engine-master-setup.sh
 EOF
 ```
 
@@ -109,6 +133,7 @@ Then run the setup script that you just copied to the master:
 chmod u+x grid-engine-master-setup.sh
 ./grid-engine-master-setup.sh
 ```
+
 ###Step 5: Run the examples
 
 You should now be ready to run the example scripts on your Grid Engine cluster.  For example, to run the "samtools-index" operation, run the following commands:
