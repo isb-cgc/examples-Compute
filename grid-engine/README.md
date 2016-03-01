@@ -15,7 +15,7 @@ gcloud compute instances create grid-engine-workstation \
     --metadata startup-script-url=https://raw.githubusercontent.com/isb-cgc/examples-Compute/master/grid-engine/workstation-startup.sh \
     --scopes https://www.googleapis.com/auth/compute,https://www.googleapis.com/auth/devstorage.full_control
 ```
-If you have not specified your default compute zone, you will be prompted to choose one -- if this occurs, we sugget you set your default compute zone, *eg*: ``gcloud config set compute/zone us-central1-a``.  
+If you have not specified your default compute zone, you will be prompted to choose one -- if this occurs, we sugget you set your default compute zone, *eg*: ``gcloud config set compute/zone us-central1-a``.  (For more information on regions and zones, look [here](https://cloud.google.com/compute/docs/zones).)  
 
 If all goes well, in a minute or less you should get a confirmation that looks like this:
 ```
@@ -28,7 +28,7 @@ Once the instance has started, you can ssh to it using the ``gcloud compute ssh`
 ```
 gcloud compute ssh grid-engine-workstation
 ```
-You may again be prompted to specify the zone if you have not set it as part of your configuration.  You may also be warned that an SSH key needs to be generated.  If so, enter "Y" (or press return) to continue.  (You may then also be prompted to enter a passphrase if you want, though you can leave that blank and press return again.  If you do choose to enter a passphrase, make sure you will be able to remember it!  For additional details on connecting to an instance, see [this page](https://cloud.google.com/compute/docs/instances/connecting-to-instance).)
+You may again be prompted to specify the zone if you have not set it as part of your configuration.  You may also be informed that an SSH key needs to be generated.  If so, enter "Y" (or press return) to continue.  (You may then also be prompted to enter a passphrase if you want, though you can leave that blank and press return again.  If you do choose to enter a passphrase, make sure you will be able to remember it!  For additional details on connecting to an instance, see [this page](https://cloud.google.com/compute/docs/instances/connecting-to-instance).)
 
 Once logged in, you can finish the setup process by authenticating to Google, using either the ``gcloud init`` or the ``gcloud auth login`` flows.  (This step is necessary because ``gcloud compute ssh`` will have signed you in using project-level service account credentials rather than your personal credentials, and access to data hosted by the ISB-CGC is granted based on user credentials rather than service accounts.  If you run ``gcloud config list`` as soon as you ssh to the instance, you will see that your "account" name is something like ``1087559035271-compute@developer.gserviceaccount.com``.  After you have completed the auth flow, your "account" will be your personal google identity.)
 
@@ -43,7 +43,7 @@ These commands will install all of the necessary dependencies and github repos, 
 
 An SSH keypair for accessing GCE will have also been created by the setup script.  By default, these keys are stored in ~/.ssh/google_compute_engine and ~/.ssh/google_compute_engine.pub.  (For reference, please see this [documentation](http://googlegenomics.readthedocs.org/en/latest/use_cases/setup_gridengine_cluster_on_compute_engine/index.html#index-generating-ssh-keypair).) 
 
-Next, you will need to customize the required configuration file under ``~/.elasticluster/config.d/``.  For this particular SAMtools example, the file is called ``samtools-index.conf`` and there are four specific places where you need to replace text such as <PROJECT ID> with your own information.  The relevant portion of the config file looks like this:
+Next, you will need to customize the required configuration file under ``~/.elasticluster/config.d/``.  For this particular SAMtools example, the file is called ``samtools-index.conf`` and there are four specific places where you need to replace text such as <PROJECT ID> with your own information.  (You can use ``vi`` to do this editing, and be sure to remove the angle brackets as well.)  The relevant portion of the config file looks like this:
 ```
 ...
 [cloud/google-cloud]
