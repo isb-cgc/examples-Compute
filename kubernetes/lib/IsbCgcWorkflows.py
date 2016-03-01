@@ -19,8 +19,7 @@ class Workflow(object):
 				"network": "default",
 				"machine_type": cluster.machine_type,
 				"cluster_node_disk_size": cluster.cluster_node_disk_size,
-				"cluster_nfs_volume_size": cluster.cluster_nfs_volume_size,
-				"tear_down": cluster.tear_down
+				"cluster_nfs_volume_size": cluster.cluster_nfs_volume_size
 			},
 			"jobs": []
 		}
@@ -63,19 +62,22 @@ class SamtoolsIndexWorkflow(Workflow):
 			self.samtools_index_script_path = samtools_index_script
 
 		if cleanup_job_script is None:
-			self.cleanup_script_path = os.path.join(os.path.dirname(__file__), '../scripts/samtools-index/cleanup.sh.template')
+			self.cleanup_job_script_path = os.path.join(os.path.dirname(__file__), '../scripts/samtools-index/cleanup.sh.template')
 		else:
 			self.cleanup_script_path = cleanup_script
 
 		self.data_staging_job_template = {
-			"container_image": "b.gcr.io/isb-cgc-public-docker-images/cloud-sdk-crcmod",
+			"name": "stage-file-{filename}",
+			"container_image": "google/cloud-sdk",
 			"restart_policy": "OnFailure"
 		}
 		self.samtools_index_job_template = {
+			"name": "samtools-index-{filename}",
 			"container_image": "nasuno/samtools",
 			"restart_policy": "OnFailure"
 		}
 		self.cleanup_job_template = {
+			"name": "retrieve-index-{filename}",
 			"container_image": "google/cloud-sdk",
 			"restart_policy": "OnFailure"
 		}
@@ -99,26 +101,23 @@ class SamtoolsIndexWorkflow(Workflow):
 		if self.output_bucket is None:
 			self.output_bucket = '/'.join(self.file_url.split('/')[0:-1])
 
-		data_staging_job = self.data_staging_job_template.copy()
-		data_staging_job["name"] = "stage-file-{filename}".format(filename=filename.replace('.', '-').lower())
-		data_staging_job["container_script"] = self.load_script_template(self.data_staging_script_path, url=file_url, filename=filename)
+		self.data_staging_job_template["name"].format(filename=filename.replace('.', '-').lower())
+		self.data_staging_job_template["container_script"] = self.load_script_template(self.data_staging_script_path, url=file_url, filename=filename)
 	
-		samtools_index_job = self.samtools_index_job_template.copy()
-		samtools_index_job["name"] = "samtools-index-{filename}".format(filename=filename.replace('.', '-').lower())
-		samtools_index_job["container_script"].self.load_script_template(self.samtools_index_script_path, filename=filename)
-		samtools_index_job["parents"] = [data_staging_job["name"]]
+		self.samtools_index_job_template["name"].format(filename=filename.replace('.', '-').lower())
+		self.samtools_index_job_template["container_script"].self.load_script_template(self.samtools_index_script_path, filename=filename)
+		self.samtools_index_job_template["parents"] = [self.data_staging_job_template["name"]]
 	
-		cleanup_job = self.cleanup_job_template.copy()
-		cleanup_job["name"] = "retrieve-index-{filename}".format(filename=filename.replace('.', '-').lower())
-		cleanup_job["container_script"] = self.load_script_template(self.cleanup_script_path, filename=filename, destination=self.output_bucket)
-		cleanup_job["parents"] = [samtools_index_job["name"]]
+		self.cleanup_job_template["name"].format(filename=filename.replace('.', '-').lower())
+		self.cleanup_job_template["container_script"] = self.load_script_template(self.cleanup_script_path, filename=filename, destination=self.output_bucket)
+		self.cleanup_job_template["parents"] = [self.samtools_index_job_template["name"]]
 
-		self.schema["jobs"].extend([data_staging_job, ssamtools_index_job, cleanup_job])
+		self.schema["jobs"].extend([self.data_staging_job_template, self.samtools_index_job_template, self.cleanup_job_template])
 
 class QcWorkflow(Workflow):
 	def __init__(self, args, data_staging_script=None, qc_script=None, cleanup_script=None):
 		super(QcWorkflow, self).__init__(args)
-		self.schema["name"] = "fastqc-picard"
+		self.schema["name"] = "qc"
 		self.input_files = args.input_files
 		self.output_bucket = args.output_bucket
 
@@ -132,20 +131,23 @@ class QcWorkflow(Workflow):
 		else:
 			self.qc_script_path = qc_script
 
-		if cleanup_script is None:
-			self.cleanup_script_path = os.path.join(os.path.dirname(__file__), '../scripts/qc/cleanup.sh.template')
+		if cleanup_job_script is None:
+			self.cleanup_job_script_path = os.path.join(os.path.dirname(__file__), '../scripts/qc/cleanup.sh.template')
 		else:
 			self.cleanup_script_path = cleanup_script
 
 		self.data_staging_job_template = {
-			"container_image": "b.gcr.io/isb-cgc-public-docker-images/cloud-sdk-crcmod",
+			"name": "stage-file-{filename}",
+			"container_image": "google/cloud-sdk",
 			"restart_policy": "OnFailure"
 		}
 		self.qc_job_template = {
+			"name": "qc-{filename}",
 			"container_image": "b.gcr.io/isb-cgc-public-docker-images/fastqc",
 			"restart_policy": "OnFailure"
 		}
 		self.cleanup_job_template = {
+			"name": "retrieve-stats-{filename}",
 			"container_image": "google/cloud-sdk",
 			"restart_policy": "OnFailure"
 		}
@@ -171,28 +173,23 @@ class QcWorkflow(Workflow):
 		if self.output_bucket is None:
 			self.output_bucket = '/'.join(url.split('/')[0:-1])
 
-		data_staging_job = self.data_staging_job_template.copy()
-		data_staging_job["name"] = "stage-file-{filename}".format(filename=filename.replace('.', '-').lower())
-		data_staging_job["container_script"] = self.load_script_template(self.data_staging_script_path, url=url, filename=filename)
-	
-		qc_job = self.qc_job_template.copy()
-		qc_job["name"] = "fastqc-{filename}".format(filename=filename.replace('.', '-').lower())
-		qc_job["container_script"] = self.load_script_template(self.qc_script_path, filename=filename, basename='.'.join(filename.split('.')[0:-1]))
-		qc_job["parents"] = [data_staging_job["name"]]
-
-		cleanup_job = self.cleanup_job_template.copy()
-		cleanup_job["name"] = "retrieve-stats-{filename}".format(filename=filename.replace('.', '-').lower())
-		cleanup_job["container_script"] = self.load_script_template(self.cleanup_script_path, filename=filename, basename='.'.join(filename.split('.')[0:-1]), destination=self.output_bucket)
-		cleanup_job["parents"] = [qc_job["name"]]
+		self.data_staging_job_template["name"].format(filename=filename.replace('.', '-').lower())
+		self.data_staging_job_template["container_script"] = self.load_script_template(self.data_staging_script_path, url=url, filename=filename)
+		self.qc_job_template["name"].format(filename=filename.replace('.', '-').lower())
+		self.qc_job_template["container_script"] = self.load_script_template(self.qc_script_path, filename=filename, basename='.'.join(filename.split('.')[0:-1]))
+		self.qc_job_template["parents"] = [self.data_staging_job_template["name"]]
+		self.cleanup_job_template["name"].format(filename=filename.replace('.', '-').lower())
+		self.cleanup_job_template["container_script"] = self.load_script_template(self.cleanup_script_path, filename=filename, basename='.'.join(filename.split('.')[0:-1]), destination=self.output_bucket)
+		self.cleanup_job_template["parents"] = [self.qc_job_template["name"]]
 		
-		self.schema["jobs"].extend([data_staging_job, qc_job, cleanup_job])
+		self.schema["jobs"].extend([self.data_staging_job_template, self.qc_job_template, self.cleanup_job_template])
 
 
 def main(args):
 	if args.workflow == "samtools-index":
 		SamtoolsIndexWorkflow(args).run()
 	elif args.workflow == "qc":
-		QcWorkflow(args).run()
+		FastQcWorkflow(args).run()
 
 if __name__ == "__main__":
 	# parse args -- project id, zone, node num, cluster node disk size, cluster nfs volume size, output bucket, list of gcs urls
@@ -203,7 +200,7 @@ if __name__ == "__main__":
 	parser.add_argument('--cluster_node_disk_size', required=True, help="Cluster boot disk size in GB")
 	parser.add_argument('--cluster_nfs_volume_size', required=True, help="NFS shared volume size in GB")
 	parser.add_argument('--machine_type', required=True, help="GCE machine type")
-	parser.add_argument('--tear_down', required=False, action='store_true', help="If set, the cluster will be cleaned up at the end of the workflow.  Default is False")
+	parser.add_argument('--no_tear_down', required=False, action='store_true', help="If set, the cluster won't be cleaned up at the end of the workflow.  Default is False")
 	parser.add_argument('--dry_run', required=False, action='store_true', help="If set, will only print the workflow graph that would have run. Default is False")
 
 	subparsers = parser.add_subparsers(help="sub-command help", dest="workflow")
