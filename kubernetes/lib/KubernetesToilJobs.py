@@ -388,7 +388,7 @@ class KubernetesToilWorkflow(Job):
 		response = SESSION.patch(full_url, headers=self.headers, json=self.nfs_service_controller_spec)
 		
 		if response.status_code != 201:
-			filestore.logToMaster("Couldn't update the NFS service controller: {e}".format(e=e))
+			filestore.logToMaster("response: {r}".format(r=response.content))
 
 		# get the service endpoint
 		full_url = API_ROOT + SERVICES_URI.format(namespace=self.namespace_spec["metadata"]["name"]) + self.nfs_service_controller_spec["metadata"]["name"]
