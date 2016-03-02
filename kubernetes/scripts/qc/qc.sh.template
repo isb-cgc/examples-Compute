@@ -18,5 +18,5 @@ if [ ! -f share/{filename}.success ]
 	mkdir ../../share/qc-{filename}
 	for output_file in $(ls)
 		do cp $output_file ../../share/qc-{filename}/$analysis_id.$output_file
-	done && touch ../share/{filename}.success && rm ../../share/{filename} && cd .. && rm -r qc-{filename}
+	done && touch ../../share/{filename}.success && rm ../../share/{filename} && cd .. && rm -r qc-{filename}
 else echo 'File {filename} already processed -- skipping'; fi
