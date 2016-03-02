@@ -1,7 +1,10 @@
 if [ ! -f share/{filename}.success ] 
 	then mkdir -p scratch/qc-{filename}
 	cd scratch/qc-{filename}
-	cp ../../share/{filename}\* .
+	cp ../../share/{filename} .
+	if [ -f ../../{filename}.bai ]
+		then cp ../../{filename}.bai
+	fi
 	if [ $(echo {filename} | grep '^.*\.tar$') ] || [ $(echo {filename} | grep '^.*\.tar.gz$') ] && [ ! -f ../../scratch/{filename}.fastqc.success ]
 		then if [ ! -f {filename}.contents ] 
 			then tar -xfvt share/{filename} > {filename}.contents
