@@ -385,7 +385,7 @@ class KubernetesToilWorkflow(Job):
 		
 		# update the rc
 		full_url = API_ROOT + REPLICATION_CONTROLLERS_URI.format(namespace=self.namespace_spec["metadata"]["name"])
-		response = SESSION.patch(full_url, headers=self.headers, json=self.nfs_service_controller_spec)
+		response = SESSION.put(full_url, headers=self.headers, json=self.nfs_service_controller_spec)
 		
 		if response.status_code != 201:
 			filestore.logToMaster("response: {r}".format(r=response.content))
