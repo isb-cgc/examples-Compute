@@ -12,7 +12,7 @@ from googleapiclient import discovery
 from oauth2client.client import GoogleCredentials
 from googleapiclient.errors import HttpError
 from toil.job import Job
-from random import SystemRandom
+from random import randint, SystemRandom
 
 # Kubernetes API URIs
 API_ROOT = "http://localhost:8080"
@@ -180,6 +180,7 @@ class KubernetesToilWorkflow(Job):
 				"refresh-token": base64.b64encode(CREDENTIALS.refresh_token)
 			}
 		}
+		self.cluster_hosts = []
 		self.headers = API_HEADERS
 		self.headers["Authorization"].format(access_token=CREDENTIALS.access_token)
 		self.tear_down = tear_down
@@ -258,6 +259,17 @@ class KubernetesToilWorkflow(Job):
 			subprocess.check_call(["gcloud", "container", "clusters", "get-credentials", self.workflow_name])
 		except subprocess.CalledProcessError as e:
 			filestore.logToMaster("Couldn't get cluster credentials: {reason}".format(reason=e))
+			exit(-1) # raise an exception
+			
+		# get the cluster hosts for reference
+		try:
+			instance_group_name = subprocess.check_output(["gcloud", "compute", "instance-groups", "list", "--regexp", "^gke-{workflow}-.*-group$".format(workflow=self.workflow_name)]).split('\n')[1].split(' ')[0]
+			instance_list = subprocess.check_output(["gcloud", "compute", "instance-groups", "list-instances", instance_group_name]).split('\n')[1:-1]
+			for instance in instance_list:
+				self.cluster_hosts.append(instance.split(' ')[0])
+
+		except subprocess.CalledProcessError as e:
+			filestore.logToMaster("Couldn't get cluster hostnames: {reason}".format(reason=e))
 			exit(-1) # raise an exception
 	
 		# run kubectl in proxy mode in a background process
@@ -351,6 +363,9 @@ class KubernetesToilWorkflow(Job):
 				filestore.logToMaster("NFS service creation failed: {reason}".format(reason=response.content))
 				exit(-1) # probably should raise an exception
 
+		# need to ensure that the NFS controller always restarts on the same host
+		nfs_controller_host = self.cluster_hosts[randint(0, len(self.cluster_hosts) - 1)]
+		self.nfs_service_controller_spec["spec"]["nodeName"] = nfs_controller_host
 		full_url = API_ROOT + REPLICATION_CONTROLLERS_URI.format(namespace=self.namespace_spec["metadata"]["name"])
 		response = SESSION.post(full_url, headers=self.headers, json=self.nfs_service_controller_spec)
 		
@@ -397,18 +412,18 @@ class KubernetesToilWorkflow(Job):
 				exit(-1) # probably should raise an exception
 				
 		# autoscale the NFS service controller
-		try:
-			kubectl_get_autoscalers = subprocess.check_output(["kubectl", "get", "horizontalPodAutoscalers"])
-		except subprocess.CalledProcessError as e:
-			filestore.logToMaster("Couldn't get a listing of the horizontalPodAutoscalers: {e}".format(e=e))
-			exit(-1)
-		else:
-			if self.nfs_service_controller_spec["metadata"]["name"] not in kubectl_get_autoscalers.split('\n')[1].split(' '):
-				try:
-					subprocess.check_call(["kubectl", "autoscale", "rc", self.nfs_service_controller_spec["metadata"]["name"], "--max={max_pods}".format(max_pods=self.cluster_spec["cluster"]["initialNodeCount"]), "--min=1"])
-				except subprocess.CalledProcessError as e:
-					filestore.logToMaster("Couldn't autoscale the NFS service container: {e}".format(e=e))
-					exit(-1)
+		#try:
+		#	kubectl_get_autoscalers = subprocess.check_output(["kubectl", "get", "horizontalPodAutoscalers"])
+		#except subprocess.CalledProcessError as e:
+		#	filestore.logToMaster("Couldn't get a listing of the horizontalPodAutoscalers: {e}".format(e=e))
+		#	exit(-1)
+		#else:
+		#	if self.nfs_service_controller_spec["metadata"]["name"] not in kubectl_get_autoscalers.split('\n')[1].split(' '):
+		#		try:
+		#			subprocess.check_call(["kubectl", "autoscale", "rc", self.nfs_service_controller_spec["metadata"]["name"], "--max={max_pods}".format(max_pods=self.cluster_spec["cluster"]["initialNodeCount"]), "--min=1"])
+		#		except subprocess.CalledProcessError as e:
+		#			filestore.logToMaster("Couldn't autoscale the NFS service container: {e}".format(e=e))
+		#			exit(-1)
 			
 
 	def create_cluster_admin_password(self):
