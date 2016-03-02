@@ -106,7 +106,7 @@ class KubernetesToilWorkflow(Job):
 				"name": "nfs-server"
 			},
 			"spec": {
-				"replicas": 4,
+				"replicas": 1,
 				"selector": {
 					"role": "nfs-server"
 				},
@@ -363,9 +363,6 @@ class KubernetesToilWorkflow(Job):
 				filestore.logToMaster("NFS service creation failed: {reason}".format(reason=response.content))
 				exit(-1) # probably should raise an exception
 
-		# need to ensure that the NFS controller always restarts on the same host
-		nfs_controller_host = self.cluster_hosts[randint(0, len(self.cluster_hosts) - 1)]
-		self.nfs_service_controller_spec["spec"]["nodeName"] = nfs_controller_host
 		full_url = API_ROOT + REPLICATION_CONTROLLERS_URI.format(namespace=self.namespace_spec["metadata"]["name"])
 		response = SESSION.post(full_url, headers=self.headers, json=self.nfs_service_controller_spec)
 		
@@ -375,6 +372,23 @@ class KubernetesToilWorkflow(Job):
 			else:
 				filestore.logToMaster("NFS service contoller creation failed: {reason}".format(reason=response.content))
 				exit(-1)
+				
+		# need to ensure that the NFS controller always restarts on the same host
+		nfs_controller_pods = subprocess.Popen(["kubectl", "get", "pods", "-l", "role=nfs-server"], stdout=subprocess.PIPE)
+		grep = subprocess.Popen(["grep", "nfs-server"], stdout=subprocess.PIPE, stdin=nfs_controller_pods.stdout, stderr=subprocess.STDOUT)
+		nfs_pod = grep.communicate()[0].split(' ')[0]
+		
+		nfs_pod_info = subprocess.Popen(["kubectl", "describe", "pod", nfs_pod], stdout=subprocess.PIPE)
+		grep = subprocess.Popen(["grep", "Node"], stdout=subprocess.PIPE, stdin=nfs_pod_info.stdout, stderr=subprocess.STDOUT)
+		nfs_controller_host = grep.communicate()[0].split('\t')[4].split('/')[0]
+		self.nfs_service_controller_spec["spec"]["template"]["spec"]["nodeName"] = nfs_controller_host
+		
+		# update the rc
+		full_url = API_ROOT + REPLICATION_CONTROLLERS_URI.format(namespace=self.namespace_spec["metadata"]["name"])
+		response = SESSION.patch(full_url, headers=self.headers, json=self.nfs_service_controller_spec)
+		
+		if response.status_code != 201:
+			filestore.logToMaster("Couldn't update the NFS service controller: {e}".format(e=e))
 
 		# get the service endpoint
 		full_url = API_ROOT + SERVICES_URI.format(namespace=self.namespace_spec["metadata"]["name"]) + self.nfs_service_controller_spec["metadata"]["name"]
