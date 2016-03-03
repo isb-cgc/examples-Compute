@@ -371,8 +371,9 @@ class KubernetesToilComputeJob(Job):
 					"path": "/{job_name}-data".format(job_name=self.job_name)
 				}
 			}
-			self.job_spec["spec"]["nodeName"] = cluster_hosts[host_key]
+			
 		self.host_key = host_key
+		self.cluster_hosts = cluster_hosts
 		self.job_spec["volumes"].append(volume)
 		
 
@@ -384,6 +385,7 @@ class KubernetesToilComputeJob(Job):
 
 		else:
 			filestore.logToMaster("{timestamp}  Creating host directory for job data ...".format(timestamp=self.create_timestamp()))
+			self.job_spec["spec"]["nodeName"] = self.cluster_hosts[self.host_key]
 			self.create_host_path()
 			
 		filestore.logToMaster("{timestamp}  Starting job {job_name} ...".format(timestamp=self.create_timestamp(), job_name=self.job_spec["metadata"]["name"]))
