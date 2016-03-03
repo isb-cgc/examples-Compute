@@ -497,9 +497,13 @@ class KubernetesToilWorkflow(Job):
 
 		# Wait for the detach operation to complete
 		while True:
-			result = COMPUTE.zoneOperations().get(project=self.project_id, zone=self.zone, operation=detach_response['name']).execute()
-			if result['status'] == 'DONE':
+			try:
+				result = COMPUTE.zoneOperations().get(project=self.project_id, zone=self.zone, operation=detach_response['name']).execute()
+			except HttpError:
 				break
+			else:
+				if result['status'] == 'DONE':
+					break
 		
 		filestore.logToMaster("Disk created successfully!")
 
