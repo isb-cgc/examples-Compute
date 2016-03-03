@@ -380,7 +380,7 @@ class KubernetesToilComputeJob(Job):
 		if self.disk_request is not None:
 			filestore.logToMaster("{timestamp}  Creating disk for job data ...".format(timestamp=self.create_timestamp()))
 			disk_status = self.create_disk()
-			filestore.logToMaster("{timestamp}  Disk creation status: {status}".format(status=disk_status)
+			filestore.logToMaster("{timestamp}  Disk creation status: {status}".format(status=disk_status))
 
 		else:
 			filestore.logToMaster("{timestamp}  Creating host directory for job data ...".format(timestamp=self.create_timestamp()))
