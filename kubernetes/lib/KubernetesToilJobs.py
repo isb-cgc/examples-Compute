@@ -384,12 +384,7 @@ class KubernetesToilWorkflow(Job):
 		self.nfs_service_controller_spec["spec"]["template"]["spec"]["nodeName"] = nfs_controller_host
 		
 		# update the rc
-		full_url = API_ROOT + REPLICATION_CONTROLLERS_URI.format(namespace=self.namespace_spec["metadata"]["name"])
-		response = SESSION.put(full_url, headers=self.headers, json=self.nfs_service_controller_spec)
-		
-		if response.status_code != 201:
-			filestore.logToMaster("response: {r}".format(r=response.content))
-			exit(-1)
+		subprocess.Popen(["kubectl", "rolling-update", "nfs-server", "-f", "-"], stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.STDOUT).communicate(input=json.dumps(self.nfs_service_controller_spec))
 
 		# get the service endpoint
 		full_url = API_ROOT + SERVICES_URI.format(namespace=self.namespace_spec["metadata"]["name"]) + self.nfs_service_controller_spec["metadata"]["name"]
