@@ -157,7 +157,7 @@ class QcWorkflow(Workflow):
 		with open(self.input_files) as f:
 			file_list = f.readlines()
 		
-		total_hosts = self.schema["cluster"]["nodes"]
+		total_hosts = int(self.schema["cluster"]["nodes"])
 		host_key = 0
 
 		for url in file_list:
