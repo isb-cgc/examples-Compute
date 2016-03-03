@@ -457,7 +457,7 @@ class KubernetesToilWorkflow(Job):
 	def create_nfs_disk(self):
 		# Check if this disk exists
 		try:
-			get_disk = COMPUTE.disks().get(project=project, zone=zone, disk=self.disk_spec["name"]).execute()
+			get_disk = COMPUTE.disks().get(project=self.project_id, zone=self.zone, disk=self.disk_spec["name"]).execute()
 
 		except HttpError:
 			# Submit the disk request
@@ -475,7 +475,7 @@ class KubernetesToilWorkflow(Job):
 			"index": 1,
 			"type": "PERSISTENT",
 			"mode": "READ_WRITE",
-			"source": "https://www.googleapis.com/compute/v1/projects/{project}/zones/{zone}/disks/{disk_name}".format(project=project, zone=zone, disk_name=self.disk_spec["name"]),
+			"source": "https://www.googleapis.com/compute/v1/projects/{project}/zones/{zone}/disks/{disk_name}".format(project=self.project_id, zone=self.zone, disk_name=self.disk_spec["name"]),
 			"deviceName": self.disk_spec["name"],
 			"boot": False,
 			"interface": "SCSI",
@@ -488,7 +488,7 @@ class KubernetesToilWorkflow(Job):
 
 			# Wait for the attach operation to complete
 			while True:
-				result = compute.zoneOperations().get(project=project, zone=zone, operation=attachResponse['name']).execute()
+				result = compute.zoneOperations().get(project=self.project_id, zone=self.zone, operation=attachResponse['name']).execute()
 				if result['status'] == 'DONE':
 					success = True
 					break
