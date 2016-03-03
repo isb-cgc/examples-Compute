@@ -20,7 +20,7 @@ class Workflow(object):
 				"network": "default",
 				"machine_type": cluster.machine_type,
 				"cluster_node_disk_size": cluster.cluster_node_disk_size,
-				"cluster_nfs_volume_size": cluster.cluster_nfs_volume_size,
+				#"cluster_nfs_volume_size": cluster.cluster_nfs_volume_size,
 				"tear_down": cluster.tear_down
 			},
 			"jobs": []
