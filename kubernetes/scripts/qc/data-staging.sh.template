@@ -1,3 +1,7 @@
 if [ ! -f share/{filename} ]
+	echo "Downloading file {filename} to shared storage ..."
 	then python -c "import subprocess; metadata = subprocess.check_output(['gsutil', 'ls', '-L', '{url}']); metadata_tag = metadata.partition('Metadata:')[2].partition('Hash')[0]; analysis_id = metadata_tag.strip().split()[-1]; print analysis_id" > share/{filename}.analysis_id && gsutil -m -o Credentials:gs_oauth2_refresh_token=$(cat /data-access/refresh-token) -o Oauth2:oauth2_refresh_retries=50 cp {url}* share
 else echo 'File {filename} already staged -- skipping'; fi
+echo "Original file GCS path: {url}" >> share/{filename}.log
+echo "File size (expected): $(gsutil du -h {url})" >> share/{filename}.log
+echo "File size (actual): $(ls -alh share/{filename} | cut -d ' ' -f 5)" >> share/{filename}.log

@@ -178,12 +178,12 @@ class QcWorkflow(Workflow):
 	
 		qc_job = self.qc_job_template.copy()
 		qc_job["name"] = "fastqc-{filename}".format(filename=filename.replace('.', '-').lower())
-		qc_job["container_script"] = self.load_script_template(self.qc_script_path, filename=filename, basename='.'.join(filename.split('.')[0:-1]))
+		qc_job["container_script"] = self.load_script_template(self.qc_script_path, filename=filename)
 		qc_job["parents"] = [data_staging_job["name"]]
 
 		cleanup_job = self.cleanup_job_template.copy()
 		cleanup_job["name"] = "retrieve-stats-{filename}".format(filename=filename.replace('.', '-').lower())
-		cleanup_job["container_script"] = self.load_script_template(self.cleanup_script_path, filename=filename, basename='.'.join(filename.split('.')[0:-1]), destination=self.output_bucket)
+		cleanup_job["container_script"] = self.load_script_template(self.cleanup_script_path, filename=filename, index_destination=url.split('/')[0:-1], destination=self.output_bucket)
 		cleanup_job["parents"] = [qc_job["name"]]
 		
 		self.schema["jobs"].extend([data_staging_job, qc_job, cleanup_job])

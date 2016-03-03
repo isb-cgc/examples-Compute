@@ -31,6 +31,7 @@ if CREDENTIALS.access_token_expired:
 	CREDENTIALS.refresh(HTTP)
 	
 GKE = discovery.build('container', 'v1', http=HTTP)
+COMPUTE = discovery.build('compute', 'v1', http=HTTP)
 SESSION = requests.Session()
 API_HEADERS = {
 	"Content-type": "application/json", 
@@ -99,7 +100,7 @@ class KubernetesToilWorkflow(Job):
 			}
 		}
 
-		self.nfs_service_controller_spec = {
+		self.nfs_service_controller_spec = { # TODO: make this a pod instead of an RC
 			"apiVersion": "v1",
 			"kind": "ReplicationController",
 			"metadata": {
@@ -169,6 +170,9 @@ class KubernetesToilWorkflow(Job):
 				}
 			}
 		}
+		
+		self.nfs_disk_spec = {} # TODO: fill in details
+		
 		self.secret = {
 			"kind": "Secret",
 			"apiVersion": "v1",
@@ -351,6 +355,12 @@ class KubernetesToilWorkflow(Job):
 	def configure_nfs_share(self, filestore):
 		filestore.logToMaster("{timestamp}  Creating an NFS share (size: {size}) for the cluster ...".format(timestamp=self.create_timestamp(), size=self.nfs_volume_spec["spec"]["capacity"]["storage"]))
 		
+		# create the persistent disk to back the NFS share
+		# create the disk
+		# choose an arbitrary host within the cluster to attach to
+		# format the disk and detach
+		# update the nfs pod to mount the disk at /exports
+		
 		# create the NFS service and rc
 		full_url = API_ROOT + SERVICES_URI.format(namespace=self.namespace_spec["metadata"]["name"])
 		response = SESSION.post(full_url, headers=self.headers, json=self.nfs_service_spec)
@@ -472,6 +482,8 @@ class KubernetesToilWorkflowCleanup(Job):
 		# if the response isn't what's expected, raise an exception
 		if response.status_code != 200:
 			filestore.logToMaster("NFS persistent volume deletion failed: {reason}".format(reason=response.content))
+			
+		# delete the NFS persistent disk
 
 	def cluster_cleanup(self, filestore):
 		# destroy the cluster
