@@ -96,6 +96,9 @@ class KubernetesWorkflowRunner():
 
 				if "add_disk" in job["resources"].keys():
 					kwargs.update({"add_disk": job["resources"]["disk"]})
+
+			if "host_key" in job.keys():
+				kwargs.update({"host_key": job["host_key"]})
 				
 			self.toil_jobs[job["name"]] = KubernetesToilComputeJob(*args, **kwargs)
 
