@@ -374,7 +374,7 @@ class KubernetesToilComputeJob(Job):
 			
 		self.host_key = host_key
 		self.cluster_hosts = cluster_hosts
-		self.job_spec["volumes"].append(volume)
+		self.job_spec["spec"]["volumes"].append(volume)
 		
 
 	def run(self, filestore):
