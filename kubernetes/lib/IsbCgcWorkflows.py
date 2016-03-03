@@ -1,6 +1,7 @@
 import os
 import re
 import sys
+import math
 import json
 import pprint
 import argparse
@@ -156,17 +157,28 @@ class QcWorkflow(Workflow):
 		with open(self.input_files) as f:
 			file_list = f.readlines()
 		
+		total_hosts = self.schema["cluster"]["nodes"]
+		host_key = 0
+
 		for url in file_list:
+			if host_key >= total_hosts:
+				host_key = 0
+
 			url = url.strip()
 			try: 
 				subprocess.check_call(["gsutil", "stat", url])
 			except ValueError:
 				print "There was a problem with url {url} in the input file".format(url=url)
 			else:
-				self.__create_subworkflow(url.strip())
+				# get the file size to determine whether or not to create a disk for this subworkflow
+				filesize = subprocess.check_output(["gsutil", "du", url]).split(' ')[0]
+				if filesize < math.floor(self.schema["cluster"]["cluster_node_disk_size"]/3):
+					host_key = None
+				self.__create_subworkflow(url.strip(), host_key, filesize)
+				host_key += 1
 				
 
-	def __create_subworkflow(self, url):
+	def __create_subworkflow(self, url, host_key, filesize):
 		filename = url.split('/')[-1]
 
 		if self.output_bucket is None:
@@ -185,6 +197,21 @@ class QcWorkflow(Workflow):
 		cleanup_job["name"] = "retrieve-stats-{filename}".format(filename=filename.replace('.', '-').lower())
 		cleanup_job["container_script"] = self.load_script_template(self.cleanup_script_path, filename=filename, index_destination=url.split('/')[0:-1], destination=self.output_bucket)
 		cleanup_job["parents"] = [qc_job["name"]]
+		
+		if host_key is not None:
+			data_staging_job["host_key"] = host_key
+			qc_job["host_key"] = host_key
+			cleanup_job["host_key"] = host_key
+
+		else:
+			disk = {
+				"name": "{filename}-disk".format(filename=filename.replace('.', '-').lower()), 
+				"type": "pd-standard",
+				"sizeGb": int(math.ceil(filesize/50000000000.0)*50000000000.0)
+			}
+			data_staging_job["disk"] = disk
+			qc_job["disk"] = disk
+			cleanup_job["disk"] = disk
 		
 		self.schema["jobs"].extend([data_staging_job, qc_job, cleanup_job])
 

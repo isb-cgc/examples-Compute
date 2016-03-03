@@ -41,7 +41,7 @@ class KubernetesWorkflowRunner():
 		#workflow_object = self.workflow_spec[self.workflow_name]
 		cluster_config = self.workflow_spec["cluster"]
 		
-		args =  [ self.workflow_name, cluster_config["project_id"], cluster_config["zone"], cluster_config["nodes"], cluster_config["machine_type"], cluster_config["cluster_node_disk_size"], cluster_config["cluster_nfs_volume_size"] ]
+		args =  [ self.workflow_name, cluster_config["project_id"], cluster_config["zone"], cluster_config["nodes"], cluster_config["machine_type"], cluster_config["cluster_node_disk_size"] ]
 
 		kwargs = {}
 		if "logging_service" in cluster_config.keys():
@@ -82,7 +82,7 @@ class KubernetesWorkflowRunner():
 	def _add_kubernetes_toil_job(self, parent, job):
 		if job["name"] not in self.toil_jobs.keys():
 			# create a new job as long as this job doesn't exist yet
-			args = [ self.workflow_name, job["name"], job["container_image"], job["container_script"] ]
+			args = [ self.workflow_name, self.workflow_spec["cluster"]["project_id"], self.workflow_spec["cluster"]["zone"], job["name"], job["container_image"], job["container_script"], self.toil_jobs[self.workflow_name].rv() ]
 			kwargs = {}
 			if "restart_policy" in job.keys():
 				kwargs.update({"restart_policy": job["restart_policy"]})
@@ -93,6 +93,9 @@ class KubernetesWorkflowRunner():
 					
 				if "memory_limit" in job["resources"].keys():
 					kwargs.update({"memory_limit": job["resources"]["memory_limit"]})
+
+				if "add_disk" in job["resources"].keys():
+					kwargs.update({"add_disk": job["resources"]["disk"]})
 				
 			self.toil_jobs[job["name"]] = KubernetesToilComputeJob(*args, **kwargs)
 
@@ -117,6 +120,10 @@ class KubernetesWorkflowRunner():
 			exit(-1)
 			
 		for job in jobs:
+			if not "host_key" in job.keys() and not "resources" in job.keys():
+				print "Job {job_name} must either add an additional disk or use a host key to select a particular host to be scheduled".format(job_name=job["name"])
+				exit(-1) 
+			elif not "host_key" in job.keys() and not "add_disk" in job["resources"].keys()
 			if "parents" in job.keys():
 				for parent in job["parents"]:
 					if parent not in job_names:
@@ -176,10 +183,6 @@ class KubernetesWorkflowRunner():
 						"required": True
 
 					},
-					"cluster_nfs_volume_size": {
-						"type": "int",
-						"required": True
-					},
 					"logging_service": {
 						"type": "string",
 						"required": False
@@ -224,6 +227,10 @@ class KubernetesWorkflowRunner():
 						"type": "object",
 						"properties": { "$ref": "#/definitions/job_resources_properties" },
 						"required": False
+					},
+					"host_key": {
+						"type": "int",
+						"required": "False"
 					}
 				},
 				"job_resources_properties": {
@@ -234,6 +241,25 @@ class KubernetesWorkflowRunner():
 					"memory_limit": {
 						"type": "int",
 						"required": False
+					},
+					"add_disk": {
+						"type": "object",
+						"properties": { "$ref": "#/definitions/add_disk_properties" },
+						"required": False
+					}
+				},
+				"add_disk_properties": {
+					"name": {
+						"type": "string",
+						"required": True
+					},
+					"type": {
+						"type": "string",
+						"required": True
+					},
+					"sizeGb": {
+						"type": "string",
+						"required": True
 					}
 				}
 			}
