@@ -367,7 +367,7 @@ class KubernetesToilWorkflow(Job):
 		filestore.logToMaster("{timestamp}  Creating an NFS share (size: {size}) for the cluster ...".format(timestamp=self.create_timestamp(), size=self.nfs_volume_spec["spec"]["capacity"]["storage"]))
 		
 		# create the persistent disk to back the NFS share
-		self.create_nfs_disk()
+		self.create_nfs_disk(filestore)
 		
 		# create the NFS service and rc
 		full_url = API_ROOT + SERVICES_URI.format(namespace=self.namespace_spec["metadata"]["name"])
@@ -440,7 +440,7 @@ class KubernetesToilWorkflow(Job):
 				exit(-1) # probably should raise an exception
 			
 
-	def create_nfs_disk(self):
+	def create_nfs_disk(self, filestore):
 		# Check if this disk exists
 		try:
 			get_disk = COMPUTE.disks().get(project=self.project_id, zone=self.zone, disk=self.nfs_disk_spec["name"]).execute()
