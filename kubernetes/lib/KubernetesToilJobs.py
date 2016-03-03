@@ -100,42 +100,48 @@ class KubernetesToilWorkflow(Job):
 			}
 		}
 
-		self.nfs_service_controller_spec = { # TODO: make this a pod instead of an RC
+		self.nfs_service_controller_spec = { 
 			"apiVersion": "v1",
-			"kind": "ReplicationController",
+			"kind": "Pod",
 			"metadata": {
 				"name": "nfs-server"
 			},
 			"spec": {
-				"replicas": 1,
-				"selector": {
-					"role": "nfs-server"
-				},
-				"template": {
-					"metadata": {
-						"labels": {
-							"role": "nfs-server"
-						}
-					},
-					"spec": {
-						"containers": [
+				"containers": [
+					{
+						"name": "nfs-server",
+						"image": "gcr.io/google_containers/volume-nfs",
+						"ports": [
 							{
-								"name": "nfs-server",
-								"image": "gcr.io/google_containers/volume-nfs",
-								"ports": [
-									{
-										"name": "nfs",
-										"containerPort": 2049
-									}
-								],
-								"securityContext": {
-									"privileged": True
-								}
+								"name": "nfs",
+								"containerPort": 2049
+							}
+						],
+						"securityContext": {
+							"privileged": True
+						},
+						"volumeMounts": [
+							{
+								"name": "{workflow}-data".format(workflow=self.workflow_name),
+								"mountPath": "/exports",
+								"readOnly": False	
 							}
 						]
 					}
-				}
+				],
+				"volumes": [
+					{
+						"name": "{workflow}-data".format(workflow=self.workflow_name),
+						"gcePersistentDisk": {
+							"pdName": "{workflow}-data".format(workflow=self.workflow_name),
+							"readOnly": False,
+							"fsType": "ext4"
+						}
+					}
+				],
+				"restartPolicy": "Always"
 			}
+				
 		}
 		self.nfs_volume_spec = {
 			"apiVersion": "v1",
@@ -171,7 +177,12 @@ class KubernetesToilWorkflow(Job):
 			}
 		}
 		
-		self.nfs_disk_spec = {} # TODO: fill in details
+		self.nfs_disk_spec = { 
+			"name": "{workflow}-data".format(workflow=self.workflow_name),
+			"zone": "https://www.googleapis.com/compute/v1/projects/{project}/zones/{zone}".format(project=project_id, zone=zone), 
+			"type": "https://www.googleapis.com/compute/v1/projects/{project}/zones/{zone}/diskTypes/ssd".format(project=project, zone=zone),
+			"sizeGb": cluster_nfs_volume_size
+		}
 		
 		self.secret = {
 			"kind": "Secret",
@@ -356,10 +367,7 @@ class KubernetesToilWorkflow(Job):
 		filestore.logToMaster("{timestamp}  Creating an NFS share (size: {size}) for the cluster ...".format(timestamp=self.create_timestamp(), size=self.nfs_volume_spec["spec"]["capacity"]["storage"]))
 		
 		# create the persistent disk to back the NFS share
-		# create the disk
-		# choose an arbitrary host within the cluster to attach to
-		# format the disk and detach
-		# update the nfs pod to mount the disk at /exports
+		self.create_nfs_disk()
 		
 		# create the NFS service and rc
 		full_url = API_ROOT + SERVICES_URI.format(namespace=self.namespace_spec["metadata"]["name"])
@@ -445,6 +453,70 @@ class KubernetesToilWorkflow(Job):
 		#			filestore.logToMaster("Couldn't autoscale the NFS service container: {e}".format(e=e))
 		#			exit(-1)
 			
+
+	def create_nfs_disk(self):
+		# Check if this disk exists
+		try:
+			get_disk = COMPUTE.disks().get(project=project, zone=zone, disk=self.disk_spec["name"]).execute()
+
+		except HttpError:
+			# Submit the disk request
+			disk_response = compute.disks().insert(project=self.project_id, zone=self.zone, body=self.disk_spec).execute()
+
+			# Wait for the disks to be created
+			while True:
+				result = COMPUTE.zoneOperations().get(project=self.project_id, zone=self.zone, operation=disk_response['name']).execute()
+				if result['status'] == 'DONE':
+					break
+
+		# attach the disk to an instance for formatting
+		attach_request = {
+    			"kind": "compute#attachedDisk",
+			"index": 1,
+			"type": "PERSISTENT",
+			"mode": "READ_WRITE",
+			"source": "https://www.googleapis.com/compute/v1/projects/{project}/zones/{zone}/disks/{disk_name}".format(project=project, zone=zone, disk_name=self.disk_spec["name"]),
+			"deviceName": self.disk_spec["name"],
+			"boot": False,
+			"interface": "SCSI",
+			"autoDelete": False
+    		}
+
+		for instance in self.cluster_hosts:
+			success = False
+			attach_response = COMPUTE.instances().attachDisk(project=self.project_id, zone=self.zone, instance=instance, body=attach_request).execute()
+
+			# Wait for the attach operation to complete
+			while True:
+				result = compute.zoneOperations().get(project=project, zone=zone, operation=attachResponse['name']).execute()
+				if result['status'] == 'DONE':
+					success = True
+					break
+
+			if success == True:
+				break
+
+		if success == False:
+			filestore.logToMaster("Couldn't attach disk for formatting: {result}".format(result=result))
+			exit(-1)
+	
+
+		command = "sudo mkdir -p /{workflow}-data && sudo mkfs.ext4 -F /dev/disk/by-id/{workflow}-data && sudo mount -o discard,defaults /dev/disk/by-id/{workflow}-data /{workflow}-data".format(workflow=self.workflow_name)
+		try:
+			subprocess.check_call(["gcloud", "compute", "ssh", instance, "--command", command])
+		except subprocess.CalledProcessError as e:
+			filestore.logToMaster("Couldn't format the disk: {e}".format(e=e))
+			exit(-1)
+
+		detach_response = COMPUTE.instances().detachDisk(project=self.project_id, zone=self.zone, instance=instance, deviceName=self.disk_spec["name"]).execute()
+
+		# Wait for the detach operation to complete
+		while True:
+			result = COMPUTE.zoneOperations().get(project=self.project_id, zone=self.zone, operation=detach_response['name']).execute()
+			if result['status'] == 'DONE':
+				break
+		
+		filestore.logToMaster("Disk created successfully!")
 
 	def create_cluster_admin_password(self):
 		return ''.join(SystemRandom().choice(string.ascii_uppercase + string.ascii_lowercase + string.digits) for _ in range(16))	
