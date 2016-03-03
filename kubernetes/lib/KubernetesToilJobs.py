@@ -457,11 +457,11 @@ class KubernetesToilWorkflow(Job):
 	def create_nfs_disk(self):
 		# Check if this disk exists
 		try:
-			get_disk = COMPUTE.disks().get(project=self.project_id, zone=self.zone, disk=self.disk_spec["name"]).execute()
+			get_disk = COMPUTE.disks().get(project=self.project_id, zone=self.zone, disk=self.nfs_disk_spec["name"]).execute()
 
 		except HttpError:
 			# Submit the disk request
-			disk_response = compute.disks().insert(project=self.project_id, zone=self.zone, body=self.disk_spec).execute()
+			disk_response = compute.disks().insert(project=self.project_id, zone=self.zone, body=self.nfs_disk_spec).execute()
 
 			# Wait for the disks to be created
 			while True:
@@ -475,8 +475,8 @@ class KubernetesToilWorkflow(Job):
 			"index": 1,
 			"type": "PERSISTENT",
 			"mode": "READ_WRITE",
-			"source": "https://www.googleapis.com/compute/v1/projects/{project}/zones/{zone}/disks/{disk_name}".format(project=self.project_id, zone=self.zone, disk_name=self.disk_spec["name"]),
-			"deviceName": self.disk_spec["name"],
+			"source": "https://www.googleapis.com/compute/v1/projects/{project}/zones/{zone}/disks/{disk_name}".format(project=self.project_id, zone=self.zone, disk_name=self.nfs_disk_spec["name"]),
+			"deviceName": self.nfs_disk_spec["name"],
 			"boot": False,
 			"interface": "SCSI",
 			"autoDelete": False
@@ -508,7 +508,7 @@ class KubernetesToilWorkflow(Job):
 			filestore.logToMaster("Couldn't format the disk: {e}".format(e=e))
 			exit(-1)
 
-		detach_response = COMPUTE.instances().detachDisk(project=self.project_id, zone=self.zone, instance=instance, deviceName=self.disk_spec["name"]).execute()
+		detach_response = COMPUTE.instances().detachDisk(project=self.project_id, zone=self.zone, instance=instance, deviceName=self.nfs_disk_spec["name"]).execute()
 
 		# Wait for the detach operation to complete
 		while True:
