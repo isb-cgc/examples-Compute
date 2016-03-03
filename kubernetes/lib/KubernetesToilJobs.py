@@ -461,7 +461,7 @@ class KubernetesToilWorkflow(Job):
 
 		except HttpError:
 			# Submit the disk request
-			disk_response = compute.disks().insert(project=self.project_id, zone=self.zone, body=self.nfs_disk_spec).execute()
+			disk_response = COMPUTE.disks().insert(project=self.project_id, zone=self.zone, body=self.nfs_disk_spec).execute()
 
 			# Wait for the disks to be created
 			while True:
@@ -488,7 +488,7 @@ class KubernetesToilWorkflow(Job):
 
 			# Wait for the attach operation to complete
 			while True:
-				result = compute.zoneOperations().get(project=self.project_id, zone=self.zone, operation=attachResponse['name']).execute()
+				result = COMPUTE.zoneOperations().get(project=self.project_id, zone=self.zone, operation=attachResponse['name']).execute()
 				if result['status'] == 'DONE':
 					success = True
 					break
