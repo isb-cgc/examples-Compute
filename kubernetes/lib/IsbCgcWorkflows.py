@@ -229,7 +229,7 @@ if __name__ == "__main__":
 	parser.add_argument('--zone', required=True, help="GCE zone")
 	parser.add_argument('--nodes', required=True, help="Number of nodes in the cluster")
 	parser.add_argument('--cluster_node_disk_size', required=True, help="Cluster boot disk size in GB")
-	parser.add_argument('--cluster_nfs_volume_size', required=True, help="NFS shared volume size in GB")
+	#parser.add_argument('--cluster_nfs_volume_size', required=True, help="NFS shared volume size in GB")
 	parser.add_argument('--machine_type', required=True, help="GCE machine type")
 	parser.add_argument('--tear_down', required=False, action='store_true', help="If set, the cluster will be cleaned up at the end of the workflow.  Default is False")
 	parser.add_argument('--dry_run', required=False, action='store_true', help="If set, will only print the workflow graph that would have run. Default is False")
