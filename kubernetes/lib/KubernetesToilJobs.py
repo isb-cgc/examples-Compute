@@ -180,7 +180,7 @@ class KubernetesToilWorkflow(Job):
 		self.nfs_disk_spec = { 
 			"name": "{workflow}-data".format(workflow=self.workflow_name),
 			"zone": "https://www.googleapis.com/compute/v1/projects/{project}/zones/{zone}".format(project=project_id, zone=zone), 
-			"type": "https://www.googleapis.com/compute/v1/projects/{project}/zones/{zone}/diskTypes/ssd".format(project=project_id, zone=zone),
+			"type": "https://www.googleapis.com/compute/v1/projects/{project}/zones/{zone}/diskTypes/pd-ssd".format(project=project_id, zone=zone),
 			"sizeGb": cluster_nfs_volume_size
 		}
 		
