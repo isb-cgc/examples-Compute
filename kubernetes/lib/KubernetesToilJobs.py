@@ -389,6 +389,7 @@ class KubernetesToilWorkflow(Job):
 		
 		if response.status_code != 201:
 			filestore.logToMaster("response: {r}".format(r=response.content))
+			exit(-1)
 
 		# get the service endpoint
 		full_url = API_ROOT + SERVICES_URI.format(namespace=self.namespace_spec["metadata"]["name"]) + self.nfs_service_controller_spec["metadata"]["name"]
