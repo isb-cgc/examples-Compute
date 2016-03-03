@@ -172,7 +172,7 @@ class QcWorkflow(Workflow):
 			else:
 				# get the file size to determine whether or not to create a disk for this subworkflow
 				filesize = subprocess.check_output(["gsutil", "du", url]).split(' ')[0]
-				if filesize < math.floor(self.schema["cluster"]["cluster_node_disk_size"]/3):
+				if filesize < math.floor(int(self.schema["cluster"]["cluster_node_disk_size"])/3):
 					host_key = None
 				self.__create_subworkflow(url.strip(), host_key, filesize)
 				host_key += 1
