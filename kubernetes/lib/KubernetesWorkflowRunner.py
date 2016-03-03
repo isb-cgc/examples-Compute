@@ -123,7 +123,7 @@ class KubernetesWorkflowRunner():
 			if not "host_key" in job.keys() and not "resources" in job.keys():
 				print "Job {job_name} must either add an additional disk or use a host key to select a particular host to be scheduled".format(job_name=job["name"])
 				exit(-1) 
-			elif not "host_key" in job.keys() and not "add_disk" in job["resources"].keys()
+			elif not "host_key" in job.keys() and not "add_disk" in job["resources"].keys():
 			if "parents" in job.keys():
 				for parent in job["parents"]:
 					if parent not in job_names:
