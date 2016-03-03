@@ -365,6 +365,7 @@ class KubernetesToilComputeJob(Job):
 				}
 			}
 		else:
+			self.disk_request = None
 			volume = {
 				"name": "{job_name}-data".format(job_name=self.job_name),
 				"hostPath": {
