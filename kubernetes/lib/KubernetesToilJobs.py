@@ -438,20 +438,6 @@ class KubernetesToilWorkflow(Job):
 			else:
 				filestore.logToMaster("NFS persistent volume claim creation failed: {reason}".format(reason=response.content))
 				exit(-1) # probably should raise an exception
-				
-		# autoscale the NFS service controller
-		#try:
-		#	kubectl_get_autoscalers = subprocess.check_output(["kubectl", "get", "horizontalPodAutoscalers"])
-		#except subprocess.CalledProcessError as e:
-		#	filestore.logToMaster("Couldn't get a listing of the horizontalPodAutoscalers: {e}".format(e=e))
-		#	exit(-1)
-		#else:
-		#	if self.nfs_service_controller_spec["metadata"]["name"] not in kubectl_get_autoscalers.split('\n')[1].split(' '):
-		#		try:
-		#			subprocess.check_call(["kubectl", "autoscale", "rc", self.nfs_service_controller_spec["metadata"]["name"], "--max={max_pods}".format(max_pods=self.cluster_spec["cluster"]["initialNodeCount"]), "--min=1"])
-		#		except subprocess.CalledProcessError as e:
-		#			filestore.logToMaster("Couldn't autoscale the NFS service container: {e}".format(e=e))
-		#			exit(-1)
 			
 
 	def create_nfs_disk(self):
@@ -488,7 +474,7 @@ class KubernetesToilWorkflow(Job):
 
 			# Wait for the attach operation to complete
 			while True:
-				result = COMPUTE.zoneOperations().get(project=self.project_id, zone=self.zone, operation=attachResponse['name']).execute()
+				result = COMPUTE.zoneOperations().get(project=self.project_id, zone=self.zone, operation=attach_response['name']).execute()
 				if result['status'] == 'DONE':
 					success = True
 					break
