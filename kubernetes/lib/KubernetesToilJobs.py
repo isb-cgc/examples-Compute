@@ -487,7 +487,7 @@ class KubernetesToilWorkflow(Job):
 			exit(-1)
 	
 
-		command = "sudo mkdir -p /{workflow}-data && sudo mkfs.ext4 -F /dev/disk/by-id/{workflow}-data && sudo mount -o discard,defaults /dev/disk/by-id/{workflow}-data /{workflow}-data".format(workflow=self.workflow_name)
+		command = "sudo mkdir -p /{workflow}-data && sudo mkfs.ext4 -F /dev/disk/by-id/google-{workflow}-data && sudo mount -o discard,defaults /dev/disk/by-id/google-{workflow}-data /{workflow}-data".format(workflow=self.workflow_name)
 		try:
 			subprocess.check_call(["gcloud", "compute", "ssh", instance, "--command", command])
 		except subprocess.CalledProcessError as e:
