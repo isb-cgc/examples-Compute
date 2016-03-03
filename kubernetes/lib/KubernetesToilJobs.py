@@ -19,7 +19,6 @@ API_ROOT = "http://localhost:8080"
 NAMESPACE_URI = "/api/v1/namespaces/"
 PODS_URI = "/api/v1/namespaces/{namespace}/pods/"
 SERVICES_URI = "/api/v1/namespaces/{namespace}/services/"
-REPLICATION_CONTROLLERS_URI = "/api/v1/namespaces/{namespace}/replicationcontrollers/"
 PERSISTENT_VOLUMES_URI = "/api/v1/persistentvolumes/" 
 PERSISTENT_VOLUME_CLAIMS_URI = "/api/v1/namespaces/{namespace}/persistentvolumeclaims/" 
 SECRETS_URI = "/api/v1/namespaces/{namespace}/secrets/"
@@ -381,28 +380,28 @@ class KubernetesToilWorkflow(Job):
 				filestore.logToMaster("NFS service creation failed: {reason}".format(reason=response.content))
 				exit(-1) # probably should raise an exception
 
-		full_url = API_ROOT + REPLICATION_CONTROLLERS_URI.format(namespace=self.namespace_spec["metadata"]["name"])
+		full_url = API_ROOT + PODS_URI.format(namespace=self.namespace_spec["metadata"]["name"])
 		response = SESSION.post(full_url, headers=self.headers, json=self.nfs_service_controller_spec)
 		
 		if response.status_code != 201:
 			if response.status_code == 409: # already exists
 				pass
 			else:
-				filestore.logToMaster("NFS service contoller creation failed: {reason}".format(reason=response.content))
+				filestore.logToMaster("NFS service pod creation failed: {reason}".format(reason=response.content))
 				exit(-1)
 				
 		# need to ensure that the NFS controller always restarts on the same host
-		nfs_controller_pods = subprocess.Popen(["kubectl", "get", "pods", "-l", "role=nfs-server"], stdout=subprocess.PIPE)
-		grep = subprocess.Popen(["grep", "nfs-server"], stdout=subprocess.PIPE, stdin=nfs_controller_pods.stdout, stderr=subprocess.STDOUT)
-		nfs_pod = grep.communicate()[0].split(' ')[0]
+		#nfs_controller_pods = subprocess.Popen(["kubectl", "get", "pods", "-l", "name=nfs-server"], stdout=subprocess.PIPE)
+		#grep = subprocess.Popen(["grep", "nfs-server"], stdout=subprocess.PIPE, stdin=nfs_controller_pods.stdout, stderr=subprocess.STDOUT)
+		#nfs_pod = grep.communicate()[0].split(' ')[0]
 		
-		nfs_pod_info = subprocess.Popen(["kubectl", "describe", "pod", nfs_pod], stdout=subprocess.PIPE)
-		grep = subprocess.Popen(["grep", "Node"], stdout=subprocess.PIPE, stdin=nfs_pod_info.stdout, stderr=subprocess.STDOUT)
-		nfs_controller_host = grep.communicate()[0].split('\t')[4].split('/')[0]
-		self.nfs_service_controller_spec["spec"]["template"]["spec"]["nodeName"] = nfs_controller_host
+		#nfs_pod_info = subprocess.Popen(["kubectl", "describe", "pod", nfs_pod], stdout=subprocess.PIPE)
+		#grep = subprocess.Popen(["grep", "Node"], stdout=subprocess.PIPE, stdin=nfs_pod_info.stdout, stderr=subprocess.STDOUT)
+		#nfs_controller_host = grep.communicate()[0].split('\t')[4].split('/')[0]
+		#self.nfs_service_controller_spec["spec"]["template"]["spec"]["nodeName"] = nfs_controller_host
 		
 		# update the rc
-		subprocess.Popen(["kubectl", "rolling-update", "nfs-server", "-f", "-"], stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.STDOUT).communicate(input=json.dumps(self.nfs_service_controller_spec))
+		#subprocess.Popen(["kubectl", "rolling-update", "nfs-server", "-f", "-"], stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.STDOUT).communicate(input=json.dumps(self.nfs_service_controller_spec))
 
 		# get the service endpoint
 		full_url = API_ROOT + SERVICES_URI.format(namespace=self.namespace_spec["metadata"]["name"]) + self.nfs_service_controller_spec["metadata"]["name"]
