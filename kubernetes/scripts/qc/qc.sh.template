@@ -16,10 +16,13 @@ if [ ! -f share/{filename}.success ]
 	if [ $(echo {filename} | grep '^.*\.bam$') ] && [ ! -f ../../share/{filename}.picard.success ]
 		then if [ ! -f {filename}.bai ]
 			then INDEXED_BAM=1 && java -jar /usr/picard/picard.jar BuildBamIndex I={filename} O={filename}.bai && cp {filename}.bai ../../share
-		fi && java -jar /usr/picard/picard.jar CollectMultipleMetrics INPUT={filename} OUTPUT={filename}.multiple_metrics PROGRAM=CollectAlignmentSummaryMetrics PROGRAM=CollectInsertSizeMetrics PROGRAM=CollectQualityYieldMetrics PROGRAM=QualityScoreDistribution && touch ../../share/{filename}.picard.success && rm {filename} && rm {filename}.bai
+		fi && java -jar /usr/picard/picard.jar CollectMultipleMetrics INPUT={filename} OUTPUT={filename}.multiple_metrics PROGRAM=CollectAlignmentSummaryMetrics PROGRAM=CollectInsertSizeMetrics PROGRAM=CollectQualityYieldMetrics PROGRAM=QualityScoreDistribution && touch ../../share/{filename}.picard.success && rm {filename}
 	fi
 	analysis_id=$(cat ../../share/{filename}.analysis_id)
 	mkdir ../../share/qc-{filename}
+	if [ -f {filename}.bai ]
+		then rm {filename}.bai
+	fi
 	for output_file in $(ls)
 		do cp $output_file ../../share/qc-{filename}/$analysis_id.$output_file
 	done && touch ../../share/{filename}.success && rm ../../share/{filename} && cd .. && rm -r qc-{filename} && cd ..
