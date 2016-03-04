@@ -1,30 +1,24 @@
 INDEXED_BAM=0
-if [ ! -f share/{filename}.success ] 
-	then mkdir -p scratch/qc-{filename}
-	cd scratch/qc-{filename}
-	cp ../../share/{filename} .
-	if [ -f ../../share/{filename}.bai ]
-		then cp ../../share/{filename}.bai .
-	fi
-	if [ $(echo {filename} | grep '^.*\.tar$') ] || [ $(echo {filename} | grep '^.*\.tar.gz$') ] && [ ! -f ../../scratch/{filename}.fastqc.success ]
+if [ ! -f {filename}.success ] 
+	if [ $(echo {filename} | grep '^.*\.tar$') ] || [ $(echo {filename} | grep '^.*\.tar.gz$') ] && [ ! -f {filename}.fastqc.success ]
 		then if [ ! -f {filename}.contents ] 
-			then tar -xfvt share/{filename} > {filename}.contents
-		fi && (cat {filename}.contents | tr '\n' | xargs -0 -n1 fastqc) && (touch ../../share/{filename}.fastqc.success) && rm {filename} && $(cat {filename}.contents | tr '\n' | xargs -0 -n1 rm)
-	elif [ ! -f ../../scratch/{filename}.fastqc.success ]
-		then fastqc {filename} && touch ../../share/{filename}.fastqc.success && rm {filename}
+			then tar -xfvt {filename} > {filename}.contents
+		fi && (cat {filename}.contents | tr '\n' | xargs -0 -n1 fastqc) && (touch {filename}.fastqc.success) && rm {filename} && $(cat {filename}.contents | tr '\n' | xargs -0 -n1 rm)
+	elif [ ! {filename}.fastqc.success ]
+		then fastqc {filename} && touch {filename}.fastqc.success && rm {filename}
 	fi
-	if [ $(echo {filename} | grep '^.*\.bam$') ] && [ ! -f ../../share/{filename}.picard.success ]
+	if [ $(echo {filename} | grep '^.*\.bam$') ] && [ ! -f {filename}.picard.success ]
 		then if [ ! -f {filename}.bai ]
-			then INDEXED_BAM=1 && java -jar /usr/picard/picard.jar BuildBamIndex I={filename} O={filename}.bai && cp {filename}.bai ../../share
-		fi && java -jar /usr/picard/picard.jar CollectMultipleMetrics INPUT={filename} OUTPUT={filename}.multiple_metrics PROGRAM=CollectAlignmentSummaryMetrics PROGRAM=CollectInsertSizeMetrics PROGRAM=CollectQualityYieldMetrics PROGRAM=QualityScoreDistribution && touch ../../share/{filename}.picard.success && rm {filename} && rm {filename}.bai
+			then INDEXED_BAM=1 && java -jar /usr/picard/picard.jar BuildBamIndex I={filename} O={filename}.bai
+		fi && java -jar /usr/picard/picard.jar CollectMultipleMetrics INPUT={filename} OUTPUT={filename}.multiple_metrics PROGRAM=CollectAlignmentSummaryMetrics PROGRAM=CollectInsertSizeMetrics PROGRAM=CollectQualityYieldMetrics PROGRAM=QualityScoreDistribution && touch {filename}.picard.success && rm {filename}
 	fi
-	analysis_id=$(cat ../../share/{filename}.analysis_id)
-	mkdir ../../share/qc-{filename}
+	analysis_id=$(cat {filename}.analysis_id)
 	for output_file in $(ls)
-		cp $output_file ../../share/qc-{filename}/$analysis_id.$output_file; fi
-	done && touch ../../share/{filename}.success && rm ../../share/{filename} && cd .. && rm -r qc-{filename}
+		if [ ! $(echo {filename} | grep '^.*\.bai') ]
+		then mv $output_file $analysis_id.$output_file; fi
+	done && {filename}.success
 	if [ "$INDEXED_BAM" == 0 ]
-		then rm ../share/{filename}.bai
+		then rm {filename}.bai
 	fi
 else echo 'File {filename} already processed -- skipping'; fi
-echo "QC processing completion time (in seconds): $SECONDS" >> ../share/{filename}.log
+echo "QC processing completion time (in seconds): $SECONDS" >> {filename}.log
