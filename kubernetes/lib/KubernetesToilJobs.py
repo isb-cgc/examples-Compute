@@ -137,7 +137,12 @@ class KubernetesToilWorkflow(Job):
 										"mountPath": "/exports",
 										"readOnly": False	
 									}
-								]
+								], 
+								"resources": {
+									"requests": {
+										"cpu": self.cluster_spec["cluster"]["nodeConfig"]["machineType"].split('-')[-1]
+									}
+								}
 							}
 						],
 						"volumes": [
@@ -614,10 +619,10 @@ class KubernetesToilComputeJob(Job):
 		self.restart_policy = restart_policy
 		
 		if cpu_limit is not None:
-			self.job_spec["spec"]["containers"][0]["resources"] = { "cpu" : cpu_limit }
+			self.job_spec["spec"]["containers"][0]["resources"]["limits"] = { "cpu" : cpu_limit }
 			
 		if memory_limit is not None:
-			self.job_spec["spec"]["containers"][0]["resources"] = {"memory": "{memory}G".format(memory=memory_limit)}
+			self.job_spec["spec"]["containers"][0]["resources"]["limits"] = {"memory": "{memory}G".format(memory=memory_limit)}
 		
 
 	def run(self, filestore):
