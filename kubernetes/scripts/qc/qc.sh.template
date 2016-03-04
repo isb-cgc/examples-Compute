@@ -9,14 +9,14 @@ if [ ! -f share/{filename}.success ]
 	if [ $(echo {filename} | grep '^.*\.tar$') ] || [ $(echo {filename} | grep '^.*\.tar.gz$') ] && [ ! -f ../../scratch/{filename}.fastqc.success ]
 		then if [ ! -f {filename}.contents ] 
 			then tar -xfvt share/{filename} > {filename}.contents
-		fi && (cat {filename}.contents | tr '\n' | xargs -0 -n1 fastqc) && (touch ../../share/{filename}.fastqc.success) && rm {filename} && $(cat {filename}.contents | tr '\n' | xargs -0 -n1 rm)
+		fi && (cat {filename}.contents | tr '\n' | xargs -0 -n1 fastqc) >> ../../share/{filename}.log 2>&1 && (touch ../../share/{filename}.fastqc.success) && rm {filename} && $(cat {filename}.contents | tr '\n' | xargs -0 -n1 rm)
 	elif [ ! -f ../../scratch/{filename}.fastqc.success ]
-		then fastqc {filename} && touch ../../share/{filename}.fastqc.success 
+		then fastqc {filename} >> ../../share/{filename}.log 2>&1 && touch ../../share/{filename}.fastqc.success 
 	fi
 	if [ $(echo {filename} | grep '^.*\.bam$') ] && [ ! -f ../../share/{filename}.picard.success ]
 		then if [ ! -f {filename}.bai ]
 			then INDEXED_BAM=1 && java -jar /usr/picard/picard.jar BuildBamIndex I={filename} O={filename}.bai && cp {filename}.bai ../../share
-		fi && java -jar /usr/picard/picard.jar CollectMultipleMetrics INPUT={filename} OUTPUT={filename}.multiple_metrics PROGRAM=CollectAlignmentSummaryMetrics PROGRAM=CollectInsertSizeMetrics PROGRAM=CollectQualityYieldMetrics PROGRAM=QualityScoreDistribution && touch ../../share/{filename}.picard.success && rm {filename}
+		fi && java -jar /usr/picard/picard.jar CollectMultipleMetrics INPUT={filename} OUTPUT={filename}.multiple_metrics PROGRAM=CollectAlignmentSummaryMetrics PROGRAM=CollectInsertSizeMetrics PROGRAM=CollectQualityYieldMetrics PROGRAM=QualityScoreDistribution >> ../../share/{filename}.log 2>&1 && touch ../../share/{filename}.picard.success && rm {filename}
 	fi
 	analysis_id=$(cat ../../share/{filename}.analysis_id)
 	mkdir ../../share/qc-{filename}
