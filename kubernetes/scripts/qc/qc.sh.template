@@ -23,7 +23,7 @@ if [ ! -f share/{filename}.success ]
 	for output_file in $(ls)
 		do cp $output_file ../../share/qc-{filename}/$analysis_id.$output_file
 	done && touch ../../share/{filename}.success && rm ../../share/{filename} && cd .. && rm -r qc-{filename} && cd ..
-	if [ "$INDEXED_BAM" == "0" ]
+	if [ "$INDEXED_BAM" = "0" ]
 		then rm ../share/{filename}.bai
 	fi
 else echo 'File {filename} already processed -- skipping'; fi
