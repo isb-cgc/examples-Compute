@@ -1,3 +1,5 @@
+ls
+pwd
 INDEXED_BAM=0
 if [ ! -f {filename}.success ] 
 	then if [ $(echo {filename} | grep '^.*\.tar$') ] || [ $(echo {filename} | grep '^.*\.tar.gz$') ] && [ ! -f {filename}.fastqc.success ]
