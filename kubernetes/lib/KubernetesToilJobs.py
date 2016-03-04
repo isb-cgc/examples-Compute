@@ -101,7 +101,7 @@ class KubernetesToilWorkflow(Job):
 
 		self.nfs_service_controller_spec = { 
 			"apiVersion": "v1",
-			"kind": "Pod",
+			"kind": "ReplicationController",
 			"metadata": {
 				"name": "nfs-server"
 			},
