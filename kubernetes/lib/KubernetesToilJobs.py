@@ -17,6 +17,7 @@ from random import randint, SystemRandom
 # Kubernetes API URIs
 API_ROOT = "http://localhost:8080"
 NAMESPACE_URI = "/api/v1/namespaces/"
+PODS_URI = "/api/v1/namespaces/{namespace}/pods/"
 REPLICATION_CONTROLLERS_URI = "/api/v1/namespaces/{namespace}/replicationcontrollers/"
 SERVICES_URI = "/api/v1/namespaces/{namespace}/services/"
 PERSISTENT_VOLUMES_URI = "/api/v1/persistentvolumes/" 
