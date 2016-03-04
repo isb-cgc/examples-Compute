@@ -21,7 +21,7 @@ if [ ! -f share/{filename}.success ]
 	analysis_id=$(cat ../../share/{filename}.analysis_id)
 	mkdir ../../share/qc-{filename}
 	for output_file in $(ls)
-		do cp $output_file ../../share/qc-{filename}/$analysis_id.$output_file; fi
+		do cp $output_file ../../share/qc-{filename}/$analysis_id.$output_file
 	done && touch ../../share/{filename}.success && rm ../../share/{filename} && cd .. && rm -r qc-{filename}
 	if [ "$INDEXED_BAM" == 0 ]
 		then rm ../share/{filename}.bai

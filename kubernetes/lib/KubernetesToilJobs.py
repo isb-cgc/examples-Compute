@@ -379,7 +379,11 @@ class KubernetesToilWorkflow(Job):
 		filestore.logToMaster("{timestamp}  Creating an NFS share (size: {size}) for the cluster ...".format(timestamp=self.create_timestamp(), size=self.nfs_volume_spec["spec"]["capacity"]["storage"]))
 		
 		# create the persistent disk to back the NFS share
-		self.create_nfs_disk(filestore)
+		try:
+			get_disk = COMPUTE.disks().get(project=self.project_id, zone=self.zone, disk=self.nfs_disk_spec["name"]).execute()
+
+		except HttpError:
+			self.create_nfs_disk(filestore)
 		
 		# create the NFS service and rc
 		full_url = API_ROOT + SERVICES_URI.format(namespace=self.namespace_spec["metadata"]["name"])
@@ -402,19 +406,6 @@ class KubernetesToilWorkflow(Job):
 			else:
 				filestore.logToMaster("NFS service controller creation failed: {reason}".format(reason=response.content))
 				exit(-1)
-				
-		# need to ensure that the NFS controller always restarts on the same host
-		#nfs_controller_pods = subprocess.Popen(["kubectl", "get", "pods", "-l", "name=nfs-server"], stdout=subprocess.PIPE)
-		#grep = subprocess.Popen(["grep", "nfs-server"], stdout=subprocess.PIPE, stdin=nfs_controller_pods.stdout, stderr=subprocess.STDOUT)
-		#nfs_pod = grep.communicate()[0].split(' ')[0]
-		
-		#nfs_pod_info = subprocess.Popen(["kubectl", "describe", "pod", nfs_pod], stdout=subprocess.PIPE)
-		#grep = subprocess.Popen(["grep", "Node"], stdout=subprocess.PIPE, stdin=nfs_pod_info.stdout, stderr=subprocess.STDOUT)
-		#nfs_controller_host = grep.communicate()[0].split('\t')[4].split('/')[0]
-		#self.nfs_service_controller_spec["spec"]["template"]["spec"]["nodeName"] = nfs_controller_host
-		
-		# update the rc
-		#subprocess.Popen(["kubectl", "rolling-update", "nfs-server", "-f", "-"], stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.STDOUT).communicate(input=json.dumps(self.nfs_service_controller_spec))
 
 		# get the service endpoint
 		full_url = API_ROOT + SERVICES_URI.format(namespace=self.namespace_spec["metadata"]["name"]) + self.nfs_service_controller_spec["metadata"]["name"]
@@ -453,19 +444,14 @@ class KubernetesToilWorkflow(Job):
 			
 
 	def create_nfs_disk(self, filestore):
-		# Check if this disk exists
-		try:
-			get_disk = COMPUTE.disks().get(project=self.project_id, zone=self.zone, disk=self.nfs_disk_spec["name"]).execute()
+		# Submit the disk request
+		disk_response = COMPUTE.disks().insert(project=self.project_id, zone=self.zone, body=self.nfs_disk_spec).execute()
 
-		except HttpError:
-			# Submit the disk request
-			disk_response = COMPUTE.disks().insert(project=self.project_id, zone=self.zone, body=self.nfs_disk_spec).execute()
-
-			# Wait for the disks to be created
-			while True:
-				result = COMPUTE.zoneOperations().get(project=self.project_id, zone=self.zone, operation=disk_response['name']).execute()
-				if result['status'] == 'DONE':
-					break
+		# Wait for the disks to be created
+		while True:
+			result = COMPUTE.zoneOperations().get(project=self.project_id, zone=self.zone, operation=disk_response['name']).execute()
+			if result['status'] == 'DONE':
+				break
 
 		# attach the disk to an instance for formatting
 		attach_request = {
