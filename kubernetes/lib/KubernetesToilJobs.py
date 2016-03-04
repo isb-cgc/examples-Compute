@@ -17,7 +17,7 @@ from random import randint, SystemRandom
 # Kubernetes API URIs
 API_ROOT = "http://localhost:8080"
 NAMESPACE_URI = "/api/v1/namespaces/"
-PODS_URI = "/api/v1/namespaces/{namespace}/pods/"
+REPLICATION_CONTROLLERS_URI = "/api/v1/namespaces/{namespace}/replicationcontrollers/"
 SERVICES_URI = "/api/v1/namespaces/{namespace}/services/"
 PERSISTENT_VOLUMES_URI = "/api/v1/persistentvolumes/" 
 PERSISTENT_VOLUME_CLAIMS_URI = "/api/v1/namespaces/{namespace}/persistentvolumeclaims/" 
@@ -106,39 +106,51 @@ class KubernetesToilWorkflow(Job):
 				"name": "nfs-server"
 			},
 			"spec": {
-				"containers": [
-					{
-						"name": "nfs-server",
-						"image": "gcr.io/google_containers/volume-nfs",
-						"ports": [
+				"replicas": 1,
+				"selector": {
+					"role": "nfs-server"
+				},
+				"template": {
+					"metadata": {
+						"labels": {
+							"role": "nfs-server"
+						}
+					},
+					"spec": {
+						"containers": [
 							{
-								"name": "nfs",
-								"containerPort": 2049
+								"name": "nfs-server",
+								"image": "gcr.io/google_containers/volume-nfs",
+								"ports": [
+									{
+										"name": "nfs",
+										"containerPort": 2049
+									}
+								],
+								"securityContext": {
+									"privileged": True
+								},
+								"volumeMounts": [
+									{
+										"name": "{workflow}-data".format(workflow=self.workflow_name),
+										"mountPath": "/exports",
+										"readOnly": False	
+									}
+								]
 							}
 						],
-						"securityContext": {
-							"privileged": True
-						},
-						"volumeMounts": [
+						"volumes": [
 							{
 								"name": "{workflow}-data".format(workflow=self.workflow_name),
-								"mountPath": "/exports",
-								"readOnly": False	
+								"gcePersistentDisk": {
+									"pdName": "{workflow}-data".format(workflow=self.workflow_name),
+									"readOnly": False,
+									"fsType": "ext4"
+								}
 							}
 						]
 					}
-				],
-				"volumes": [
-					{
-						"name": "{workflow}-data".format(workflow=self.workflow_name),
-						"gcePersistentDisk": {
-							"pdName": "{workflow}-data".format(workflow=self.workflow_name),
-							"readOnly": False,
-							"fsType": "ext4"
-						}
-					}
-				],
-				"restartPolicy": "Always"
+				}			
 			}
 				
 		}
@@ -380,14 +392,14 @@ class KubernetesToilWorkflow(Job):
 				filestore.logToMaster("NFS service creation failed: {reason}".format(reason=response.content))
 				exit(-1) # probably should raise an exception
 
-		full_url = API_ROOT + PODS_URI.format(namespace=self.namespace_spec["metadata"]["name"])
+		full_url = API_ROOT + REPLICATION_CONTROLLERS_URI.format(namespace=self.namespace_spec["metadata"]["name"])
 		response = SESSION.post(full_url, headers=self.headers, json=self.nfs_service_controller_spec)
 		
 		if response.status_code != 201:
 			if response.status_code == 409: # already exists
 				pass
 			else:
-				filestore.logToMaster("NFS service pod creation failed: {reason}".format(reason=response.content))
+				filestore.logToMaster("NFS service controller creation failed: {reason}".format(reason=response.content))
 				exit(-1)
 				
 		# need to ensure that the NFS controller always restarts on the same host
