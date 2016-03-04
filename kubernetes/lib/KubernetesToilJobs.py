@@ -591,7 +591,8 @@ class KubernetesToilComputeJob(Job):
 								"mountPath": "/data-access",
 								"readOnly": True
 							}
-						]
+						],
+						"resources": {}
 					},
 
 				],
