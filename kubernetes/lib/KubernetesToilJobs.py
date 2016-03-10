@@ -140,7 +140,7 @@ class KubernetesToilWorkflow(Job):
 								], 
 								"resources": {
 									"requests": {
-										"cpu": self.cluster_spec["cluster"]["nodeConfig"]["machineType"].split('-')[-1]
+										"cpu": int(self.cluster_spec["cluster"]["nodeConfig"]["machineType"].split('-')[-1]) - 1
 									}
 								}
 							}
