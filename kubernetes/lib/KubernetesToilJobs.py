@@ -629,10 +629,10 @@ class KubernetesToilComputeJob(Job):
 		self.restart_policy = restart_policy
 		
 		if cpu_limit is not None:
-			self.job_spec["spec"]["containers"][0]["resources"]["requests"] = { "cpu" : cpu_limit }
+			self.job_spec["spec"]["containers"][0]["resources"]["limits"] = { "cpu" : cpu_limit }
 			
 		if memory_limit is not None:
-			self.job_spec["spec"]["containers"][0]["resources"]["requests"] = {"memory": "{memory}G".format(memory=memory_limit)}
+			self.job_spec["spec"]["containers"][0]["resources"]["limits"] = {"memory": "{memory}G".format(memory=memory_limit)}
 		
 
 	def run(self, filestore):
