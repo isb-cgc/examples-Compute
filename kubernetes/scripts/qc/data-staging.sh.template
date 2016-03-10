@@ -1,6 +1,5 @@
 if [ ! -f {filename} ]
-	then echo "Downloading file {filename} ..."
-	python -c "import subprocess; metadata = subprocess.check_output(['gsutil', 'ls', '-L', '{url}']); metadata_tag = metadata.partition('Metadata:')[2].partition('Hash')[0]; analysis_id = metadata_tag.strip().split()[-1]; print analysis_id" > {filename}.analysis_id && gsutil -m -o Credentials:gs_oauth2_refresh_token=$(cat /data-access/refresh-token) -o Oauth2:oauth2_refresh_retries=50 cp {url}* .
+	then gsutil ls -L {url} | grep analysis-id | tr -s $'\t' | cut -d $'\t' -f 3 > {filename}.analysis_id && gsutil -m -o Credentials:gs_oauth2_refresh_token=$(cat /data-access/refresh-token) -o Oauth2:oauth2_refresh_retries=50 cp {url}* .
 else echo 'File {filename} already staged -- skipping'; fi
 echo "Original file GCS path: {url}" >> {filename}.log
 echo "File size (expected): $(gsutil du -h {url})" >> {filename}.log
