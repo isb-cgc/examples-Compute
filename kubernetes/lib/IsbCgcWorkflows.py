@@ -207,7 +207,7 @@ class QcWorkflow(Workflow):
 			disk = {
 				"name": "{filename}-disk".format(filename=filename.replace('.', '-').lower()), 
 				"type": "pd-standard",
-				"sizeGb": int(math.ceil(filesize/50000000000.0)*50000000000.0)
+				"sizeGb": int(math.ceil(int(filesize)/50000000000.0)*50000000000.0)
 			}
 			data_staging_job["disk"] = disk
 			qc_job["disk"] = disk
