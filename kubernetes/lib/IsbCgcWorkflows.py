@@ -171,7 +171,7 @@ class QcWorkflow(Workflow):
 				print "There was a problem with url {url} in the input file".format(url=url)
 			else:
 				# get the file size to determine whether or not to create a disk for this subworkflow
-				filesize = subprocess.check_output(["gsutil", "du", url]).split(' ')[0]
+				filesize = int(subprocess.check_output(["gsutil", "du", url]).split(' ')[0])
 				if filesize/1000000000 > math.floor(int(self.schema["cluster"]["cluster_node_disk_size"])/3):
 					host_key = None
 				self.__create_subworkflow(url.strip(), host_key, filesize)
@@ -207,7 +207,7 @@ class QcWorkflow(Workflow):
 			disk = {
 				"name": "{filename}-disk".format(filename=filename.replace('.', '-').lower()), 
 				"type": "pd-standard",
-				"sizeGb": int(math.ceil(int(filesize)/50000000000.0)*50000000000.0)
+				"sizeGb": int(math.ceil(filesize/50000000000.0)*50000000000.0)
 			}
 			data_staging_job["disk"] = disk
 			qc_job["disk"] = disk
