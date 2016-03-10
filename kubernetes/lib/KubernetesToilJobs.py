@@ -496,7 +496,7 @@ class KubernetesToilWorkflow(Job):
 			try:
 				subprocess.check_call(["gcloud", "compute", "config-ssh"])
 			except subprocess.CalledProcessError as e:
-				filestore.logToMaster("Couldn't generate SSH keys for the workstation: {e}".format(e=e)
+				filestore.logToMaster("Couldn't generate SSH keys for the workstation: {e}".format(e=e))
 				exit(-1)
 
 		command = "sudo mkdir -p /{workflow}-data && sudo mkfs.ext4 -F /dev/disk/by-id/google-{workflow}-data && sudo mount -o discard,defaults /dev/disk/by-id/google-{workflow}-data /{workflow}-data".format(workflow=self.workflow_name)
