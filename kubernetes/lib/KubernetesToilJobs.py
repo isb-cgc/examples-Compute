@@ -489,6 +489,15 @@ class KubernetesToilWorkflow(Job):
 			filestore.logToMaster("Couldn't attach disk for formatting: {result}".format(result=result))
 			exit(-1)
 	
+		# generate ssh keys on the workstation
+		try:
+			subprocess.check_call(["bash", "-c", "stat ~/.ssh/google_compute_engine && stat ~/.ssh/google_compute_engine.pub"])
+		except subprocess.CalledProcessError as e:
+			try:
+				subprocess.check_call(["gcloud", "compute", "config-ssh"])
+			except subprocess.CalledProcessError as e:
+				filestore.logToMaster("Couldn't generate SSH keys for the workstation: {e}".format(e=e)
+				exit(-1)
 
 		command = "sudo mkdir -p /{workflow}-data && sudo mkfs.ext4 -F /dev/disk/by-id/google-{workflow}-data && sudo mount -o discard,defaults /dev/disk/by-id/google-{workflow}-data /{workflow}-data".format(workflow=self.workflow_name)
 		try:
