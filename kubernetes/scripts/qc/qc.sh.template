@@ -11,10 +11,11 @@ if [ ! -f {filename}.success ]
 	if [ $(echo {filename} | grep '^.*\.bam$') ] && [ ! -f {filename}.picard.success ]
 		then if [ ! -f {filename}.bai ]
 			then INDEXED_BAM=1 && echo "Indexing BAM file {filename} ..." >> {filename}.log && java -jar /usr/picard/picard.jar BuildBamIndex I={filename} O={filename}.bai >> {filename}.log
-		else PID=$(java -jar /usr/picard/picard.jar ValidateSamFile I={filename} > bam_validation.log &)
+		else (nohup java -jar /usr/picard/picard.jar ValidateSamFile I={filename} > bam_validation.log &)
+			PID=$!
 			sleep 10
 			kill -9 $PID
-			if [ $(grep "WARNING: BAM index file $PWD/{filename}.bai is older than BAM $PWD/{filename}" bam_validation.log) ] 
+			if [ $(grep "WARNING: BAM index file .*{filename}.bai is older than BAM .*{filename}" bam_validation.log) ] 
 				then INDEXED_BAM=1 && echo "Indexing BAM file {filename} ..." >> {filename}.log && java -jar /usr/picard/picard.jar BuildBamIndex I={filename} O={filename}.bai >> {filename}.log
 			fi
 			java -jar /usr/picard/picard.jar CollectMultipleMetrics INPUT={filename} OUTPUT={filename}.multiple_metrics PROGRAM=CollectAlignmentSummaryMetrics PROGRAM=CollectInsertSizeMetrics PROGRAM=CollectQualityYieldMetrics PROGRAM=QualityScoreDistribution >> {filename}.log
