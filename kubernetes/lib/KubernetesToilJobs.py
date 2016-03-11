@@ -306,7 +306,7 @@ class KubernetesToilWorkflowCleanup(Job):
 		delete_cluster = GKE.projects().zones().clusters().delete(projectId=self.project_id, zone=self.zone, clusterId=self.workflow_name).execute(http=HTTP)
 
 class KubernetesToilComputeJob(Job):
-	def __init__(self, workflow_name, project_id, zone, job_name, container_image, container_script, cluster_hosts, secrets, subworkflow_name=None, host_key=None, restart_policy="Never", cpu_limit=None, memory_limit=None, disk=None):
+	def __init__(self, workflow_name, project_id, zone, job_name, container_image, container_script, additional_info, subworkflow_name=None, host_key=None, restart_policy="Never", cpu_limit=None, memory_limit=None, disk=None):
 		super(KubernetesToilComputeJob, self).__init__()
 		self.workflow_name = workflow_name.replace("_", "-")
 		self.project_id = project_id
@@ -368,11 +368,13 @@ class KubernetesToilComputeJob(Job):
 
 					
 		self.host_key = host_key
-		self.cluster_hosts = cluster_hosts
-		self.secrets = secrets
+		self.additional_info = additional_info
 
 	def run(self, filestore):
 		filestore.logToMaster("{timestamp}  Creating host directory for job data ...".format(timestamp=self.create_timestamp()))
+		self.cluster_hosts = additional_info[0]
+		self.secrets = additional_info[1]
+
 		if self.host_key is not None:
 			self.job_spec["spec"]["nodeName"] = self.cluster_hosts[self.host_key]
 			self.create_host_path()
