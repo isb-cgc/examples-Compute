@@ -177,7 +177,7 @@ class QcWorkflow(Workflow):
 		filename = url.split('/')[-1]
 		subworkflow_name = "qc-{filename}".format(filename=filename)
 		try:
-			metadata = subprocess.check_output(['gsutil', 'ls', '-L', '{url}'])
+			metadata = subprocess.check_output(['gsutil', 'ls', '-L', '{url}'.format(url=url)])
 		except subprocess.CalledProcessError as e:
 			print "URL {url} doesn't exist".format(url=url)
 			exit(-1)
