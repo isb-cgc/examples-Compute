@@ -94,7 +94,7 @@ class KubernetesToilWorkflow(Job):
 		}
 
 		self.default_secret = ("refresh-token", base64.b64encode(CREDENTIALS.refresh_token), "/data-access/refresh-token")
-		self.add_secrets = []
+		self.add_secrets = [self.default_secret]
 		if secrets is not None:
 			for secret in secrets:
 				self.add_secrets.append((secret["name"], self.get_secret_contents(secret["url"]), secret["mount_path"]))
@@ -123,7 +123,7 @@ class KubernetesToilWorkflow(Job):
 			self.create_secret(secret, filestore)
 		filestore.logToMaster("{timestamp}  Additional secrets created successfully!".format(timestamp=self.create_timestamp()))
 
-		return (self.cluster_hosts, self.add_secrets.extend(self.default_secret))
+		return (self.cluster_hosts, self.add_secrets)
 
 	def create_timestamp(self):
 		return datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
