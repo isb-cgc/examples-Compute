@@ -39,7 +39,7 @@ API_HEADERS = {
 }
 	
 class KubernetesToilWorkflow(Job):
-	def __init__(self, workflow_name, project_id, zone, node_num, machine_type, cluster_node_disk_size, add_secret=None, network="default", logging_service=None, monitoring_service=None, tear_down=False):
+	def __init__(self, workflow_name, project_id, zone, node_num, machine_type, cluster_node_disk_size, secrets=None, network="default", logging_service=None, monitoring_service=None, tear_down=False):
 		super(KubernetesToilWorkflow, self).__init__()
 		self.workflow_name = workflow_name.replace("_", "-")
 		self.project_id = project_id
@@ -95,9 +95,9 @@ class KubernetesToilWorkflow(Job):
 
 		self.default_secret = ("refresh-token", base64.b64encode(CREDENTIALS.refresh_token), "/data-access/refresh-token")
 		self.add_secrets = []
-		if add_secret is not None:
-			for secret in add_secret:
-				self.add_secrets.append((secret[0], self.get_secret_contents(secret[1]), secret[2]))
+		if secrets is not None:
+			for secret in secrets:
+				self.add_secrets.append((secret["name"], self.get_secret_contents(secret["url"]), secret["mount_path"]))
 		
 		self.cluster_hosts = []
 		self.headers = API_HEADERS
@@ -357,8 +357,27 @@ class KubernetesToilComputeJob(Job):
 				"restartPolicy": restart_policy
 			}
 		}
+							
+		self.restart_policy = restart_policy
 		
-		for secret in secrets:
+		if cpu_limit is not None:
+			self.job_spec["spec"]["containers"][0]["resources"] = { "cpu" : cpu_limit }
+			
+		if memory_limit is not None:
+			self.job_spec["spec"]["containers"][0]["resources"] = {"memory": "{memory}G".format(memory=memory_limit)}
+
+					
+		self.host_key = host_key
+		self.cluster_hosts = cluster_hosts
+		self.secrets = secrets
+
+	def run(self, filestore):
+		filestore.logToMaster("{timestamp}  Creating host directory for job data ...".format(timestamp=self.create_timestamp()))
+		if self.host_key is not None:
+			self.job_spec["spec"]["nodeName"] = self.cluster_hosts[self.host_key]
+			self.create_host_path()
+
+		for secret in self.secrets:
 			secret_volume_mount = {
 				"name": secret[0],
 				"mountPath": secret[2],
@@ -372,25 +391,6 @@ class KubernetesToilComputeJob(Job):
 				}
 			}
 			self.job_spec["spec"]["volumes"].append(secret_volume)
-							
-		self.restart_policy = restart_policy
-		
-		if cpu_limit is not None:
-			self.job_spec["spec"]["containers"][0]["resources"] = { "cpu" : cpu_limit }
-			
-		if memory_limit is not None:
-			self.job_spec["spec"]["containers"][0]["resources"] = {"memory": "{memory}G".format(memory=memory_limit)}
-
-					
-		self.host_key = host_key
-		self.cluster_hosts = cluster_hosts
-
-
-	def run(self, filestore):
-		filestore.logToMaster("{timestamp}  Creating host directory for job data ...".format(timestamp=self.create_timestamp()))
-		if self.host_key is not None:
-			self.job_spec["spec"]["nodeName"] = self.cluster_hosts[self.host_key]
-			self.create_host_path()
 			
 		filestore.logToMaster("{timestamp}  Starting job {job_name} ...".format(timestamp=self.create_timestamp(), job_name=self.job_spec["metadata"]["name"]))
 		submit = self.start_job(filestore) 

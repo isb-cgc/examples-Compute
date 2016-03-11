@@ -99,6 +99,7 @@ class KubernetesWorkflowRunner():
 
 			if "subworkflow_name" in job.keys():
 				kwargs.update({"subworkflow_name": job["subworkflow_name"]})
+
 				
 			self.toil_jobs[job["name"]] = KubernetesToilComputeJob(*args, **kwargs)
 
@@ -194,6 +195,14 @@ class KubernetesWorkflowRunner():
 					"tear_down": {
 						"type": "boolean",
 						"required": False
+					},
+					"secrets": {
+						"type": "array"
+						"items": {
+							"type": "object"
+						},
+						"properties": { "$ref": "#/definitions/secret_properties" },
+						"required": False
 					}
 				},
 				"job_properties": {
@@ -244,6 +253,20 @@ class KubernetesWorkflowRunner():
 					"memory_limit": {
 						"type": "int",
 						"required": False
+					}
+				},
+				"secret_properties": {
+					"name": {
+						"type": "string",
+						"required": "True"
+					},
+					"url": {
+						"type": "string",
+						"required": "True"
+					},
+					"mount_path": {
+						"type": "string",
+						"required": "True"
 					}
 				}
 			}

@@ -20,11 +20,20 @@ class Workflow(object):
 				"network": "default",
 				"machine_type": cluster.machine_type,
 				"cluster_node_disk_size": cluster.cluster_node_disk_size,
-				"tear_down": cluster.tear_down
+				"tear_down": cluster.tear_down,
+				"secrets": []
 			},
 			"jobs": []
 		}
 		self.dry_run = cluster.dry_run
+		for secret in cluster.add_secret:
+			secret_details = secret.split(',')
+			secret_spec = {
+				"name": secret_details[0],
+				"url": secret_details[1],
+				"mount_path": secret_details[2]
+			}
+			self.schema["cluster"]["secrets"].append(secret_spec)
 
 	def __build(self):
 		pass # to be overridden in subclasses
@@ -229,6 +238,7 @@ if __name__ == "__main__":
 	parser.add_argument('--machine_type', required=True, help="GCE machine type")
 	parser.add_argument('--tear_down', required=False, action='store_true', help="If set, the cluster will be cleaned up at the end of the workflow.  Default is False")
 	parser.add_argument('--dry_run', required=False, action='store_true', help="If set, will only print the workflow graph that would have run. Default is False")
+	parser.add_argument('--add_secret', required=False, action='append', help="An additional secret to add to the cluster, formatted as a comma-delimited string: <secret-name>,<secret-gcs-url>,<secret-mount-path>")
 
 	subparsers = parser.add_subparsers(help="sub-command help", dest="workflow")
 	
