@@ -82,7 +82,7 @@ class KubernetesWorkflowRunner():
 	def _add_kubernetes_toil_job(self, parent, job):
 		if job["name"] not in self.toil_jobs.keys():
 			# create a new job as long as this job doesn't exist yet
-			args = [ self.workflow_name, self.workflow_spec["cluster"]["project_id"], self.workflow_spec["cluster"]["zone"], job["name"], job["container_image"], job["container_script"], self.toil_jobs[self.workflow_name].rv()[0], self.toil_jobs[self.workflow_name].rv()[1] ]
+			args = [ self.workflow_name, self.workflow_spec["cluster"]["project_id"], self.workflow_spec["cluster"]["zone"], job["name"], job["container_image"], job["container_script"], self.toil_jobs[self.workflow_name].rv() ]
 			kwargs = {}
 			if "restart_policy" in job.keys():
 				kwargs.update({"restart_policy": job["restart_policy"]})
