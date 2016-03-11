@@ -268,36 +268,15 @@ class KubernetesToilWorkflowCleanup(Job):
 		self.project_id = project_id
 		self.zone = zone
 		
-	def run(self, filestore): # this should override the inherited "base" class run function
+	def run(self, filestore): 
 		if CREDENTIALS.access_token_expired:
 			CREDENTIALS.refresh(HTTP)
 		
-		#self.nfs_cleanup(filestore)
 		self.cluster_cleanup(filestore)
 
 		return True
-	
-	def nfs_cleanup(self, filestore):
-		# delete the NFS volume and claim
-		full_path = API_ROOT + PERSISTENT_VOLUME_CLAIMS_URI.format(namespace=self.workflow_name) + "nfs-{workflow}".format(workflow=self.workflow_name)
-		response = SESSION.delete(full_path)
-
-		# if the response isn't what's expected, raise an exception
-		if response.status_code != 200:
-			# if the response isn't what's expected, raise an exception
-			filestore.logToMaster("NFS persistent volume claim deletion failed: {reason}".format(reason=response.content))
-		
-		full_path = API_ROOT + PERSISTENT_VOLUMES_URI.format(namespace=self.workflow_name) + "nfs-{workflow}".format(workflow=self.workflow_name)
-		response = SESSION.delete(full_path)
-		
-		# if the response isn't what's expected, raise an exception
-		if response.status_code != 200:
-			filestore.logToMaster("NFS persistent volume deletion failed: {reason}".format(reason=response.content))
-			
-		# delete the NFS persistent disk
 
 	def cluster_cleanup(self, filestore):
-		# destroy the cluster
 		delete_cluster = GKE.projects().zones().clusters().delete(projectId=self.project_id, zone=self.zone, clusterId=self.workflow_name).execute(http=HTTP)
 
 class KubernetesToilComputeJob(Job):

@@ -4,5 +4,3 @@ else echo 'File {filename} already staged -- skipping'; fi
 echo "Original file GCS path: {url}" >> {filename}.log
 echo "File size (expected): $(gsutil du -h {url})" >> {filename}.log
 echo "File size (actual): $(ls -alh {filename} | cut -d ' ' -f 5)" >> {filename}.log
-ls
-pwd
