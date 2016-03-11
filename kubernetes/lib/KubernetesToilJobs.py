@@ -327,7 +327,7 @@ class KubernetesToilComputeJob(Job):
 						"workingDir": "/workflow",
 						"volumeMounts": [
 							{
-								"name": "{job_name}-data".format(job_name=self.job_name),
+								"name": "data".format(job_name=self.job_name),
 								"mountPath": "/workflow",
 								"readOnly": False	
 							},
@@ -348,7 +348,7 @@ class KubernetesToilComputeJob(Job):
 						}
 					},
 					{
-						"name": "{job_name}-data".format(job_name=self.job_name),
+						"name": "data".format(job_name=self.job_name),
 						"hostPath": {
 							"path": "/{job_name}-data".format(job_name=self.job_name)
 						}
