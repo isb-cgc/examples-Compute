@@ -169,11 +169,11 @@ class QcWorkflow(Workflow):
 			except ValueError:
 				print "There was a problem with url {url} in the input file".format(url=url)
 			else:
-				self.__create_subworkflow(url.strip(), host_key, filesize)
+				self.__create_subworkflow(url.strip(), host_key)
 				host_key += 1
 				
 
-	def __create_subworkflow(self, url, host_key, filesize):
+	def __create_subworkflow(self, url, host_key):
 		filename = url.split('/')[-1]
 
 		if self.output_bucket is None:
