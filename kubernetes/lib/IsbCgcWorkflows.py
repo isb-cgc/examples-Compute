@@ -199,7 +199,7 @@ class QcWorkflow(Workflow):
 
 		cleanup_job = self.cleanup_job_template.copy()
 		cleanup_job["name"] = "retrieve-stats-{analysis_id}".format(analysis_id=analysis_id)
-		cleanup_job["container_script"] = self.load_script_template(self.cleanup_script_path, filename=filename, index_destination=url.split('/')[0:-1], destination=self.output_bucket)
+		cleanup_job["container_script"] = self.load_script_template(self.cleanup_script_path, filename=filename, index_destination='/'.join(url.split('/')[0:-1]), destination=self.output_bucket)
 		cleanup_job["parents"] = [qc_job["name"]]
 		
 		data_staging_job["host_key"] = host_key
