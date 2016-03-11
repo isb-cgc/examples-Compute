@@ -52,6 +52,9 @@ class KubernetesWorkflowRunner():
 
 		if "tear_down" in cluster_config.keys():
 			kwargs.update({"tear_down": cluster_config["tear_down"]})
+
+		if "secrets" in cluster_config.keys():
+			kwargs.update({"secrets": cluster_config["secrets"]})
 	
 		self.toil_jobs[self.workflow_name] = KubernetesToilWorkflow(*args, **kwargs)
 	
