@@ -123,7 +123,7 @@ class KubernetesToilWorkflow(Job):
 			self.create_secret(secret, filestore)
 		filestore.logToMaster("{timestamp}  Additional secrets created successfully!".format(timestamp=self.create_timestamp()))
 
-		return self.cluster_hosts, self.add_secrets.extend(self.default_secret)
+		return (self.cluster_hosts, self.add_secrets.extend(self.default_secret))
 
 	def create_timestamp(self):
 		return datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
@@ -372,14 +372,15 @@ class KubernetesToilComputeJob(Job):
 
 	def run(self, filestore):
 		filestore.logToMaster("{timestamp}  Creating host directory for job data ...".format(timestamp=self.create_timestamp()))
-		self.cluster_hosts = self.additional_info[0]
-		self.secrets = self.additional_info[1]
+		cluster_hosts = self.additional_info[0]
+		secrets = self.additional_info[1]
 
+		filestore.logToMaster(' '.join(map(str, self.additional_info)))
 		if self.host_key is not None:
-			self.job_spec["spec"]["nodeName"] = self.cluster_hosts[self.host_key]
-			self.create_host_path()
+			self.job_spec["spec"]["nodeName"] = cluster_hosts[self.host_key]
+			self.create_host_path(cluster_hosts[self.host_key])
 
-		for secret in self.secrets:
+		for secret in secrets:
 			secret_volume_mount = {
 				"name": secret[0],
 				"mountPath": secret[2],
@@ -402,9 +403,9 @@ class KubernetesToilComputeJob(Job):
 
 		return job_status
 
-	def create_host_path(self):
+	def create_host_path(self, host):
 		try:
-			subprocess.check_call(["gcloud", "compute", "ssh", self.cluster_hosts[self.host_key], "--command", "if [[ ! -d /{host_path} ]]; then sudo mkdir /{host_path}; fi".format(host_path=self.host_path)])
+			subprocess.check_call(["gcloud", "compute", "ssh", host, "--command", "if [[ ! -d /{host_path} ]]; then sudo mkdir /{host_path}; fi".format(host_path=self.host_path)])
 		except subprocess.CalledProcessError as e:
 			filestore.logToMaster("Couldn't create the hostPath directory for this job: {e}".format(e=e))
 			exit(-1)
