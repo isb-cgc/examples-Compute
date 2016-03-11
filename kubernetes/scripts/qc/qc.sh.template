@@ -14,7 +14,7 @@ if [ ! -f {filename}.success ]
 		else (nohup java -jar /usr/picard/picard.jar ValidateSamFile I={filename} > bam_validation.log &)
 			PID=$(echo $!)
 			sleep 10
-			kill -9 $PID
+			kill $PID
 			if [ $(grep "WARNING: BAM index file .*{filename}.bai is older than BAM .*{filename}" bam_validation.log) ] 
 				then INDEXED_BAM=1 && echo "Indexing BAM file {filename} ..." >> {filename}.log && java -jar /usr/picard/picard.jar BuildBamIndex I={filename} O={filename}.bai >> {filename}.log
 			fi
