@@ -93,7 +93,7 @@ class KubernetesToilWorkflow(Job):
 			}
 		}
 
-		self.default_secret = ("refresh-token", base64.b64encode(CREDENTIALS.refresh_token), "/data-access/refresh-token")
+		self.default_secret = ("refresh-token", base64.b64encode(CREDENTIALS.refresh_token), "/data-access")
 		self.add_secrets = [self.default_secret]
 		if secrets is not None:
 			for secret in secrets:
