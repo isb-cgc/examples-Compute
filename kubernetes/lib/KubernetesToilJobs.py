@@ -356,7 +356,7 @@ class KubernetesToilComputeJob(Job):
 					{
 						"name": "data".format(job_name=self.job_name),
 						"hostPath": {
-							"path": "/{host_path}".format(job_name=self.host_path)
+							"path": "/{host_path}".format(host_path=self.host_path)
 						}
 					}
 				],
