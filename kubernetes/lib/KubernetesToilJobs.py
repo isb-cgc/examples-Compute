@@ -357,7 +357,7 @@ class KubernetesToilComputeJob(Job):
 
 	def run(self, filestore):
 		filestore.logToMaster("{timestamp}  Creating host directory for job data ...".format(timestamp=self.create_timestamp()))
-		filestore.logToMaster(self.cluster_hosts)
+		filestore.logToMaster(','.join(self.cluster_hosts))
 		filestore.logToMaster(self.host_key)
 		self.job_spec["spec"]["nodeName"] = self.cluster_hosts[self.host_key]
 		self.create_host_path()
