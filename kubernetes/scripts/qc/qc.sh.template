@@ -5,22 +5,20 @@ if [ ! -f {filename}.success ]
 	then if [ $(echo {filename} | grep '^.*\.tar$') ] || [ $(echo {filename} | grep '^.*\.tar.gz$') ] && [ ! -f {filename}.fastqc.success ]
 		then if [ ! -f {filename}.contents ] 
 			then tar -xfvt {filename} > {filename}.contents
-		fi && (cat {filename}.contents | tr '\n' | xargs -0 -n1 fastqc) && (touch {filename}.fastqc.success) && rm {filename} && $(cat {filename}.contents | tr '\n' | xargs -0 -n1 rm)
+		fi
+		(cat {filename}.contents | tr '\n' | xargs -0 -n1 fastqc >> {filename}.log) && (touch {filename}.fastqc.success) && rm {filename} && $(cat {filename}.contents | tr '\n' | xargs -0 -n1 rm)
 	elif [ ! {filename}.fastqc.success ]
-		then fastqc {filename} && touch {filename}.fastqc.success && rm {filename}
+		then fastqc {filename} >> {filename}.log && touch {filename}.fastqc.success && rm {filename}
 	fi
 	if [ $(echo {filename} | grep '^.*\.bam$') ] && [ ! -f {filename}.picard.success ]
 		then if [ ! -f {filename}.bai ]
-			then INDEXED_BAM=1 && java -jar /usr/picard/picard.jar BuildBamIndex I={filename} O={filename}.bai
+			then INDEXED_BAM=1 && echo "Indexing BAM file {filename} ..." >> {filename}.log && java -jar /usr/picard/picard.jar BuildBamIndex I={filename} O={filename}.bai >> {filename}.log
 		else
-			while true
-				do java -jar /usr/picard/picard.jar CollectMultipleMetrics INPUT={filename} OUTPUT={filename}.multiple_metrics PROGRAM=CollectAlignmentSummaryMetrics PROGRAM=CollectInsertSizeMetrics PROGRAM=CollectQualityYieldMetrics PROGRAM=QualityScoreDistribution > picard.log &
-				PID=$(echo $!)
-				if [ $(grep "WARNING: BAM index file $PWD/{filename}.bai is older than BAM $PWD/{filename}" picard.log) ] 
-					then kill $PID && INDEXED_BAM=1 && java -jar /usr/picard/picard.jar BuildBamIndex I={filename} O={filename}.bai
-				fi
-				break
-			done
+			java -jar /usr/picard/picard.jar ValidateSamFile I={filename} > bam_validation.log
+			if [ $(grep "WARNING: BAM index file $PWD/{filename}.bai is older than BAM $PWD/{filename}" bam_validation.log) ] 
+				then INDEXED_BAM=1 && echo "Indexing BAM file {filename} ..." >> {filename}.log && java -jar /usr/picard/picard.jar BuildBamIndex I={filename} O={filename}.bai >> {filename}.log
+			fi
+			java -jar /usr/picard/picard.jar CollectMultipleMetrics INPUT={filename} OUTPUT={filename}.multiple_metrics PROGRAM=CollectAlignmentSummaryMetrics PROGRAM=CollectInsertSizeMetrics PROGRAM=CollectQualityYieldMetrics PROGRAM=QualityScoreDistribution >> {filename}.log
 		fi
 		touch {filename}.picard.success && rm {filename}
 	fi
