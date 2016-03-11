@@ -197,7 +197,7 @@ class KubernetesWorkflowRunner():
 						"required": False
 					},
 					"secrets": {
-						"type": "array"
+						"type": "array",
 						"items": {
 							"type": "object"
 						},
