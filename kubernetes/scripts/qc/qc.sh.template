@@ -11,8 +11,7 @@ if [ ! -f {filename}.success ]
 	if [ $(echo {filename} | grep '^.*\.bam$') ] && [ ! -f {filename}.picard.success ]
 		then if [ ! -f {filename}.bai ]
 			then INDEXED_BAM=1 && echo "Indexing BAM file {filename} ..." >> {filename}.log && java -jar /usr/picard/picard.jar BuildBamIndex I={filename} O={filename}.bai >> {filename}.log
-		else (java -jar /usr/picard/picard.jar ValidateSamFile I={filename} > bam_validation.log &)
-			PID=$!
+		else PID=$(java -jar /usr/picard/picard.jar ValidateSamFile I={filename} > bam_validation.log &)
 			sleep 10
 			kill -9 $PID
 			if [ $(grep "WARNING: BAM index file $PWD/{filename}.bai is older than BAM $PWD/{filename}" bam_validation.log) ] 
@@ -29,7 +28,7 @@ if [ ! -f {filename}.success ]
 		fi
 	done
 	touch {filename}.success
-	if [ "$INDEXED_BAM" == "0" ]
+	if [ "$INDEXED_BAM" = 0 ]
 		then rm {filename}.bai
 	fi
 else echo 'File {filename} already processed -- skipping'; fi
