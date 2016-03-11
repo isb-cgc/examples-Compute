@@ -271,7 +271,7 @@ class KubernetesToilWorkflow(Job):
 	def create_secret(self, secret, filestore):
 		secret_spec = self.secret_spec.copy()
 		secret_spec["metadata"]["name"] = secret[0]
-		secret_spec["data"].update({"{secret_name}".format(secret[0]):"{secret_value}".format(secret(1))})
+		secret_spec["data"].update({"{secret_name}".format(secret[0]):"{secret_value}".format(secret[1])})
 		# create a secret
 		full_url = API_ROOT + SECRETS_URI.format(namespace=self.namespace_spec["metadata"]["name"])
 		response = SESSION.post(full_url, headers=self.headers, json=secret_spec)
