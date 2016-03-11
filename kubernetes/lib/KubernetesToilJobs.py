@@ -347,7 +347,7 @@ class KubernetesToilComputeJob(Job):
 							"secretName": "refresh-token"
 						}
 					},
-					volume = {
+					{
 						"name": "{job_name}-data".format(job_name=self.job_name),
 						"hostPath": {
 							"path": "/{job_name}-data".format(job_name=self.job_name)
