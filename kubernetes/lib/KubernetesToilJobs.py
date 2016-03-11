@@ -313,7 +313,7 @@ class KubernetesToilComputeJob(Job):
 		if subworkflow_name is None:
 			self.host_path = "{job_name}-data".format(job_name=self.job_name)
 		else:
-			self.host_path = "{subworkfow_name}-data".format(subworkflow_name=subworkflow_name)
+			self.host_path = "{subworkflow_name}-data".format(subworkflow_name=subworkflow_name)
 
 		self.job_spec = {
 			"kind": "Pod",
