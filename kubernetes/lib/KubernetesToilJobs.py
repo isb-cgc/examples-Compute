@@ -121,7 +121,7 @@ class KubernetesToilWorkflow(Job):
 		filestore.logToMaster("{timestamp}  Default secret created successfully!".format(timestamp=self.create_timestamp()))
 		for secret in self.add_secrets:
 			self.create_secret(secret, filestore)
-		filestore.logToMaster("{timestamp}  Additional secrets created successfully!".format(timestamp=self.create_timestamp())
+		filestore.logToMaster("{timestamp}  Additional secrets created successfully!".format(timestamp=self.create_timestamp()))
 
 		return self.cluster_hosts, self.add_secrets.extend(self.default_secret)
 
