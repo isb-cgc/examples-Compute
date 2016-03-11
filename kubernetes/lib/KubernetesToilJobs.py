@@ -372,8 +372,8 @@ class KubernetesToilComputeJob(Job):
 
 	def run(self, filestore):
 		filestore.logToMaster("{timestamp}  Creating host directory for job data ...".format(timestamp=self.create_timestamp()))
-		self.cluster_hosts = additional_info[0]
-		self.secrets = additional_info[1]
+		self.cluster_hosts = self.additional_info[0]
+		self.secrets = self.additional_info[1]
 
 		if self.host_key is not None:
 			self.job_spec["spec"]["nodeName"] = self.cluster_hosts[self.host_key]
