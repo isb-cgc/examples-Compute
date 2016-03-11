@@ -19,7 +19,7 @@ if [ ! -f {filename}.success ]
 		do if [ ! $(echo {filename} | grep '^.*\.bai') ]
 			then mv $output_file $analysis_id.$output_file; fi
 	done && touch {filename}.success
-	if [ "$INDEXED_BAM" == 0 ]
+	if [ "$INDEXED_BAM" == "0" ]
 		then rm {filename}.bai
 	fi
 else echo 'File {filename} already processed -- skipping'; fi

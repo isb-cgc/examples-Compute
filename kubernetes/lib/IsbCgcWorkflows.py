@@ -176,21 +176,29 @@ class QcWorkflow(Workflow):
 	def __create_subworkflow(self, url, host_key):
 		filename = url.split('/')[-1]
 		subworkflow_name = "qc-{filename}".format(filename=filename)
+		try:
+			metadata = subprocess.check_output(['gsutil', 'ls', '-L', '{url}'])
+		except subprocess.CalledProcessError as e:
+			print "URL {url} doesn't exist".format(url=url)
+			exit(-1)
+
+		metadata_tag = metadata.partition('Metadata:')[2].partition('Hash')[0]
+		analysis_id = metadata_tag.strip().split()[-1]
 
 		if self.output_bucket is None:
 			self.output_bucket = '/'.join(url.split('/')[0:-1])
 
 		data_staging_job = self.data_staging_job_template.copy()
-		data_staging_job["name"] = "stage-file-{filename}".format(filename=filename.replace('.', '-').lower())
+		data_staging_job["name"] = "stage-file-{analysis_id}".format(analysis_id=analysis_id)
 		data_staging_job["container_script"] = self.load_script_template(self.data_staging_script_path, url=url, filename=filename)
 	
 		qc_job = self.qc_job_template.copy()
-		qc_job["name"] = "fastqc-{filename}".format(filename=filename.replace('.', '-').lower())
+		qc_job["name"] = "fastqc-{analysis_id}".format(analysis_id=analysis_id)
 		qc_job["container_script"] = self.load_script_template(self.qc_script_path, filename=filename)
 		qc_job["parents"] = [data_staging_job["name"]]
 
 		cleanup_job = self.cleanup_job_template.copy()
-		cleanup_job["name"] = "retrieve-stats-{filename}".format(filename=filename.replace('.', '-').lower())
+		cleanup_job["name"] = "retrieve-stats-{analysis_id}".format(analysis_id=analysis_id)
 		cleanup_job["container_script"] = self.load_script_template(self.cleanup_script_path, filename=filename, index_destination=url.split('/')[0:-1], destination=self.output_bucket)
 		cleanup_job["parents"] = [qc_job["name"]]
 		
