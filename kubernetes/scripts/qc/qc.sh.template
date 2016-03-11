@@ -16,18 +16,20 @@ if [ ! -f {filename}.success ]
 			while 1
 				do java -jar /usr/picard/picard.jar CollectMultipleMetrics INPUT={filename} OUTPUT={filename}.multiple_metrics PROGRAM=CollectAlignmentSummaryMetrics PROGRAM=CollectInsertSizeMetrics PROGRAM=CollectQualityYieldMetrics PROGRAM=QualityScoreDistribution > picard.log &
 				PID=$(echo $!)
-			
 				if [ $(grep "WARNING: BAM index file $PWD/{filename}.bai is older than BAM $PWD/{filename}" picard.log) ] 
 					then kill $PID && INDEXED_BAM=1 && java -jar /usr/picard/picard.jar BuildBamIndex I={filename} O={filename}.bai
-				fi && break
+				fi
+				break
 			done
-		fi && touch {filename}.picard.success && rm {filename}
+		fi
+		touch {filename}.picard.success && rm {filename}
 	fi
 	analysis_id=$(cat {filename}.analysis_id)
 	for output_file in $(ls)
 		do if [ ! $(echo {filename} | grep '^.*\.bai') ]
 			then mv $output_file $analysis_id.$output_file; fi
-	done && touch {filename}.success
+	done
+	touch {filename}.success
 	if [ "$INDEXED_BAM" == "0" ]
 		then rm {filename}.bai
 	fi
