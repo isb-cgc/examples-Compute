@@ -175,6 +175,7 @@ class QcWorkflow(Workflow):
 
 	def __create_subworkflow(self, url, host_key):
 		filename = url.split('/')[-1]
+		subworkflow_name = "qc-{filename}".format(filename=filename)
 
 		if self.output_bucket is None:
 			self.output_bucket = '/'.join(url.split('/')[0:-1])
@@ -196,6 +197,10 @@ class QcWorkflow(Workflow):
 		data_staging_job["host_key"] = host_key
 		qc_job["host_key"] = host_key
 		cleanup_job["host_key"] = host_key
+
+		data_staging_job["subworkflow_name"] = subworkflow_name
+		qc_job["subworkflow_name"] = subworkflow_name
+		cleanup_job["subworkflow_name"] = subworkflow_name
 		
 		self.schema["jobs"].extend([data_staging_job, qc_job, cleanup_job])
 

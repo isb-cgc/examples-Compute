@@ -96,6 +96,9 @@ class KubernetesWorkflowRunner():
 
 			if "host_key" in job.keys():
 				kwargs.update({"host_key": job["host_key"]})
+
+			if "subworkflow_name" in job.keys():
+				kwargs.update({"subworkflow_name": job["subworkflow_name"]})
 				
 			self.toil_jobs[job["name"]] = KubernetesToilComputeJob(*args, **kwargs)
 
@@ -232,6 +235,10 @@ class KubernetesWorkflowRunner():
 					},
 					"host_key": {
 						"type": "int",
+						"required": "False"
+					},
+					"subworkflow_name": {
+						"type": "string",
 						"required": "False"
 					}
 				},

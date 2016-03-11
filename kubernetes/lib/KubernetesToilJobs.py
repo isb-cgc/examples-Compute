@@ -301,7 +301,7 @@ class KubernetesToilWorkflowCleanup(Job):
 		delete_cluster = GKE.projects().zones().clusters().delete(projectId=self.project_id, zone=self.zone, clusterId=self.workflow_name).execute(http=HTTP)
 
 class KubernetesToilComputeJob(Job):
-	def __init__(self, workflow_name, project_id, zone, job_name, container_image, container_script, cluster_hosts, host_key=None, restart_policy="Never", cpu_limit=None, memory_limit=None, disk=None):
+	def __init__(self, workflow_name, project_id, zone, job_name, container_image, container_script, cluster_hosts, subworkflow_name=None, host_key=None, restart_policy="Never", cpu_limit=None, memory_limit=None, disk=None):
 		super(KubernetesToilComputeJob, self).__init__()
 		self.workflow_name = workflow_name.replace("_", "-")
 		self.project_id = project_id
@@ -309,6 +309,12 @@ class KubernetesToilComputeJob(Job):
 		self.headers = API_HEADERS
 		self.headers["Authorization"].format(access_token=CREDENTIALS.access_token)
 		self.job_name = job_name.replace("_", "-")
+
+		if subworkflow_name is None:
+			self.host_path = "{job_name}-data".format(job_name=self.job_name)
+		else:
+			self.host_path = "{subworkfow_name}-data".format(subworkflow_name=subworkflow_name)
+
 		self.job_spec = {
 			"kind": "Pod",
 			"apiVersion": "v1",
@@ -350,7 +356,7 @@ class KubernetesToilComputeJob(Job):
 					{
 						"name": "data".format(job_name=self.job_name),
 						"hostPath": {
-							"path": "/{job_name}-data".format(job_name=self.job_name)
+							"path": "/{host_path}".format(job_name=self.host_path)
 						}
 					}
 				],
@@ -385,7 +391,7 @@ class KubernetesToilComputeJob(Job):
 
 	def create_host_path(self):
 		try:
-			subprocess.check_call(["gcloud", "compute", "ssh", self.cluster_hosts[self.host_key], "--command", "if [[ ! -d /{job_name}-data ]]; then sudo mkdir /{job_name}-data; fi"])
+			subprocess.check_call(["gcloud", "compute", "ssh", self.cluster_hosts[self.host_key], "--command", "if [[ ! -d /{host_path} ]]; then sudo mkdir /{host_path}; fi".format(host_path=self.host_path)])
 		except subprocess.CalledProcessError as e:
 			filestore.logToMaster("Couldn't create the hostPath directory for this job: {e}".format(e=e))
 			exit(-1)
