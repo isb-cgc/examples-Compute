@@ -39,7 +39,7 @@ API_HEADERS = {
 }
 	
 class KubernetesToilWorkflow(Job):
-	def __init__(self, workflow_name, project_id, zone, node_num, machine_type, cluster_node_disk_size, network="default", logging_service=None, monitoring_service=None, tear_down=False):
+	def __init__(self, workflow_name, project_id, zone, node_num, machine_type, cluster_node_disk_size, add_secret=None, network="default", logging_service=None, monitoring_service=None, tear_down=False):
 		super(KubernetesToilWorkflow, self).__init__()
 		self.workflow_name = workflow_name.replace("_", "-")
 		self.project_id = project_id
@@ -83,17 +83,22 @@ class KubernetesToilWorkflow(Job):
 			}
 		}
 		
-		self.secret = {
+		self.secret_spec = {
 			"kind": "Secret",
 			"apiVersion": "v1",
 			"metadata": {
-				"name": "refresh-token",
 			},
 			"type": "Opaque",
 			"data": {
-				"refresh-token": base64.b64encode(CREDENTIALS.refresh_token)
 			}
 		}
+
+		self.default_secret = ("refresh-token", base64.b64encode(CREDENTIALS.refresh_token), "/data-access/refresh-token")
+		self.add_secrets = []
+		if add_secret is not None:
+			for secret in add_secret:
+				self.add_secrets.append((secret[0], self.get_secret_contents(secret[1]), secret[2]))
+		
 		self.cluster_hosts = []
 		self.headers = API_HEADERS
 		self.headers["Authorization"].format(access_token=CREDENTIALS.access_token)
@@ -112,10 +117,13 @@ class KubernetesToilWorkflow(Job):
 		filestore.logToMaster("{timestamp}  Cluster created successfully!".format(timestamp=self.create_timestamp()))
 		self.configure_cluster_access(filestore) 
 		filestore.logToMaster("{timestamp}  Cluster configured successfully!".format(timestamp=self.create_timestamp()))
-		self.create_secret(filestore)
-		filestore.logToMaster("{timestamp}  Secret created successfully!".format(timestamp=self.create_timestamp()))
+		self.create_secret(self.default_secret, filestore)
+		filestore.logToMaster("{timestamp}  Default secret created successfully!".format(timestamp=self.create_timestamp()))
+		for secret in self.add_secrets:
+			self.create_secret(secret, filestore)
+		filestore.logToMaster("{timestamp}  Additional secrets created successfully!".format(timestamp=self.create_timestamp())
 
-		return self.cluster_hosts
+		return self.cluster_hosts, self.add_secrets.extend(self.default_secret)
 
 	def create_timestamp(self):
 		return datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
@@ -245,10 +253,28 @@ class KubernetesToilWorkflow(Job):
 
 		filestore.logToMaster("{timestamp}  Cluster configuration was successful!".format(timestamp=self.create_timestamp()))
 
-	def create_secret(self, filestore):
+	def get_secret_contents(self, url):
+		try:
+			subprocess.check_output(["gsutil", "stat", url])
+		except subprocess.CalledProcessError as e:
+			filestore.logToMaster("Couldn't get secret contents: {e}".format(e=e))
+			exit(-1)
+		
+		try:
+			contents = subprocess.check_output(["gsutil", "cat", url])
+		except subprocess.CalledProcessError as e:
+			filestore.logTomaster("Couldn't get secret contents: {e}".format(e=e))
+			exit(-1)
+	
+		return base64.b64encode(contents)
+
+	def create_secret(self, secret, filestore):
+		secret_spec = self.secret_spec.copy()
+		secret_spec["metadata"]["name"] = secret[0]
+		secret_spec["data"].update({"{secret_name}".format(secret[0]):"{secret_value}".format(secret(1))})
 		# create a secret
 		full_url = API_ROOT + SECRETS_URI.format(namespace=self.namespace_spec["metadata"]["name"])
-		response = SESSION.post(full_url, headers=self.headers, json=self.secret)
+		response = SESSION.post(full_url, headers=self.headers, json=secret_spec)
 
 		if response.status_code != 201:
 			if response.status_code == 409: # already exists
@@ -280,7 +306,7 @@ class KubernetesToilWorkflowCleanup(Job):
 		delete_cluster = GKE.projects().zones().clusters().delete(projectId=self.project_id, zone=self.zone, clusterId=self.workflow_name).execute(http=HTTP)
 
 class KubernetesToilComputeJob(Job):
-	def __init__(self, workflow_name, project_id, zone, job_name, container_image, container_script, cluster_hosts, subworkflow_name=None, host_key=None, restart_policy="Never", cpu_limit=None, memory_limit=None, disk=None):
+	def __init__(self, workflow_name, project_id, zone, job_name, container_image, container_script, cluster_hosts, secrets, subworkflow_name=None, host_key=None, restart_policy="Never", cpu_limit=None, memory_limit=None, disk=None):
 		super(KubernetesToilComputeJob, self).__init__()
 		self.workflow_name = workflow_name.replace("_", "-")
 		self.project_id = project_id
@@ -315,23 +341,12 @@ class KubernetesToilComputeJob(Job):
 								"name": "data".format(job_name=self.job_name),
 								"mountPath": "/workflow",
 								"readOnly": False	
-							},
-							{
-								"name": "refresh-token",
-								"mountPath": "/data-access",
-								"readOnly": True
 							}
 						]
 					},
 
 				],
 				"volumes": [
-					{
-						"name": "refresh-token",
-						"secret": {
-							"secretName": "refresh-token"
-						}
-					},
 					{
 						"name": "data".format(job_name=self.job_name),
 						"hostPath": {
@@ -342,6 +357,22 @@ class KubernetesToilComputeJob(Job):
 				"restartPolicy": restart_policy
 			}
 		}
+		
+		for secret in secrets:
+			secret_volume_mount = {
+				"name": secret[0],
+				"mountPath": secret[2],
+				"readOnly": True
+			}
+			self.job_spec["spec"]["containers"][0]["volumeMounts"].append(secret_volume_mount)
+			secret_volume = {
+				"name": secret[0],
+				"secret": {
+					"secretName": secret[0]
+				}
+			}
+			self.job_spec["spec"]["volumes"].append(secret_volume)
+							
 		self.restart_policy = restart_policy
 		
 		if cpu_limit is not None:
@@ -357,10 +388,9 @@ class KubernetesToilComputeJob(Job):
 
 	def run(self, filestore):
 		filestore.logToMaster("{timestamp}  Creating host directory for job data ...".format(timestamp=self.create_timestamp()))
-		filestore.logToMaster(','.join(self.cluster_hosts))
-		filestore.logToMaster(self.host_key)
-		self.job_spec["spec"]["nodeName"] = self.cluster_hosts[self.host_key]
-		self.create_host_path()
+		if self.host_key is not None:
+			self.job_spec["spec"]["nodeName"] = self.cluster_hosts[self.host_key]
+			self.create_host_path()
 			
 		filestore.logToMaster("{timestamp}  Starting job {job_name} ...".format(timestamp=self.create_timestamp(), job_name=self.job_spec["metadata"]["name"]))
 		submit = self.start_job(filestore) 
