@@ -20,7 +20,6 @@ class Workflow(object):
 				"network": "default",
 				"machine_type": cluster.machine_type,
 				"cluster_node_disk_size": cluster.cluster_node_disk_size,
-				#"cluster_nfs_volume_size": cluster.cluster_nfs_volume_size,
 				"tear_down": cluster.tear_down
 			},
 			"jobs": []
@@ -162,7 +161,7 @@ class QcWorkflow(Workflow):
 
 		for url in file_list:
 			if host_key >= total_hosts:
-				host_key = 0
+				host_key = host_key % total_hosts
 
 			url = url.strip()
 			try: 
@@ -170,10 +169,6 @@ class QcWorkflow(Workflow):
 			except ValueError:
 				print "There was a problem with url {url} in the input file".format(url=url)
 			else:
-				# get the file size to determine whether or not to create a disk for this subworkflow
-				filesize = int(subprocess.check_output(["gsutil", "du", url]).split(' ')[0])
-				if filesize/1000000000 > math.floor(int(self.schema["cluster"]["cluster_node_disk_size"])/3):
-					host_key = None
 				self.__create_subworkflow(url.strip(), host_key, filesize)
 				host_key += 1
 				
@@ -198,20 +193,9 @@ class QcWorkflow(Workflow):
 		cleanup_job["container_script"] = self.load_script_template(self.cleanup_script_path, filename=filename, index_destination=url.split('/')[0:-1], destination=self.output_bucket)
 		cleanup_job["parents"] = [qc_job["name"]]
 		
-		if host_key is not None:
-			data_staging_job["host_key"] = host_key
-			qc_job["host_key"] = host_key
-			cleanup_job["host_key"] = host_key
-
-		else:
-			disk = {
-				"name": "{filename}-disk".format(filename=filename.replace('.', '-').lower()), 
-				"type": "pd-standard",
-				"sizeGb": int(math.ceil(filesize/50000000000.0)*50000000000.0)
-			}
-			data_staging_job["disk"] = disk
-			qc_job["disk"] = disk
-			cleanup_job["disk"] = disk
+		data_staging_job["host_key"] = host_key
+		qc_job["host_key"] = host_key
+		cleanup_job["host_key"] = host_key
 		
 		self.schema["jobs"].extend([data_staging_job, qc_job, cleanup_job])
 
@@ -229,7 +213,6 @@ if __name__ == "__main__":
 	parser.add_argument('--zone', required=True, help="GCE zone")
 	parser.add_argument('--nodes', required=True, help="Number of nodes in the cluster")
 	parser.add_argument('--cluster_node_disk_size', required=True, help="Cluster boot disk size in GB")
-	#parser.add_argument('--cluster_nfs_volume_size', required=True, help="NFS shared volume size in GB")
 	parser.add_argument('--machine_type', required=True, help="GCE machine type")
 	parser.add_argument('--tear_down', required=False, action='store_true', help="If set, the cluster will be cleaned up at the end of the workflow.  Default is False")
 	parser.add_argument('--dry_run', required=False, action='store_true', help="If set, will only print the workflow graph that would have run. Default is False")

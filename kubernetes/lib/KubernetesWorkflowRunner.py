@@ -94,9 +94,6 @@ class KubernetesWorkflowRunner():
 				if "memory_limit" in job["resources"].keys():
 					kwargs.update({"memory_limit": job["resources"]["memory_limit"]})
 
-				if "add_disk" in job["resources"].keys():
-					kwargs.update({"add_disk": job["resources"]["disk"]})
-
 			if "host_key" in job.keys():
 				kwargs.update({"host_key": job["host_key"]})
 				
@@ -127,7 +124,7 @@ class KubernetesWorkflowRunner():
 				print "Job {job_name} must either add an additional disk or use a host key to select a particular host to be scheduled".format(job_name=job["name"])
 				exit(-1) 
 			elif not "host_key" in job.keys() and not "add_disk" in job["resources"].keys():
-				print "Job {job_name} must either add an additional disk or use a host key to select a particular host to be scheduled".format(job_name=job["name"])
+				print "Job {job_name} must use a host key to select a particular host to be scheduled".format(job_name=job["name"])
 				exit(-1)
 			if "parents" in job.keys():
 				for parent in job["parents"]:
@@ -246,25 +243,6 @@ class KubernetesWorkflowRunner():
 					"memory_limit": {
 						"type": "int",
 						"required": False
-					},
-					"add_disk": {
-						"type": "object",
-						"properties": { "$ref": "#/definitions/add_disk_properties" },
-						"required": False
-					}
-				},
-				"add_disk_properties": {
-					"name": {
-						"type": "string",
-						"required": True
-					},
-					"type": {
-						"type": "string",
-						"required": True
-					},
-					"sizeGb": {
-						"type": "string",
-						"required": True
 					}
 				}
 			}

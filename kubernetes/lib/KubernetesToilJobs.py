@@ -156,6 +156,16 @@ class KubernetesToilWorkflow(Job):
 	def configure_cluster_access(self, filestore):
 		# configure cluster access (may want to perform checks before doing this)
 		filestore.logToMaster("{timestamp}  Configuring access to cluster {cluster_name} ...".format(timestamp=self.create_timestamp(), cluster_name=self.workflow_name))
+
+		# configure ssh keys
+		try:
+			subprocess.check_call(["bash", "-c", "stat ~/.ssh/google_compute_engine && stat ~/.ssh/google_compute_engine.pub"])
+		except subprocess.CalledProcessError as e:
+			try:
+				subprocess.check_call(["gcloud", "compute", "config-ssh"])
+			except subprocess.CalledProcessError as e:
+				filestore.logToMaster("Couldn't generate SSH keys for the workstation: {e}".format(e=e))
+				exit(-1)
 		
 		try:
 			subprocess.check_call(["gcloud", "config", "set", "compute/zone", self.zone])
@@ -291,7 +301,7 @@ class KubernetesToilWorkflowCleanup(Job):
 		delete_cluster = GKE.projects().zones().clusters().delete(projectId=self.project_id, zone=self.zone, clusterId=self.workflow_name).execute(http=HTTP)
 
 class KubernetesToilComputeJob(Job):
-	def __init__(self, workflow_name, project_id, zone, job_name, container_image, container_script, cluster_hosts, host_key=None, add_disk=None, restart_policy="Never", cpu_limit=None, memory_limit=None, disk=None):
+	def __init__(self, workflow_name, project_id, zone, job_name, container_image, container_script, cluster_hosts, host_key=None, restart_policy="Never", cpu_limit=None, memory_limit=None, disk=None):
 		super(KubernetesToilComputeJob, self).__init__()
 		self.workflow_name = workflow_name.replace("_", "-")
 		self.project_id = project_id
@@ -336,6 +346,12 @@ class KubernetesToilComputeJob(Job):
 						"secret": {
 							"secretName": "refresh-token"
 						}
+					},
+					volume = {
+						"name": "{job_name}-data".format(job_name=self.job_name),
+						"hostPath": {
+							"path": "/{job_name}-data".format(job_name=self.job_name)
+						}
 					}
 				],
 				"restartPolicy": restart_policy
@@ -349,45 +365,15 @@ class KubernetesToilComputeJob(Job):
 		if memory_limit is not None:
 			self.job_spec["spec"]["containers"][0]["resources"] = {"memory": "{memory}G".format(memory=memory_limit)}
 
-		if add_disk is not None:
-			self.disk_request = { 
-				"name": self.disk["name"],
-				"zone": "https://www.googleapis.com/compute/v1/projects/{project}/zones/{zone}".format(project=project_id, zone=zone), 
-				"type": "https://www.googleapis.com/compute/v1/projects/{project}/zones/{zone}/diskTypes/{disk_type}".format(project=project_id, zone=zone, disk_type=disk["type"]),
-				"sizeGb": disk["sizeGb"]
-			}
-			volume = {
-				"name": "{job_name}-data".format(job_name=self.job_name),
-				"gcePersistentDisk": {
-					"pdName": self.disk["name"],
-					"readOnly": False,
-					"fsType": "ext4"
-				}
-			}
-		else:
-			self.disk_request = None
-			volume = {
-				"name": "{job_name}-data".format(job_name=self.job_name),
-				"hostPath": {
-					"path": "/{job_name}-data".format(job_name=self.job_name)
-				}
-			}
-			
+					
 		self.host_key = host_key
 		self.cluster_hosts = cluster_hosts
-		self.job_spec["spec"]["volumes"].append(volume)
-		
+
 
 	def run(self, filestore):
-		if self.disk_request is not None:
-			filestore.logToMaster("{timestamp}  Creating disk for job data ...".format(timestamp=self.create_timestamp()))
-			disk_status = self.create_disk()
-			filestore.logToMaster("{timestamp}  Disk creation status: {status}".format(status=disk_status))
-
-		else:
-			filestore.logToMaster("{timestamp}  Creating host directory for job data ...".format(timestamp=self.create_timestamp()))
-			self.job_spec["spec"]["nodeName"] = self.cluster_hosts[self.host_key]
-			self.create_host_path()
+		filestore.logToMaster("{timestamp}  Creating host directory for job data ...".format(timestamp=self.create_timestamp()))
+		self.job_spec["spec"]["nodeName"] = self.cluster_hosts[self.host_key]
+		self.create_host_path()
 			
 		filestore.logToMaster("{timestamp}  Starting job {job_name} ...".format(timestamp=self.create_timestamp(), job_name=self.job_spec["metadata"]["name"]))
 		submit = self.start_job(filestore) 
@@ -396,75 +382,6 @@ class KubernetesToilComputeJob(Job):
 		filestore.logToMaster("{timestamp}  Job status response: {status}".format(timestamp=self.create_timestamp(), status=job_status.text))
 
 		return job_status
-
-	def create_disk(self):
-		# Check if this disk exists
-		try:
-			get_disk = COMPUTE.disks().get(project=project, zone=zone, disk=self.disk_request["name"]).execute()
-
-		except HttpError:
-			# Submit the disk request
-			disk_response = compute.disks().insert(project=self.project_id, zone=self.zone, body=self.disk_request).execute()
-
-			# Wait for the disks to be created
-			while True:
-				result = COMPUTE.zoneOperations().get(project=self.project_id, zone=self.zone, operation=disk_response['name']).execute()
-				if result['status'] == 'DONE':
-					break
-
-		# attach the disk to an instance for formatting
-		attach_request = {
-    			"kind": "compute#attachedDisk",
-			"index": 1,
-			"type": "PERSISTENT",
-			"mode": "READ_WRITE",
-			"source": "https://www.googleapis.com/compute/v1/projects/{project}/zones/{zone}/disks/{disk_name}".format(project=project, zone=zone, disk_name=self.disk_request["name"]),
-			"deviceName": self.disk_request["name"],
-			"boot": False,
-			"interface": "SCSI",
-			"autoDelete": False
-    		}
-
-		try:
-			instance_group_name = subprocess.check_output(["gcloud", "compute", "instance-groups", "list", "--regexp", "^gke-{workflow}-.*-group$".format(workflow=self.workflow_name)]).split('\n')[1].split(' ')[0]
-			instance_list = subprocess.check_output(["gcloud", "compute", "instance-groups", "list-instances", instance_group_name]).split('\n')[1:-1]
-
-		except subprocess.CalledProcessError as e:
-			filestore.logToMaster("Couldn't get cluster hostnames: {reason}".format(reason=e))
-			exit(-1) # raise an exception
-
-		else:
-			for instance in instance_list:
-				success = False
-				attach_response = COMPUTE.instances().attachDisk(project=self.project_id, zone=self.zone, instance=instance, body=attach_request).execute()
-
-				# Wait for the attach operation to complete
-				while True:
-					result = compute.zoneOperations().get(project=project, zone=zone, operation=attachResponse['name']).execute()
-					if result['status'] == 'DONE':
-						success = True
-						break
-
-				if success == True:
-					break
-	
-
-		command = "sudo mkdir -p /{job_name}-data && sudo mkfs.ext4 -F /dev/disk/by-id/{job_name}-data && sudo mount -o discard,defaults /dev/disk/by-id/{job_name}-data /{job_name}-data".format(job_name=self.job_name)
-		try:
-			subprocess.check_call(["gcloud", "compute", "ssh", instance, "--command", command])
-		except subprocess.CalledProcessError as e:
-			filestore.logToMaster("Couldn't format the disk: {e}".format(e=e))
-			exit(-1)
-
-		detach_response = COMPUTE.instances().detachDisk(project=self.project_id, zone=self.zone, instance=instance, deviceName=self.disk_request["name"]).execute()
-
-		# Wait for the detach operation to complete
-		while True:
-			result = COMPUTE.zoneOperations().get(project=self.project_id, zone=self.zone, operation=detach_response['name']).execute()
-			if result['status'] == 'DONE':
-				break
-		
-		filestore.logToMaster("Disk created successfully!")
 
 	def create_host_path(self):
 		try:
