@@ -1,4 +1,5 @@
 INDEXED_BAM=0
+ANALYSIS_ID=$(cat {filename}.analysis_id)
 if [ ! -f {filename}.success ] 
 	then if [ $(echo {filename} | grep '^.*\.tar$') ] || [ $(echo {filename} | grep '^.*\.tar.gz$') ] && [ ! -f {filename}.fastqc.success ]
 		then if [ ! -f {filename}.contents ] 
@@ -18,9 +19,8 @@ if [ ! -f {filename}.success ]
 				then INDEXED_BAM=1 && echo "Indexing BAM file {filename} ..." >> {filename}.log && java -jar /usr/picard/picard.jar BuildBamIndex I={filename} O={filename}.bai >> {filename}.log
 			fi
 		fi
-		java -jar /usr/picard/picard.jar CollectMultipleMetrics INPUT={filename} OUTPUT={analysis_id}-{filename}.multiple_metrics PROGRAM=CollectAlignmentSummaryMetrics PROGRAM=CollectInsertSizeMetrics PROGRAM=CollectQualityYieldMetrics PROGRAM=QualityScoreDistribution >> {filename}.log &&  java -jar /usr/picard/picard.jar BamIndexStats INPUT={filename} OUTPUT={analysis_id}-{filename}.bam_index_stats && touch {filename}.picard.success && rm {filename}
+		java -jar /usr/picard/picard.jar CollectMultipleMetrics INPUT={filename} OUTPUT=$ANALYSIS_ID-{filename}.multiple_metrics PROGRAM=CollectAlignmentSummaryMetrics PROGRAM=CollectInsertSizeMetrics PROGRAM=CollectQualityYieldMetrics PROGRAM=QualityScoreDistribution >> {filename}.log &&  java -jar /usr/picard/picard.jar BamIndexStats INPUT={filename} OUTPUT={analysis_id}-{filename}.bam_index_stats && touch {filename}.picard.success && rm {filename}
 	fi
-	analysis_id=$(cat {filename}.analysis_id)
 	touch {filename}.success
 	if [ "$INDEXED_BAM" = 0 ]
 		then rm {filename}.bai
