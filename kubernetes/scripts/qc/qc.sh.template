@@ -14,7 +14,7 @@ if [ ! -f {filename}.success ]
 		else java -jar /usr/picard/picard.jar ValidateSamFile I={filename} MODE=SUMMARY 2> bam_validation.log & PID=$!
 			sleep 10
 			kill -SIGTERM $PID
-			if [ $(grep "WARNING: BAM index file .*\.bai is older than BAM .*\.bam" bam_validation.log) ] 
+			if [ "$(grep 'WARNING: BAM index file .*\.bai is older than BAM .*\.bam' bam_validation.log)" ] 
 				then INDEXED_BAM=1 && echo "Indexing BAM file {filename} ..." >> {filename}.log && java -jar /usr/picard/picard.jar BuildBamIndex I={filename} O={filename}.bai >> {filename}.log
 			fi
 			java -jar /usr/picard/picard.jar CollectMultipleMetrics INPUT={filename} OUTPUT={filename}.multiple_metrics PROGRAM=CollectAlignmentSummaryMetrics PROGRAM=CollectInsertSizeMetrics PROGRAM=CollectQualityYieldMetrics PROGRAM=QualityScoreDistribution >> {filename}.log
