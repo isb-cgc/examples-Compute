@@ -241,11 +241,11 @@ class KubernetesWorkflowRunner():
 					},
 					"host_key": {
 						"type": "int",
-						"required": "False"
+						"required": False
 					},
 					"subworkflow_name": {
 						"type": "string",
-						"required": "False"
+						"required": False
 					}
 				},
 				"job_resources_properties": {
