@@ -11,9 +11,9 @@ if [ ! -f {filename}.success ]
 	if [ $(echo {filename} | grep '^.*\.bam$') ] && [ ! -f {filename}.picard.success ]
 		then if [ ! -f {filename}.bai ]
 			then INDEXED_BAM=1 && echo "Indexing BAM file {filename} ..." >> {filename}.log && java -jar /usr/picard/picard.jar BuildBamIndex I={filename} O={filename}.bai >> {filename}.log
-		else PID=$(java -jar /usr/picard/picard.jar ValidateSamFile I={filename} MODE=SUMMARY 2> bam_validation.log &)
+		else java -jar /usr/picard/picard.jar ValidateSamFile I={filename} MODE=SUMMARY 2> bam_validation.log & PID=$!
 			sleep 10
-			kill -SIGHUP $PID
+			kill -SIGTERM $PID
 			if [ $(grep "WARNING: BAM index file .*\.bai is older than BAM .*\.bam" bam_validation.log) ] 
 				then INDEXED_BAM=1 && echo "Indexing BAM file {filename} ..." >> {filename}.log && java -jar /usr/picard/picard.jar BuildBamIndex I={filename} O={filename}.bai >> {filename}.log
 			fi
