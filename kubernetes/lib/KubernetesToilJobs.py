@@ -334,7 +334,7 @@ class KubernetesToilComputeJob(Job):
 					{
 						"name": "{job_name}".format(job_name=self.job_name),
 						"image": container_image,
-						"command": ["sh", "-c", container_script],
+						"command": ["bash", "-c", container_script],
 						"workingDir": "/workflow",
 						"volumeMounts": [
 							{
