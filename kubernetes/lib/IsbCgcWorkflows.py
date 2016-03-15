@@ -9,8 +9,75 @@ import subprocess
 from KubernetesWorkflowRunner import KubernetesWorkflowRunner
 from random import SystemRandom
 
+DEFAULT_DATA_STAGING_SCRIPT_PATH = os.path.join(os.path.dirname(__file__), '../scripts/data/data-staging.sh.template')
+DEFAULT_CLEANUP_SCRIPT_PATH = os.path.join(os.path.dirname(__file__), '../scripts/data/cleanup.sh.template')
+DEFAULT_SAMTOOLS_INDEX_SCRIPT_PATH = os.path.join(os.path.dirname(__file__), '../scripts/samtools-index/samtools-index.sh.template')
+DEFAULT_QC_SCRIPT_PATH = os.path.join(os.path.dirname(__file__), '../scripts/qc/qc.sh.template')
+
+DATA_STAGING_JOB_TEMPLATE = {
+	"container_image": "b.gcr.io/isb-cgc-public-docker-images/cloud-sdk-crcmod",
+	"restart_policy": "OnFailure"
+}
+
+CLEANUP_JOB_TEMPLATE = {
+	"container_image": "google/cloud-sdk",
+	"restart_policy": "OnFailure"
+}
+
+SAMTOOLS_INDEX_JOB_TEMPLATE = {
+	"container_image": "nasuno/samtools",
+	"restart_policy": "OnFailure"
+}
+
+QC_JOB_TEMPLATE = {
+	"container_image": "b.gcr.io/isb-cgc-public-docker-images/qctools",
+	"restart_policy": "OnFailure"
+}
+
+class WorkflowArgumentParser(argparse.ArgumentParser):
+	def __init__(self, description):
+		super(WorkflowArgumentParser).__init__(description=description)
+		
+		self.add_argument('--project_id', required=True, help="GCP project id")
+		self.add_argument('--zone', required=True, help="GCE zone")
+		self.add_argument('--nodes', required=True, help="Number of nodes in the cluster")
+		self.add_argument('--cluster_node_disk_size', required=True, help="Cluster boot disk size in GB")
+		self.add_argument('--machine_type', required=True, help="GCE machine type")
+		self.add_argument('--tear_down', required=False, action='store_true', help="If set, the cluster will be cleaned up at the end of the workflow.  Default is False")
+		self.add_argument('--dry_run', required=False, action='store_true', help="If set, will only print the workflow graph that would have run. Default is False")
+		self.add_argument('--add_secret', required=False, default=None, action='append', help="An additional secret to add to the cluster, formatted as a comma-delimited string: <secret-name>,<secret-gcs-url>,<secret-mount-path>")
+
+		subparsers = self.add_subparsers(help="sub-command help", dest="workflow")
+	
+		samtools_subparser = subparsers.add_parser('samtools-index', help="samtools-index workflow arguments")
+		samtools_subparser.add_argument('--input_files', required=True, help="A plain text file containing a list of GCS URLs representing BAM files to index, one per line")
+		samtools_subparser.add_argument('--output_bucket', required=False, default=None, help="The output bucket for the results files; if not provided, will default to the object hierarchy of the original input file")
+	
+		fastqc_subparser = subparsers.add_parser('qc', help="QC (fastqc + picard) workflow arguments")
+		fastqc_subparser.add_argument('--input_files', required=True, help="A plain text file containing a list of GCS URLs representing fastq files (fastq, fastq.gz, fastq.tar, or tar.gz extensions) or BAM files, one per line")
+		fastqc_subparser.add_argument('--output_bucket', required=False, help="The output bucket for the results files; if not provided, will default to the object hierarchy of the original input file")
+
+class WorkflowStep(object):
+	def __init__(self, template, name, container_script, **kwargs):
+		self.template = template.copy()
+		self.template["name"] = name
+		self.template["container_script"] = self.load_script_template(container_script, **kwargs)
+		
+	def link_child(self, step):
+		step.parents.append(self.name)
+		
+	def load_script_template(self, path, **params):
+		script_lines = []
+		with open(path) as f:
+			for line in f:
+				script_lines.append(line.strip())
+
+		return ';'.join(script_lines).format(**params)
+		
+		
 class Workflow(object):
 	def __init__(self, cluster):
+		self.dry_run = cluster.dry_run
 		self.schema = {
 			"name": None,
 			"cluster": {
@@ -21,11 +88,11 @@ class Workflow(object):
 				"machine_type": cluster.machine_type,
 				"cluster_node_disk_size": cluster.cluster_node_disk_size,
 				"tear_down": cluster.tear_down,
-				"secrets": []
+				"secrets": [],
+				"shared_files": []
 			},
 			"jobs": []
 		}
-		self.dry_run = cluster.dry_run
 		if cluster.add_secret is not None:
 			for secret in cluster.add_secret:
 				secret_details = secret.split(',')
@@ -39,16 +106,29 @@ class Workflow(object):
 	def __build(self):
 		pass # to be overridden in subclasses
 
-	def load_script_template(self, path, **params):
-		script_lines = []
-		with open(path) as f:
-			for line in f:
-				script_lines.append(line.strip())
-
-		return ';'.join(script_lines).format(**params)
-
-	def __create_subworkflow(self):
-		pass # to be overridden in subclasses
+	def __create_subworkflow(self, subworkflow_name, steps, host_key=None):
+		i = 0
+		j = 1
+		
+		while j <= len(steps):
+			steps[i].template["subworkflow_name"] = subworkflow_name
+			steps[i].template["host_key"] = host_key
+			steps[j].link_child(steps[i])
+			i += 1
+			j += 1
+			
+		steps[i].template["subworkflow_name"] = subworkflow_name
+		steps[i].template["host_key"] = host_key
+		
+		self.schema["jobs"].extend(steps)
+		
+	@staticmethod
+	def createDefaultDataStagingStep(filename, analysis_id, url):
+		return WorkflowStep(DATA_STAGING_JOB_TEMPLATE, "stage-file-{analysis_id}".format(analysis_id=analysis_id), DEFAULT_DATA_STAGING_SCRIPT_PATH, url=url, filename=filename)
+		
+	@staticmethod
+	def createDefaultCleanupStep(filename, analysis_id, destination):
+		return WorkflowStep(CLEANUP_JOB_TEMPLATE, "retrieve-index-{analysis_id}".format(analysis_id=analysis_id), DEFAULT_CLEANUP_SCRIPT_PATH, filename=filename, destination=destination)
 
 	def run(self):
 		pprint.pprint(self.schema)
@@ -63,67 +143,59 @@ class SamtoolsIndexWorkflow(Workflow):
 		self.input_files = args.input_files
 
 		if data_staging_script is None:
-			self.data_staging_script_path = os.path.join(os.path.dirname(__file__), '../scripts/samtools-index/data-staging.sh.template')
+			self.data_staging_script_path = DEFAULT_DATA_STAGING_SCRIPT_PATH
 		else:
 			self.data_staging_script_path = data_staging_script
 
 		if samtools_index_script is None:
-			self.samtools_index_script_path = os.path.join(os.path.dirname(__file__), '../scripts/samtools-index/samtools-index.sh.template')
+			self.samtools_index_script_path = DEFAULT_SAMTOOLS_INDEX_SCRIPT_PATH
 		else:
 			self.samtools_index_script_path = samtools_index_script
 
 		if cleanup_job_script is None:
-			self.cleanup_script_path = os.path.join(os.path.dirname(__file__), '../scripts/samtools-index/cleanup.sh.template')
+			self.cleanup_script_path = DEFAULT_CLEANUP_SCRIPT_PATH
 		else:
 			self.cleanup_script_path = cleanup_script
-
-		self.data_staging_job_template = {
-			"container_image": "b.gcr.io/isb-cgc-public-docker-images/cloud-sdk-crcmod",
-			"restart_policy": "OnFailure"
-		}
-		self.samtools_index_job_template = {
-			"container_image": "nasuno/samtools",
-			"restart_policy": "OnFailure"
-		}
-		self.cleanup_job_template = {
-			"container_image": "google/cloud-sdk",
-			"restart_policy": "OnFailure"
-		}
 
 		self.__build()
 
 	def __build(self):
 		with open(self.input_files) as f:
 			file_list = f.readlines()
+			
+		total_hosts = int(self.schema["cluster"]["nodes"])
+		host_key = 0
 		
 		for url in file_list:
-			try: 
-				subprocess.check_call(["gsutil", "stat", url])
-			except ValueError:
-				print "There was a problem with url {url} in the input file".format(url=url)
+			if host_key >= total_hosts:
+				host_key = host_key % total_hosts
+				
+			url = url.strip()
+			try:
+				metadata = subprocess.check_output(['gsutil', 'ls', '-L', '{url}'.format(url=url)])
+			except subprocess.CalledProcessError as e:
+				print "URL {url} doesn't exist".format(url=url)
+				exit(-1)
 			else:
-				self.__create_subworkflow(url.strip())
 
-	def __create_subworkflow(self, file_url):
-		filename = file_url.split('/')[-1]
-		if self.output_bucket is None:
-			self.output_bucket = '/'.join(self.file_url.split('/')[0:-1])
+				metadata_tag = metadata.partition('Metadata:')[2].partition('Hash')[0]
+				analysis_id = metadata_tag.strip().split()[-1]
+				filename = url.split('/')[-1]
+				subworkflow_name = "samtools-index-{analysis_id}".format(analysis_id=analysis_id)
+				
+				if self.output_bucket is None:
+					self.output_bucket = '/'.join(self.url.split('/')[0:-1])
+					
+				data_staging_step = self.createDefaultDataStagingStep(filename, analysis_id, url)
+				samtools_index_step = self.createDefaultSamtoolsIndexStep(filename, analysis_id)
+				cleanup_step = self.createDefaultCleanupStep(filename, analysis_id, self.output_bucket)
 
-		data_staging_job = self.data_staging_job_template.copy()
-		data_staging_job["name"] = "stage-file-{filename}".format(filename=filename.replace('.', '-').lower())
-		data_staging_job["container_script"] = self.load_script_template(self.data_staging_script_path, url=file_url, filename=filename)
+				self.__create_subworkflow([ data_staging_step, samtools_index_step, cleanup_step ], subworkflow_name, host_key)
+				host_key += 1
 	
-		samtools_index_job = self.samtools_index_job_template.copy()
-		samtools_index_job["name"] = "samtools-index-{filename}".format(filename=filename.replace('.', '-').lower())
-		samtools_index_job["container_script"].self.load_script_template(self.samtools_index_script_path, filename=filename)
-		samtools_index_job["parents"] = [data_staging_job["name"]]
-	
-		cleanup_job = self.cleanup_job_template.copy()
-		cleanup_job["name"] = "retrieve-index-{filename}".format(filename=filename.replace('.', '-').lower())
-		cleanup_job["container_script"] = self.load_script_template(self.cleanup_script_path, filename=filename, destination=self.output_bucket)
-		cleanup_job["parents"] = [samtools_index_job["name"]]
-
-		self.schema["jobs"].extend([data_staging_job, ssamtools_index_job, cleanup_job])
+	@staticmethod
+	def createDefaultSamtoolsIndexStep(filename, analysis_id):
+		return WorkflowStep(SAMTOOLS_INDEX_JOB_TEMPLATE, "samtools-index-{analysis_id}".format(analysis_id=analysis_id), DEFAULT_SAMTOOLS_INDEX_SCRIPT_PATH, filename=filename)
 
 class QcWorkflow(Workflow):
 	def __init__(self, args, data_staging_script=None, qc_script=None, cleanup_script=None):
@@ -133,32 +205,20 @@ class QcWorkflow(Workflow):
 		self.output_bucket = args.output_bucket
 
 		if data_staging_script is None:
-			self.data_staging_script_path = os.path.join(os.path.dirname(__file__), '../scripts/qc/data-staging.sh.template')
+			self.data_staging_script_path = DEFAULT_DATA_STAGING_SCRIPT_PATH
 		else:
 			self.data_staging_script_path = data_staging_script
 
 		if qc_script is None:
-			self.qc_script_path = os.path.join(os.path.dirname(__file__), '../scripts/qc/qc.sh.template')
+			self.qc_script_path = DEFAULT_QC_SCRIPT_PATH
 		else:
 			self.qc_script_path = qc_script
 
 		if cleanup_script is None:
-			self.cleanup_script_path = os.path.join(os.path.dirname(__file__), '../scripts/qc/cleanup.sh.template')
+			self.cleanup_script_path = DEFAULT_CLEANUP_SCRIPT_PATH
 		else:
 			self.cleanup_script_path = cleanup_script
 
-		self.data_staging_job_template = {
-			"container_image": "b.gcr.io/isb-cgc-public-docker-images/cloud-sdk-crcmod",
-			"restart_policy": "OnFailure"
-		}
-		self.qc_job_template = {
-			"container_image": "b.gcr.io/isb-cgc-public-docker-images/qctools",
-			"restart_policy": "OnFailure"
-		}
-		self.cleanup_job_template = {
-			"container_image": "google/cloud-sdk",
-			"restart_policy": "OnFailure"
-		}
 
 		self.__build()
 	
@@ -174,53 +234,31 @@ class QcWorkflow(Workflow):
 				host_key = host_key % total_hosts
 
 			url = url.strip()
-			try: 
-				subprocess.check_call(["gsutil", "stat", url])
-			except ValueError:
-				print "There was a problem with url {url} in the input file".format(url=url)
+			
+			try:
+				metadata = subprocess.check_output(['gsutil', 'ls', '-L', '{url}'.format(url=url)])
+			except subprocess.CalledProcessError as e:
+				print "URL {url} doesn't exist".format(url=url)
+				exit(-1)
 			else:
-				self.__create_subworkflow(url.strip(), host_key)
+				metadata_tag = metadata.partition('Metadata:')[2].partition('Hash')[0]
+				analysis_id = metadata_tag.strip().split()[-1]
+				filename = url.split('/')[-1]
+				subworkflow_name = "qc-{filename}".format(filename=filename)
+
+				if self.output_bucket is None:
+					self.output_bucket = '/'.join(url.split('/')[0:-1])
+					
+				data_staging_step = self.createDefaultDataStagingStep(filename, analysis_id, url)
+				qc_step = self.createDefaultQcStep(filename, analysis_id)
+				cleanup_step = self.createDefaultCleanupStep(filename, analysis_id, self.output_bucket)
+				cleanup_bai = self.createDefaultCleanupStep("{filename}.bai".format(filename=filename), analysis_id, '/'.join(url.split('/')[0:-1])
+				self.__create_subworkflow([ data_staging_step, qc_step, cleanup_step, cleanup_bai ], subworkflow_name, host_key)
 				host_key += 1
-				
-
-	def __create_subworkflow(self, url, host_key):
-		filename = url.split('/')[-1]
-		subworkflow_name = "qc-{filename}".format(filename=filename)
-		try:
-			metadata = subprocess.check_output(['gsutil', 'ls', '-L', '{url}'.format(url=url)])
-		except subprocess.CalledProcessError as e:
-			print "URL {url} doesn't exist".format(url=url)
-			exit(-1)
-
-		metadata_tag = metadata.partition('Metadata:')[2].partition('Hash')[0]
-		analysis_id = metadata_tag.strip().split()[-1]
-
-		if self.output_bucket is None:
-			self.output_bucket = '/'.join(url.split('/')[0:-1])
-
-		data_staging_job = self.data_staging_job_template.copy()
-		data_staging_job["name"] = "stage-file-{analysis_id}".format(analysis_id=analysis_id)
-		data_staging_job["container_script"] = self.load_script_template(self.data_staging_script_path, url=url, filename=filename)
 	
-		qc_job = self.qc_job_template.copy()
-		qc_job["name"] = "fastqc-{analysis_id}".format(analysis_id=analysis_id)
-		qc_job["container_script"] = self.load_script_template(self.qc_script_path, filename=filename)
-		qc_job["parents"] = [data_staging_job["name"]]
-
-		cleanup_job = self.cleanup_job_template.copy()
-		cleanup_job["name"] = "retrieve-stats-{analysis_id}".format(analysis_id=analysis_id)
-		cleanup_job["container_script"] = self.load_script_template(self.cleanup_script_path, filename=filename, index_destination='/'.join(url.split('/')[0:-1]), destination=self.output_bucket)
-		cleanup_job["parents"] = [qc_job["name"]]
-		
-		data_staging_job["host_key"] = host_key
-		qc_job["host_key"] = host_key
-		cleanup_job["host_key"] = host_key
-
-		data_staging_job["subworkflow_name"] = subworkflow_name
-		qc_job["subworkflow_name"] = subworkflow_name
-		cleanup_job["subworkflow_name"] = subworkflow_name
-		
-		self.schema["jobs"].extend([data_staging_job, qc_job, cleanup_job])
+	@staticmethod		
+	def createDefaultQcStep(filename, analysis_id):
+		return WorkflowStep(DEFAULT_QC_JOB_TEMPLATE, "fastqc-{analysis_id}".format(analysis_id=analysis_id), DEFAULT_QC_SCRIPT_PATH, filename=filename)
 
 
 def main(args):
@@ -230,27 +268,6 @@ def main(args):
 		QcWorkflow(args).run()
 
 if __name__ == "__main__":
-	# parse args -- project id, zone, node num, cluster node disk size, cluster nfs volume size, output bucket, list of gcs urls
-	parser = argparse.ArgumentParser(description="ISB-CGC Compute Workflows")
-	parser.add_argument('--project_id', required=True, help="GCP project id")
-	parser.add_argument('--zone', required=True, help="GCE zone")
-	parser.add_argument('--nodes', required=True, help="Number of nodes in the cluster")
-	parser.add_argument('--cluster_node_disk_size', required=True, help="Cluster boot disk size in GB")
-	parser.add_argument('--machine_type', required=True, help="GCE machine type")
-	parser.add_argument('--tear_down', required=False, action='store_true', help="If set, the cluster will be cleaned up at the end of the workflow.  Default is False")
-	parser.add_argument('--dry_run', required=False, action='store_true', help="If set, will only print the workflow graph that would have run. Default is False")
-	parser.add_argument('--add_secret', required=False, default=None, action='append', help="An additional secret to add to the cluster, formatted as a comma-delimited string: <secret-name>,<secret-gcs-url>,<secret-mount-path>")
-
-	subparsers = parser.add_subparsers(help="sub-command help", dest="workflow")
-	
-	samtools_subparser = subparsers.add_parser('samtools-index', help="samtools-index workflow arguments")
-	samtools_subparser.add_argument('--input_files', required=True, help="A plain text file containing a list of GCS URLs representing BAM files to index, one per line")
-	samtools_subparser.add_argument('--output_bucket', required=False, default=None, help="The output bucket for the results files; if not provided, will default to the object hierarchy of the original input file")
-	
-	
-	fastqc_subparser = subparsers.add_parser('qc', help="QC (fastqc + picard) workflow arguments")
-	fastqc_subparser.add_argument('--input_files', required=True, help="A plain text file containing a list of GCS URLs representing fastq files (fastq, fastq.gz, fastq.tar, or tar.gz extensions) or BAM files, one per line")
-	fastqc_subparser.add_argument('--output_bucket', required=False, help="The output bucket for the results files; if not provided, will default to the object hierarchy of the original input file")
-	
+	parser = WorkflowArgumentParser(description="ISB-CGC Computational Workflows")
 	args = parser.parse_args()
 	main(args)

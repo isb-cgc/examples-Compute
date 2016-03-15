@@ -206,6 +206,13 @@ class KubernetesWorkflowRunner():
 						},
 						"properties": { "$ref": "#/definitions/secret_properties" },
 						"required": False
+					},
+					"shared_files": {
+						"type": "array",
+						"items": {
+							"type": "string"
+						},
+						"required": False
 					}
 				},
 				"job_properties": {

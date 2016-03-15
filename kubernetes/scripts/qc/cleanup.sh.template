@@ -1,6 +1,0 @@
-analysis_id=$(cat {filename}.analysis_id)
-if [ -f {filename}.success ]
-	then if [ -f {filename}.bai ]
-		then gsutil -h "x-goog-meta-analysis-id:$analysis_id" -o Credentials:gs_oauth2_refresh_token=$(cat /data-access/refresh-token) -o Oauth2:oauth2_refresh_retries=50 cp {filename}.bai {index_destination} && rm {filename}.bai
-	fi && gsutil -h "x-goog-meta-analysis-id:$analysis_id" -o Credentials:gs_oauth2_refresh_token=$(cat /data-access/refresh-token) -o Oauth2:oauth2_refresh_retries=50 cp * {destination}
-else echo 'Success indicator file not found'; fi
