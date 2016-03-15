@@ -21,7 +21,8 @@ DATA_STAGING_JOB_TEMPLATE = {
 
 CLEANUP_JOB_TEMPLATE = {
 	"container_image": "google/cloud-sdk",
-	"restart_policy": "OnFailure"
+	"restart_policy": "OnFailure",
+	"cleanup": True
 }
 
 SAMTOOLS_INDEX_JOB_TEMPLATE = {

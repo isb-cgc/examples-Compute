@@ -1,5 +1,6 @@
 import os
 import pwd
+import math
 import json
 import time
 import base64
@@ -29,7 +30,8 @@ CREDENTIALS = GoogleCredentials.get_application_default()
 HTTP=CREDENTIALS.authorize(httplib2.Http())
 if CREDENTIALS.access_token_expired:
 	CREDENTIALS.refresh(HTTP)
-	
+
+# GCP API Access
 GKE = discovery.build('container', 'v1', http=HTTP)
 COMPUTE = discovery.build('compute', 'v1', http=HTTP)
 SESSION = requests.Session()
@@ -39,7 +41,7 @@ API_HEADERS = {
 }
 	
 class KubernetesToilWorkflow(Job):
-	def __init__(self, workflow_name, project_id, zone, node_num, machine_type, cluster_node_disk_size, secrets=None, network="default", logging_service=None, monitoring_service=None, tear_down=False):
+	def __init__(self, workflow_name, project_id, zone, node_num, machine_type, cluster_node_disk_size, secrets=None, shared_files=None, network="default", logging_service=None, monitoring_service=None, tear_down=False):
 		super(KubernetesToilWorkflow, self).__init__()
 		self.workflow_name = workflow_name.replace("_", "-")
 		self.project_id = project_id
@@ -98,6 +100,129 @@ class KubernetesToilWorkflow(Job):
 		if secrets is not None:
 			for secret in secrets:
 				self.add_secrets.append((secret["name"], self.get_secret_contents(secret["url"]), secret["mount_path"]))
+				
+		self.shared_files = shared_files
+		
+		cluster_nfs_volume_size = self.get_cluster_nfs_volume_size()
+		
+		self.nfs_service_spec = {
+			"kind": "Service",
+			"apiVersion": "v1",
+			"metadata": {
+				"name": "nfs-server"
+			},
+			"spec": {
+				"ports": [
+					{
+						"port": 2049
+					}
+				],
+				"selector": {
+			    		"role": "nfs-server"
+				}
+			}
+		}
+
+		self.nfs_service_controller_spec = { 
+			"apiVersion": "v1",
+			"kind": "ReplicationController",
+			"metadata": {
+				"name": "nfs-server"
+			},
+			"spec": {
+				"replicas": 1,
+				"selector": {
+					"role": "nfs-server"
+				},
+				"template": {
+					"metadata": {
+						"labels": {
+							"role": "nfs-server"
+						}
+					},
+					"spec": {
+						"containers": [
+							{
+								"name": "nfs-server",
+								"image": "gcr.io/google_containers/volume-nfs",
+								"ports": [
+									{
+										"name": "nfs",
+										"containerPort": 2049
+									}
+								],
+								"securityContext": {
+									"privileged": True
+								},
+								"volumeMounts": [
+									{
+										"name": "{workflow}-data".format(workflow=self.workflow_name),
+										"mountPath": "/exports",
+										"readOnly": False	
+									}
+								], 
+								"resources": {
+									"requests": {
+										"cpu": int(self.cluster_spec["cluster"]["nodeConfig"]["machineType"].split('-')[-1]) - 1
+									}
+								}
+							}
+						],
+						"volumes": [
+							{
+								"name": "{workflow}-data".format(workflow=self.workflow_name),
+								"gcePersistentDisk": {
+									"pdName": "{workflow}-data".format(workflow=self.workflow_name),
+									"readOnly": False,
+									"fsType": "ext4"
+								}
+							}
+						]
+					}
+				}			
+			}
+				
+		}
+		self.nfs_volume_spec = {
+			"apiVersion": "v1",
+			"kind": "PersistentVolume",
+			"metadata": {
+				"name": "nfs-{workflow}".format(workflow=self.workflow_name)
+			},
+			"spec": {
+				"capacity": {
+					"storage": "{size}G".format(size=cluster_nfs_volume_size)
+				},
+				"nfs": {
+					"server": None,
+					"path": "/"
+				},
+			"accessModes": [ "ReadWriteMany" ]
+			}
+		}
+
+		self.nfs_volume_claim_spec = {
+			"kind": "PersistentVolumeClaim",
+			"apiVersion": "v1",
+			"metadata": {
+		  		"name": "nfs-{workflow}".format(workflow=self.workflow_name)
+			},
+			"spec": {
+		  		"accessModes": [ "ReadWriteMany" ],
+				"resources": {
+					"requests": {
+						"storage": "{size}G".format(size=cluster_nfs_volume_size)
+					}
+				}
+			}
+		}
+		
+		self.nfs_disk_spec = { 
+			"name": "{workflow}-data".format(workflow=self.workflow_name),
+			"zone": "https://www.googleapis.com/compute/v1/projects/{project}/zones/{zone}".format(project=project_id, zone=zone), 
+			"type": "https://www.googleapis.com/compute/v1/projects/{project}/zones/{zone}/diskTypes/pd-ssd".format(project=project_id, zone=zone),
+			"sizeGb": cluster_nfs_volume_size
+		}
 		
 		self.cluster_hosts = []
 		self.headers = API_HEADERS
@@ -122,11 +247,29 @@ class KubernetesToilWorkflow(Job):
 		for secret in self.add_secrets:
 			self.create_secret(secret, filestore)
 		filestore.logToMaster("{timestamp}  Additional secrets created successfully!".format(timestamp=self.create_timestamp()))
+		
+		if self.shared_files is not None:
+			self.configure_nfs_share(filestore) 
+			filestore.logToMaster("{timestamp}  NFS share created successfully!".format(timestamp=self.create_timestamp()))
 
 		return (self.cluster_hosts, self.add_secrets)
 
 	def create_timestamp(self):
 		return datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
+		
+	def get_cluster_nfs_volume_size(self, filestore):
+		total_size = 0
+		for shared_file in self.shared_files:
+			try:
+				filesize = subprocess.check_output(["gsutil", "du", shared_file])
+			except subprocess.CalledProcessError as e:
+				print "Couldn't get the filesize for file {filename}: {e}".format(filename=shared_file, e=e)
+				exit(-1)
+			
+			total_size += int(filesize.split(' ')[0])
+			
+		return int(math.ceil(total_size/50000000000.0)*50000000000.0)
+			
 
 	def cluster_exists(self, filestore):
 		cluster_exists = False
@@ -143,8 +286,7 @@ class KubernetesToilWorkflow(Job):
 			except KeyError:
 				pass
 
-		return cluster_exists
-					
+		return cluster_exists		
 
 	def ensure_cluster(self, filestore):
 		# create a cluster to run the workflow on if it doesn't exist already
@@ -282,6 +424,147 @@ class KubernetesToilWorkflow(Job):
 			else:
 				filestore.logToMaster("Secret creation failed: {reason}".format(reason=response.status_code))
 				exit(-1) # probably should raise an exception
+				
+	def configure_nfs_share(self, filestore):
+		filestore.logToMaster("{timestamp}  Creating an NFS share (size: {size}) for the cluster ...".format(timestamp=self.create_timestamp(), size=self.nfs_volume_spec["spec"]["capacity"]["storage"]))
+		
+		# create the persistent disk to back the NFS share
+		try:
+			get_disk = COMPUTE.disks().get(project=self.project_id, zone=self.zone, disk=self.nfs_disk_spec["name"]).execute()
+
+		except HttpError:
+			self.create_nfs_disk(filestore)
+		
+		# create the NFS service and rc
+		full_url = API_ROOT + SERVICES_URI.format(namespace=self.namespace_spec["metadata"]["name"])
+		response = SESSION.post(full_url, headers=self.headers, json=self.nfs_service_spec)
+
+		# if the response isn't what's expected, raise an exception
+		if response.status_code != 201:
+			if response.status_code == 409: # already exists
+				pass
+			else:
+				filestore.logToMaster("NFS service creation failed: {reason}".format(reason=response.content))
+				exit(-1) # probably should raise an exception
+
+		full_url = API_ROOT + REPLICATION_CONTROLLERS_URI.format(namespace=self.namespace_spec["metadata"]["name"])
+		response = SESSION.post(full_url, headers=self.headers, json=self.nfs_service_controller_spec)
+		
+		if response.status_code != 201:
+			if response.status_code == 409: # already exists
+				pass
+			else:
+				filestore.logToMaster("NFS service controller creation failed: {reason}".format(reason=response.content))
+				exit(-1)
+
+		# get the service endpoint
+		full_url = API_ROOT + SERVICES_URI.format(namespace=self.namespace_spec["metadata"]["name"]) + self.nfs_service_controller_spec["metadata"]["name"]
+		response = SESSION.get(full_url)
+		
+		# if the response isn't what's expected, raise an exception
+		if response.status_code != 200:
+			exit(-1) # probably should raise an exception
+		
+		self.cluster_endpoint = response.json()["spec"]["clusterIP"]
+
+		# create an NFS persistent volume for this workflow
+		self.nfs_volume_spec["spec"]["nfs"]["server"] = self.cluster_endpoint
+		full_url = API_ROOT + PERSISTENT_VOLUMES_URI.format(namespace=self.namespace_spec["metadata"]["name"])
+		response = SESSION.post(full_url, headers=self.headers, json=self.nfs_volume_spec)
+		
+		# if the response isn't what's expected, raise an exception
+		if response.status_code != 201:
+			if response.status_code == 409: # already exists
+				pass
+			else:
+				filestore.logToMaster("NFS persistent volume creation failed: {reason}".format(reason=response.content))
+				exit(-1) # probably should raise an exception
+		
+		# create a persistent volume claim for the NFS volume
+		full_url = API_ROOT + PERSISTENT_VOLUME_CLAIMS_URI.format(namespace=self.namespace_spec["metadata"]["name"])
+		response = SESSION.post(full_url, headers=self.headers, json=self.nfs_volume_claim_spec)
+		
+		# if the response isn't what's expected, raise an exception
+		if response.status_code != 201:
+			if response.status_code == 409: # already exists
+				pass
+			else:
+				filestore.logToMaster("NFS persistent volume claim creation failed: {reason}".format(reason=response.content))
+				exit(-1) # probably should raise an exception
+			
+
+	def create_nfs_disk(self, filestore):
+		# Submit the disk request
+		disk_response = COMPUTE.disks().insert(project=self.project_id, zone=self.zone, body=self.nfs_disk_spec).execute()
+
+		# Wait for the disks to be created
+		while True:
+			result = COMPUTE.zoneOperations().get(project=self.project_id, zone=self.zone, operation=disk_response['name']).execute()
+			if result['status'] == 'DONE':
+				break
+
+		# attach the disk to an instance for formatting
+		attach_request = {
+    			"kind": "compute#attachedDisk",
+			"index": 1,
+			"type": "PERSISTENT",
+			"mode": "READ_WRITE",
+			"source": "https://www.googleapis.com/compute/v1/projects/{project}/zones/{zone}/disks/{disk_name}".format(project=self.project_id, zone=self.zone, disk_name=self.nfs_disk_spec["name"]),
+			"deviceName": self.nfs_disk_spec["name"],
+			"boot": False,
+			"interface": "SCSI",
+			"autoDelete": False
+    		}
+
+		for instance in self.cluster_hosts:
+			success = False
+			attach_response = COMPUTE.instances().attachDisk(project=self.project_id, zone=self.zone, instance=instance, body=attach_request).execute()
+
+			# Wait for the attach operation to complete
+			while True:
+				result = COMPUTE.zoneOperations().get(project=self.project_id, zone=self.zone, operation=attach_response['name']).execute()
+				if result['status'] == 'DONE':
+					success = True
+					break
+
+			if success == True:
+				break
+
+		if success == False:
+			filestore.logToMaster("Couldn't attach disk for formatting: {result}".format(result=result))
+			exit(-1)
+	
+		# generate ssh keys on the workstation
+		try:
+			subprocess.check_call(["bash", "-c", "stat ~/.ssh/google_compute_engine && stat ~/.ssh/google_compute_engine.pub"])
+		except subprocess.CalledProcessError as e:
+			try:
+				subprocess.check_call(["gcloud", "compute", "config-ssh"])
+			except subprocess.CalledProcessError as e:
+				filestore.logToMaster("Couldn't generate SSH keys for the workstation: {e}".format(e=e))
+				exit(-1)
+
+		command = "sudo mkdir -p /{workflow}-data && sudo mkfs.ext4 -F /dev/disk/by-id/google-{workflow}-data && sudo mount -o discard,defaults /dev/disk/by-id/google-{workflow}-data /{workflow}-data".format(workflow=self.workflow_name)
+		try:
+			subprocess.check_call(["gcloud", "compute", "ssh", instance, "--command", command])
+		except subprocess.CalledProcessError as e:
+			filestore.logToMaster("Couldn't format the disk: {e}".format(e=e))
+			exit(-1)
+
+		detach_response = COMPUTE.instances().detachDisk(project=self.project_id, zone=self.zone, instance=instance, deviceName=self.nfs_disk_spec["name"]).execute()
+
+		# Wait for the detach operation to complete
+		while True:
+			try:
+				result = COMPUTE.zoneOperations().get(project=self.project_id, zone=self.zone, operation=detach_response['name']).execute()
+			except HttpError:
+				break
+			else:
+				if result['status'] == 'DONE':
+					break
+		
+		filestore.logToMaster("Disk created successfully!")
+
 
 	def create_cluster_admin_password(self):
 		return ''.join(SystemRandom().choice(string.ascii_uppercase + string.ascii_lowercase + string.digits) for _ in range(16))	
@@ -306,7 +589,7 @@ class KubernetesToilWorkflowCleanup(Job):
 		delete_cluster = GKE.projects().zones().clusters().delete(projectId=self.project_id, zone=self.zone, clusterId=self.workflow_name).execute(http=HTTP)
 
 class KubernetesToilComputeJob(Job):
-	def __init__(self, workflow_name, project_id, zone, job_name, container_image, container_script, additional_info, subworkflow_name=None, host_key=None, restart_policy="Never", cpu_limit=None, memory_limit=None, disk=None):
+	def __init__(self, workflow_name, project_id, zone, job_name, container_image, container_script, additional_info, cleanup=False, subworkflow_name=None, host_key=None, restart_policy="Never", cpu_limit=None, memory_limit=None, disk=None):
 		super(KubernetesToilComputeJob, self).__init__()
 		self.workflow_name = workflow_name.replace("_", "-")
 		self.project_id = project_id
@@ -369,11 +652,15 @@ class KubernetesToilComputeJob(Job):
 					
 		self.host_key = host_key
 		self.additional_info = additional_info
+		
 
 	def run(self, filestore):
 		filestore.logToMaster("{timestamp}  Creating host directory for job data ...".format(timestamp=self.create_timestamp()))
 		cluster_hosts = self.additional_info[0]
 		secrets = self.additional_info[1]
+		
+		if cleanup is True:
+			self.addFollowOn(KubernetesToilComputeJobCleanup(cluster_hosts[self.host_key], self.host_path))
 
 		filestore.logToMaster(' '.join(map(str, self.additional_info)))
 		if self.host_key is not None:
@@ -442,12 +729,32 @@ class KubernetesToilComputeJob(Job):
 					exit(-1)
 			else:
 				continue
-				
 		
 		return response	
 
 	def create_timestamp(self):
 		return datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
+		
+class KubernetesToilComputeJobCleanup(Job):
+	def __init__(self, host, host_path):
+		super(KubernetesToilComputeJobCleanup, self).__init__()
+		self.host = host
+		self.host_path = host_path
+	
+	def run(self, filestore): 
+		if CREDENTIALS.access_token_expired:
+			CREDENTIALS.refresh(HTTP)
+		
+		self.delete_host_path(filestore)
+
+		return True
+		
+	def delete_host_path(self, filestore):
+		try:
+			subprocess.check_call(["gcloud", "compute", "ssh", self.host, "--command", "if [[ -d /{host_path} ]]; then sudo rm -rf /{host_path}; fi".format(host_path=self.host_path)])
+		except subprocess.CalledProcessError as e:
+			filestore.logToMaster("Couldn't delete the hostPath directory for this job: {e}".format(e=e))
+			exit(-1)
 
 
 			

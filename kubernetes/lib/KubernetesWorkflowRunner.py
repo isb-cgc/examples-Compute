@@ -55,6 +55,9 @@ class KubernetesWorkflowRunner():
 
 		if "secrets" in cluster_config.keys():
 			kwargs.update({"secrets": cluster_config["secrets"]})
+			
+		if "shared_files" in cluster_config.keys():
+			kwargs.update({"shared_files": cluster_config["shared_files"]})
 	
 		self.toil_jobs[self.workflow_name] = KubernetesToilWorkflow(*args, **kwargs)
 	
@@ -102,7 +105,9 @@ class KubernetesWorkflowRunner():
 
 			if "subworkflow_name" in job.keys():
 				kwargs.update({"subworkflow_name": job["subworkflow_name"]})
-
+				
+			if "cleanup" in job.keys():
+				kwargs.update({"cleanup": job["cleanup"]})
 				
 			self.toil_jobs[job["name"]] = KubernetesToilComputeJob(*args, **kwargs)
 
@@ -252,6 +257,10 @@ class KubernetesWorkflowRunner():
 					},
 					"subworkflow_name": {
 						"type": "string",
+						"required": False
+					},
+					"cleanup": {
+						"type": "boolean",
 						"required": False
 					}
 				},
