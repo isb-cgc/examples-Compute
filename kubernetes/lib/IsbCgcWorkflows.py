@@ -106,9 +106,9 @@ class Workflow(object):
 				self.schema["cluster"]["secrets"].append(secret_spec)
 
 	def __build(self):
-		pass # to be overridden in subclasses
+		pass # to be "overridden" in subclasses
 
-	def create_subworkflow(self, subworkflow_name, steps, host_key=None):
+	def create_subworkflow(self, steps, subworkflow_name, host_key=None):
 		i = 0
 		j = 1
 		
