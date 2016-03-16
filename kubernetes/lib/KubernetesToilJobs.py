@@ -671,6 +671,7 @@ class KubernetesToilComputeJob(Job):
 					
 		self.host_key = host_key
 		self.additional_info = additional_info
+		self.cleanup = cleanup
 		
 
 	def run(self, filestore):
@@ -678,7 +679,7 @@ class KubernetesToilComputeJob(Job):
 		cluster_hosts = self.additional_info[0]
 		secrets = self.additional_info[1]
 		
-		if cleanup is True:
+		if self.cleanup is True:
 			self.addFollowOn(KubernetesToilComputeJobCleanup(cluster_hosts[self.host_key], self.host_path))
 
 		filestore.logToMaster(' '.join(map(str, self.additional_info)))
