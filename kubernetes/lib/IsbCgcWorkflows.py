@@ -35,20 +35,21 @@ QC_JOB_TEMPLATE = {
 	"restart_policy": "OnFailure"
 }
 
-class WorkflowArgumentParser(argparse.ArgumentParser):
-	def __init__(self, description):
-		super(WorkflowArgumentParser, self).__init__(description=description)
-		
-		self.add_argument('--project_id', required=True, help="GCP project id")
-		self.add_argument('--zone', required=True, help="GCE zone")
-		self.add_argument('--nodes', required=True, help="Number of nodes in the cluster")
-		self.add_argument('--cluster_node_disk_size', required=True, help="Cluster boot disk size in GB")
-		self.add_argument('--machine_type', required=True, help="GCE machine type")
-		self.add_argument('--tear_down', required=False, action='store_true', help="If set, the cluster will be cleaned up at the end of the workflow.  Default is False")
-		self.add_argument('--dry_run', required=False, action='store_true', help="If set, will only print the workflow graph that would have run. Default is False")
-		self.add_argument('--add_secret', required=False, default=None, action='append', help="An additional secret to add to the cluster, formatted as a comma-delimited string: <secret-name>,<secret-gcs-url>,<secret-mount-path>")
+class WorkflowArguments(object):
+	def __init__(self):
+		super(WorkflowArgumentParser, self).__init__()
+		self.parser = argparse.ArgumentParser(description="ISB-CGC Computational Workflows")
+		self.parser.add_argument('--project_id', required=True, help="GCP project id")
+		self.parser.add_argument('--zone', required=True, help="GCE zone")
+		self.parser.add_argument('--nodes', required=True, help="Number of nodes in the cluster")
+		self.parser.add_argument('--cluster_node_disk_size', required=True, help="Cluster boot disk size in GB")
+		self.parser.add_argument('--machine_type', required=True, help="GCE machine type")
+		self.parser.add_argument('--tear_down', required=False, action='store_true', help="If set, the cluster will be cleaned up at the end of the workflow.  Default is False")
+		self.parser.add_argument('--dry_run', required=False, action='store_true', help="If set, will only print the workflow graph that would have run. Default is False")
+		self.parser.add_argument('--add_secret', required=False, default=None, action='append', help="An additional secret to add to the cluster, formatted as a comma-delimited string: <secret-name>,<secret-gcs-url>,<secret-mount-path>")
+		self.parser.add_argument('--shared_file', required=False, default=None, action='append', help="A shared file to be used among multiple subworkflows.  Must be a valid GCS url.")
 
-		subparsers = self.add_subparsers(help="sub-command help", dest="workflow")
+		subparsers = self.parser.add_subparsers(help="sub-command help", dest="workflow")
 	
 		samtools_subparser = subparsers.add_parser('samtools-index', help="samtools-index workflow arguments")
 		samtools_subparser.add_argument('--input_files', required=True, help="A plain text file containing a list of GCS URLs representing BAM files to index, one per line")
@@ -269,6 +270,6 @@ def main(args):
 		QcWorkflow(args).run()
 
 if __name__ == "__main__":
-	parser = WorkflowArgumentParser(description="ISB-CGC Computational Workflows")
+	parser = WorkflowArguments().parser
 	args = parser.parse_args()
 	main(args)
