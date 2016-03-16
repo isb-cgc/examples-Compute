@@ -229,7 +229,7 @@ class KubernetesToilWorkflow(Job):
 		self.headers["Authorization"].format(access_token=CREDENTIALS.access_token)
 		self.tear_down = tear_down
 		if self.tear_down != "false" and self.tear_down is not False:
-			cleanup = KubernetesToilWorkflowCleanup(self.workflow_name, self.project_id, self.zone)
+			cleanup = KubernetesToilWorkflowCleanup(self.workflow_name, self.project_id, self.zone, nfs=(self.shared_files is not None), nfs_disk_name=self.nfs_disk_spec["name"])
 			self.addFollowOn(cleanup)
 		
 	def run(self, filestore): 
@@ -571,22 +571,30 @@ class KubernetesToilWorkflow(Job):
 		
 
 class KubernetesToilWorkflowCleanup(Job):
-	def __init__(self, workflow_name, project_id, zone):
+	def __init__(self, workflow_name, project_id, zone, nfs=False, nfs_disk_name=None):
 		super(KubernetesToilWorkflowCleanup, self).__init__()
 		self.workflow_name = workflow_name.replace("_", "-")
 		self.project_id = project_id
 		self.zone = zone
+		self.nfs = nfs
+		self.nfs_disk_name = nfs_disk_name
 		
 	def run(self, filestore): 
 		if CREDENTIALS.access_token_expired:
 			CREDENTIALS.refresh(HTTP)
 		
 		self.cluster_cleanup(filestore)
+		
+		if self.nfs is True:
+			self.nfs_disk_cleanup()
 
 		return True
 
 	def cluster_cleanup(self, filestore):
 		delete_cluster = GKE.projects().zones().clusters().delete(projectId=self.project_id, zone=self.zone, clusterId=self.workflow_name).execute(http=HTTP)
+		
+	def nfs_disk_cleanup(self):
+		delete_disk = COMPUTE.disks().delete(project=self.project_id, zone=self.zone, disk=self.nfs_disk_name).execute()
 
 class KubernetesToilComputeJob(Job):
 	def __init__(self, workflow_name, project_id, zone, job_name, container_image, container_script, additional_info, cleanup=False, subworkflow_name=None, host_key=None, restart_policy="Never", cpu_limit=None, memory_limit=None, disk=None):
@@ -624,6 +632,11 @@ class KubernetesToilComputeJob(Job):
 								"name": "data".format(job_name=self.job_name),
 								"mountPath": "/workflow",
 								"readOnly": False	
+							},
+							{
+								"name": "nfs-{workflow}".format(workflow=self.workflow_name),
+								"mountPath": "/share",
+								"readOnly": True
 							}
 						]
 					},
@@ -634,6 +647,12 @@ class KubernetesToilComputeJob(Job):
 						"name": "data".format(job_name=self.job_name),
 						"hostPath": {
 							"path": "/{host_path}".format(host_path=self.host_path)
+						}
+					},
+					{
+						"name": "nfs-{workflow}".format(workflow=self.workflow_name),
+						"persistentVolumeClaim": {
+							"claimName": "nfs-{workflow}".format(workflow=self.workflow_name)
 						}
 					}
 				],
