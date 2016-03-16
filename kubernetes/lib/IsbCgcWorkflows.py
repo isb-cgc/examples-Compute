@@ -111,7 +111,7 @@ class Workflow(object):
 
 		if cluster.shared_file is not None:
 			for shared_file in cluster.shared_file:
-				self.schema["shared_files"].append(shared_file)
+				self.schema["cluster"]["shared_files"].append(shared_file)
 
 	def __build(self):
 		pass # to be "overridden" in subclasses
