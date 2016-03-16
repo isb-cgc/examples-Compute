@@ -268,7 +268,7 @@ class KubernetesToilWorkflow(Job):
 			
 			total_size += int(filesize.split(' ')[0])
 			
-		return int(math.ceil(total_size/50000000000.0)*50000000000.0)
+		return int(math.ceil(total_size/50000000000.0)*50000000000.0)/1000000000
 			
 
 	def cluster_exists(self, filestore):
