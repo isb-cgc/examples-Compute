@@ -19,7 +19,7 @@ if [ ! -f {filename}.success ]
 				then INDEXED_BAM=1 && echo "Indexing BAM file {filename} ..." >> {filename}.log && java -jar /usr/picard/picard.jar BuildBamIndex I={filename} O={filename}.bai >> {filename}.log
 			fi
 		fi
-		java -jar /usr/picard/picard.jar CollectMultipleMetrics INPUT={filename} OUTPUT=$ANALYSIS_ID-{filename}.multiple_metrics PROGRAM=CollectAlignmentSummaryMetrics PROGRAM=CollectInsertSizeMetrics PROGRAM=CollectQualityYieldMetrics PROGRAM=QualityScoreDistribution >> {filename}.log &&  java -jar /usr/picard/picard.jar BamIndexStats INPUT={filename} OUTPUT=$ANALYSIS_ID-{filename}.bam_index_stats && touch {filename}.picard.success && rm {filename}
+		java -jar /usr/picard/picard.jar CollectMultipleMetrics INPUT={filename} OUTPUT=$ANALYSIS_ID-{filename}.multiple_metrics PROGRAM=CollectAlignmentSummaryMetrics PROGRAM=CollectInsertSizeMetrics PROGRAM=CollectQualityYieldMetrics PROGRAM=QualityScoreDistribution >> {filename}.log &&  java -jar /usr/picard/picard.jar BamIndexStats INPUT={filename} OUTPUT=$ANALYSIS_ID-{filename}.bam_index_stats REFERENCE_SEQUENCE=/share/Homo_sapiens_assembly19.fasta && touch {filename}.picard.success && rm {filename}
 	fi
 	touch {filename}.success
 	if [ "$INDEXED_BAM" = 0 ]
