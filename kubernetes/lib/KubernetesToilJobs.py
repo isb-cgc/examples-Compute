@@ -257,7 +257,7 @@ class KubernetesToilWorkflow(Job):
 	def create_timestamp(self):
 		return datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
 		
-	def get_cluster_nfs_volume_size(self, filestore):
+	def get_cluster_nfs_volume_size(self):
 		total_size = 0
 		for shared_file in self.shared_files:
 			try:
