@@ -108,7 +108,7 @@ class Workflow(object):
 	def __build(self):
 		pass # to be overridden in subclasses
 
-	def __create_subworkflow(self, subworkflow_name, steps, host_key=None):
+	def create_subworkflow(self, subworkflow_name, steps, host_key=None):
 		i = 0
 		j = 1
 		
@@ -192,7 +192,7 @@ class SamtoolsIndexWorkflow(Workflow):
 				samtools_index_step = self.createDefaultSamtoolsIndexStep(filename, analysis_id)
 				cleanup_step = self.createDefaultCleanupStep(filename, analysis_id, self.output_bucket)
 
-				self.__create_subworkflow([ data_staging_step, samtools_index_step, cleanup_step ], subworkflow_name, host_key)
+				self.create_subworkflow([ data_staging_step, samtools_index_step, cleanup_step ], subworkflow_name, host_key)
 				host_key += 1
 	
 	@staticmethod
@@ -255,7 +255,7 @@ class QcWorkflow(Workflow):
 				qc_step = self.createDefaultQcStep(filename, analysis_id)
 				cleanup_step = self.createDefaultCleanupStep(filename, analysis_id, self.output_bucket)
 				cleanup_bai = self.createDefaultCleanupStep("{filename}.bai".format(filename=filename), analysis_id, '/'.join(url.split('/')[0:-1]))
-				self.__create_subworkflow([ data_staging_step, qc_step, cleanup_step, cleanup_bai ], subworkflow_name, host_key)
+				self.create_subworkflow([ data_staging_step, qc_step, cleanup_step, cleanup_bai ], subworkflow_name, host_key)
 				host_key += 1
 	
 	@staticmethod		
