@@ -124,8 +124,12 @@ class Workflow(object):
 			
 		steps[i].template["subworkflow_name"] = subworkflow_name
 		steps[i].template["host_key"] = host_key
+
+		jobs_list = []
+		for step in steps:
+			jobs_list.append(step.template)
 		
-		self.schema["jobs"].extend(steps)
+		self.schema["jobs"].extend(jobs_list)
 		
 	@staticmethod
 	def createDefaultDataStagingStep(filename, analysis_id, url):
