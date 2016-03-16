@@ -37,7 +37,7 @@ QC_JOB_TEMPLATE = {
 
 class WorkflowArguments(object):
 	def __init__(self):
-		super(WorkflowArgumentParser, self).__init__()
+		super(WorkflowArguments, self).__init__()
 		self.parser = argparse.ArgumentParser(description="ISB-CGC Computational Workflows")
 		self.parser.add_argument('--project_id', required=True, help="GCP project id")
 		self.parser.add_argument('--zone', required=True, help="GCE zone")
