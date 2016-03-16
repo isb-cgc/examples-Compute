@@ -66,7 +66,10 @@ class WorkflowStep(object):
 		self.template["container_script"] = self.load_script_template(container_script, **kwargs)
 		
 	def link_child(self, step):
-		step.parents.append(self.name)
+		if "parents" in step.template.keys():
+			step.template["parents"].append(self.name)
+		else:
+			step.template["parents"] = [self.name]
 		
 	def load_script_template(self, path, **params):
 		script_lines = []
