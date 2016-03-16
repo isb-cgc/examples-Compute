@@ -115,7 +115,7 @@ class Workflow(object):
 		i = 0
 		j = 1
 		
-		while j <= len(steps):
+		while j < len(steps):
 			steps[i].template["subworkflow_name"] = subworkflow_name
 			steps[i].template["host_key"] = host_key
 			steps[j].link_child(steps[i])
