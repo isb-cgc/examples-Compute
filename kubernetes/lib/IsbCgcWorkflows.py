@@ -129,11 +129,11 @@ class Workflow(object):
 		
 	@staticmethod
 	def createDefaultDataStagingStep(filename, analysis_id, url):
-		return WorkflowStep(DATA_STAGING_JOB_TEMPLATE, "stage-file-{analysis_id}".format(analysis_id=analysis_id), DEFAULT_DATA_STAGING_SCRIPT_PATH, url=url, filename=filename)
+		return WorkflowStep(DATA_STAGING_JOB_TEMPLATE, "stage-file-{analysis_id}-{random_id}".format(analysis_id=analysis_id), DEFAULT_DATA_STAGING_SCRIPT_PATH, url=url, filename=filename, random_id=''.join(SystemRandom().choice(string.ascii_lowercase + string.digits) for _ in range(6)))
 		
 	@staticmethod
 	def createDefaultCleanupStep(filename, analysis_id, destination):
-		return WorkflowStep(CLEANUP_JOB_TEMPLATE, "retrieve-index-{analysis_id}".format(analysis_id=analysis_id), DEFAULT_CLEANUP_SCRIPT_PATH, filename=filename, destination=destination)
+		return WorkflowStep(CLEANUP_JOB_TEMPLATE, "retrieve-outputs-{analysis_id}-{random_id}".format(analysis_id=analysis_id), DEFAULT_CLEANUP_SCRIPT_PATH, filename=filename, destination=destination, random_id=''.join(SystemRandom().choice(string.ascii_lowercase + string.digits) for _ in range(6)))
 
 	def run(self):
 		pprint.pprint(self.schema)
