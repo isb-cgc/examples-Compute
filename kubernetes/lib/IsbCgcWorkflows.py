@@ -260,7 +260,7 @@ class QcWorkflow(Workflow):
 	
 	@staticmethod		
 	def createDefaultQcStep(filename, analysis_id):
-		return WorkflowStep(DEFAULT_QC_JOB_TEMPLATE, "fastqc-{analysis_id}".format(analysis_id=analysis_id), DEFAULT_QC_SCRIPT_PATH, filename=filename)
+		return WorkflowStep(QC_JOB_TEMPLATE, "fastqc-{analysis_id}".format(analysis_id=analysis_id), DEFAULT_QC_SCRIPT_PATH, filename=filename)
 
 
 def main(args):
