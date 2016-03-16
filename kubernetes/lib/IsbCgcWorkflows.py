@@ -114,20 +114,16 @@ class Workflow(object):
 	def create_subworkflow(self, steps, subworkflow_name, host_key=None):
 		i = 0
 		j = 1
-		
-		while j < len(steps):
+		jobs_list = []
+		while i < len(steps):
 			steps[i].template["subworkflow_name"] = subworkflow_name
 			steps[i].template["host_key"] = host_key
-			steps[j].link_child(steps[i])
+			if j < len(steps):
+				steps[i].link_child(steps[j])
+
+			jobs_list.append(steps[i].template)
 			i += 1
 			j += 1
-			
-		steps[i].template["subworkflow_name"] = subworkflow_name
-		steps[i].template["host_key"] = host_key
-
-		jobs_list = []
-		for step in steps:
-			jobs_list.append(step.template)
 		
 		self.schema["jobs"].extend(jobs_list)
 		
