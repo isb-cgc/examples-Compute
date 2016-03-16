@@ -37,7 +37,7 @@ QC_JOB_TEMPLATE = {
 
 class WorkflowArgumentParser(argparse.ArgumentParser):
 	def __init__(self, description):
-		super(WorkflowArgumentParser).__init__(description=description)
+		super(WorkflowArgumentParser, self).__init__(description=description)
 		
 		self.add_argument('--project_id', required=True, help="GCP project id")
 		self.add_argument('--zone', required=True, help="GCE zone")
