@@ -614,7 +614,7 @@ class KubernetesToilWorkflowCleanup(Job):
 		delete_disk = COMPUTE.disks().delete(project=self.project_id, zone=self.zone, disk=self.nfs_disk_name).execute()
 		while True:
 			try:
-				result = COMPUTE.zoneOperations().get(project=self.project_id, zone=self.zone, operation=disk_response['name']).execute()
+				result = COMPUTE.zoneOperations().get(project=self.project_id, zone=self.zone, operation=delete_disk['name']).execute()
 			except HttpError:
 				break
 			else:
