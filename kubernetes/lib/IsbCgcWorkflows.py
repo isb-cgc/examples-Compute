@@ -258,12 +258,14 @@ class QcWorkflow(Workflow):
 
 				if self.output_bucket is None:
 					self.output_bucket = '/'.join(url.split('/')[0:-1])
-					
-				data_staging_step = self.createDefaultDataStagingStep(filename, analysis_id, url)
-				qc_step = self.createDefaultQcStep(filename, analysis_id)
-				cleanup_bai = self.createDefaultCleanupStep("{filename}.bai".format(filename=filename), analysis_id, '/'.join(url.split('/')[0:-1]))
-				cleanup_step = self.createDefaultCleanupStep(filename, analysis_id, self.output_bucket)
-				self.create_subworkflow([ data_staging_step, qc_step, cleanup_bai, cleanup_step ], subworkflow_name, host_key)
+				
+				steps = []
+				steps.append(self.createDefaultDataStagingStep(filename, analysis_id, url))
+				steps.append(self.createDefaultQcStep(filename, analysis_id))
+				if re.match('^.*\.bam', filename):
+					steps.append(self.createDefaultCleanupStep("{filename}.bai".format(filename=filename), analysis_id, '/'.join(url.split('/')[0:-1])))
+				steps.append(self.createDefaultCleanupStep(filename, analysis_id, self.output_bucket))
+				self.create_subworkflow(steps, subworkflow_name, host_key)
 				host_key += 1
 	
 	@staticmethod		
