@@ -499,9 +499,13 @@ class KubernetesToilWorkflow(Job):
 
 		# Wait for the disks to be created
 		while True:
-			result = COMPUTE.zoneOperations().get(project=self.project_id, zone=self.zone, operation=disk_response['name']).execute()
-			if result['status'] == 'DONE':
+			try:
+				result = COMPUTE.zoneOperations().get(project=self.project_id, zone=self.zone, operation=disk_response['name']).execute()
+			except HttpError:
 				break
+			else:
+				if result['status'] == 'DONE':
+					break
 
 		# attach the disk to an instance for formatting
 		attach_request = {
@@ -522,10 +526,14 @@ class KubernetesToilWorkflow(Job):
 
 			# Wait for the attach operation to complete
 			while True:
-				result = COMPUTE.zoneOperations().get(project=self.project_id, zone=self.zone, operation=attach_response['name']).execute()
-				if result['status'] == 'DONE':
-					success = True
+				try:
+					result = COMPUTE.zoneOperations().get(project=self.project_id, zone=self.zone, operation=attach_response['name']).execute()
+				except HttpError:
 					break
+				else:
+					if result['status'] == 'DONE':
+						success = True
+						break
 
 			if success == True:
 				break
@@ -592,9 +600,26 @@ class KubernetesToilWorkflowCleanup(Job):
 
 	def cluster_cleanup(self, filestore):
 		delete_cluster = GKE.projects().zones().clusters().delete(projectId=self.project_id, zone=self.zone, clusterId=self.workflow_name).execute(http=HTTP)
+		while True:
+			try:
+				result = GKE.projects().zones().operations().get(projectId=self.project_id, zone=self.zone, operationId=delete_cluster['name']).execute()
+			except HttpError:
+				break
+			else:
+				if result['status'] == 'DONE':
+					break
+			
 		
 	def nfs_disk_cleanup(self):
 		delete_disk = COMPUTE.disks().delete(project=self.project_id, zone=self.zone, disk=self.nfs_disk_name).execute()
+		while True:
+			try:
+				result = COMPUTE.zoneOperations().get(project=self.project_id, zone=self.zone, operation=disk_response['name']).execute()
+			except HttpError:
+				break
+			else:
+				if result['status'] == 'DONE':
+					break
 
 class KubernetesToilComputeJob(Job):
 	def __init__(self, workflow_name, project_id, zone, job_name, container_image, container_script, additional_info, cleanup=False, subworkflow_name=None, host_key=None, restart_policy="Never", cpu_limit=None, memory_limit=None, disk=None):
