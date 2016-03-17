@@ -138,7 +138,7 @@ class Workflow(object):
 		
 	@staticmethod
 	def createDefaultCleanupStep(filename, analysis_id, destination):
-		return WorkflowStep(CLEANUP_JOB_TEMPLATE, "retrieve-outputs-{analysis_id}-{random_id}".format(analysis_id=analysis_id, random_id=''.join(SystemRandom().choice(string.ascii_lowercase + string.digits) for _ in range(6))), DEFAULT_CLEANUP_SCRIPT_PATH, filename=filename, destination=destination)
+		return WorkflowStep(CLEANUP_JOB_TEMPLATE, "retrieve-outputs-{analysis_id}-{random_id}".format(analysis_id=analysis_id, random_id=''.join(SystemRandom().choice(string.ascii_lowercase + string.digits) for _ in range(6))), DEFAULT_CLEANUP_SCRIPT_PATH, analysis_id=analysis_id, filename=filename, destination=destination)
 
 	def run(self):
 		pprint.pprint(self.schema)
