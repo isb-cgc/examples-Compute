@@ -1,3 +1,10 @@
+
+Note: Elasticluster, described below, uses an insecure protocol (Network File System, NFS) to share data across the network between nodes. Thus, it is not appropriate if sensitive, Personally Identifiable Information (PII) is being distributed across the nodes. In this case, when used in the Google Cloud, Google states that even insecure protocols such as this will be protected, see "Encryption of Inter-Service Communication" in this document:
+https://cloud.google.com/security/security-design/resources/google_infrastructure_whitepaper_fa.pdf. The use of secure protocols must always be considered when sharing sensitive data in a compute grid.
+
+
+
+
 #ISB-CGC Grid Engine Examples
 
 ##Setup Instructions
