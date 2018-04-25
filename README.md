@@ -5,7 +5,7 @@ This repo contains computational examples for use in conjunction with the ISB-CG
 Current examples include how to run CWL workflows on a single VM, and how to use Grid Engine.  Additional examples will be added as new use-cases are defined and implemented.
 
 * **Running CWL workflows on the google cloud using the cwl_runner script.**
- * modification of the (now unsupported) google script to allow automated workflow runs in the cloud 
+  * modification of the (now unsupported) google script to allow automated workflow runs in the cloud 
 
 * **Using CWL (Common Workflow Language)**
   *  **cwl-examples**: Several examples of specific CWL workflows.
